@@ -2,6 +2,9 @@ import bg from "../assets/train-bg.jpg";
 import { useNavigate } from "react-router-dom";
 const LoginPage = () => {
     const navigate = useNavigate();
+    const handleLogin = () => {
+  navigate("/admin");
+};
   return (
     <div
       style={{
@@ -221,7 +224,7 @@ const LoginPage = () => {
             boxShadow:
               "0 0 35px rgba(37,99,235,0.4)",
           }}
-        >
+               onClick={handleLogin}>
           Sign In
         </button>
       </div>
