@@ -3,26 +3,10 @@ import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiX, FiFilter } from "react-icons/
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import { FiTruck, FiActivity, FiAlertTriangle, FiTool } from "react-icons/fi";
+import { useAuth } from "../context/AuthContext";
+import { ALL_WAGONS } from "../data/zoneData";
 
-const INITIAL = [
-  { id:"WGN-001", type:"Freight",   location:"New Delhi",    dest:"Mumbai CST",     speed:"87",  status:"On Time",     capacity:"60T", zone:"NR"  },
-  { id:"WGN-002", type:"Tank",      location:"Chennai Ctrl", dest:"Hyderabad",      speed:"64",  status:"Delayed",     capacity:"45T", zone:"SR"  },
-  { id:"WGN-003", type:"Freight",   location:"Howrah",       dest:"New Delhi",      speed:"92",  status:"On Time",     capacity:"60T", zone:"ER"  },
-  { id:"WGN-004", type:"Flatbed",   location:"Pune Jn",      dest:"Mumbai CST",     speed:"0",   status:"Maintenance", capacity:"55T", zone:"CR"  },
-  { id:"WGN-005", type:"Passenger", location:"Bengaluru",    dest:"Chennai",        speed:"78",  status:"On Time",     capacity:"200P",zone:"SWR" },
-  { id:"WGN-006", type:"Freight",   location:"Ahmedabad",    dest:"New Delhi",      speed:"55",  status:"Delayed",     capacity:"60T", zone:"WR"  },
-  { id:"WGN-007", type:"Freight",   location:"Lucknow",      dest:"Kolkata",        speed:"81",  status:"On Time",     capacity:"60T", zone:"NR"  },
-  { id:"WGN-008", type:"Tank",      location:"Jaipur",       dest:"Mumbai",         speed:"0",   status:"Maintenance", capacity:"45T", zone:"NWR" },
-  { id:"WGN-009", type:"Freight",   location:"Nagpur",       dest:"Hyderabad",      speed:"73",  status:"On Time",     capacity:"60T", zone:"SCR" },
-  { id:"WGN-010", type:"Flatbed",   location:"Patna",        dest:"New Delhi",      speed:"68",  status:"Delayed",     capacity:"55T", zone:"ECR" },
-  { id:"WGN-011", type:"Freight",   location:"Surat",        dest:"Ahmedabad",      speed:"90",  status:"On Time",     capacity:"60T", zone:"WR"  },
-  { id:"WGN-012", type:"Passenger", location:"Coimbatore",   dest:"Bengaluru",      speed:"59",  status:"On Time",     capacity:"200P",zone:"SR"  },
-  { id:"WGN-013", type:"Freight",   location:"Bhopal",       dest:"Delhi",          speed:"82",  status:"On Time",     capacity:"60T", zone:"WCR" },
-  { id:"WGN-014", type:"Tank",      location:"Vizag",        dest:"Chennai",        speed:"0",   status:"Maintenance", capacity:"45T", zone:"ECoR"},
-  { id:"WGN-015", type:"Flatbed",   location:"Kanpur",       dest:"Kolkata",        speed:"77",  status:"On Time",     capacity:"55T", zone:"NCR" },
-];
-
-const TYPES    = ["All","Freight","Passenger","Tank","Flatbed"];
+const TYPES    = ["All","Freight","Tank","Flatbed"];
 const STATUSES = ["All","On Time","Delayed","Maintenance"];
 
 const statusClass = s => ({ "On Time":"badge-ontime","Delayed":"badge-delayed","Maintenance":"badge-maint" }[s]||"badge-info");
@@ -56,7 +40,7 @@ const WagonModal = ({ wagon, onSave, onClose }) => {
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Type</label>
             <select className="form-select" value={form.type} onChange={e => set("type", e.target.value)}>
-              {["Freight","Passenger","Tank","Flatbed"].map(o => <option key={o}>{o}</option>)}
+              {["Freight","Tank","Flatbed"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ margin:0 }}>
@@ -91,7 +75,11 @@ const DeleteModal = ({ wagon, onConfirm, onClose }) => (
 );
 
 const Wagons = () => {
-  const [data, setData]       = useState(INITIAL);
+  const { admin } = useAuth();
+  const zone = admin?.zone || "NR";
+  const ZONE_WAGONS = ALL_WAGONS.filter(w => w.zone === zone);
+  
+  const [data, setData]       = useState(ZONE_WAGONS);
   const [query, setQuery]     = useState("");
   const [typeFilter, setType] = useState("All");
   const [statusFilter, setSt] = useState("All");
@@ -117,7 +105,7 @@ const Wagons = () => {
   const handleDelete = ()   => { setData(p => p.filter(w => w.id !== delTarget.id)); setDel(null); };
 
   return (
-    <DashboardLayout title="Wagons" sub="Manage and monitor all wagons across the network">
+    <DashboardLayout title={`Wagons — Zone ${zone}`} sub={`Manage and monitor all wagons in ${admin?.region}`}>
       <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
         <StatCard title="Total Wagons"   value={counts.total}   color="#3b82f6" icon={FiTruck} />
         <StatCard title="On Time"        value={counts.active}  color="#22c55e" icon={FiActivity} />

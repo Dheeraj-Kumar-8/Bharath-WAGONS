@@ -24,20 +24,20 @@ const NAV = [
 const Sidebar = () => (
   <div style={{
     width: "256px", minWidth: "256px", height: "100vh",
-    background: "#060e1e", borderRight: "1px solid #0f2040",
+    background: "var(--bg)", borderRight: "1px solid var(--border-color)",
     display: "flex", flexDirection: "column", overflow: "hidden",
   }}>
     {/* Logo */}
-    <div style={{ padding: "20px 18px", borderBottom: "1px solid #0f2040", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+    <div style={{ padding: "20px 18px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
       <div style={{
         width: "40px", height: "40px", borderRadius: "12px",
-        background: "linear-gradient(135deg,#1d4ed8,#3b82f6)",
+        background: "linear-gradient(135deg,var(--accent-dark),var(--accent))",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "20px", flexShrink: 0, boxShadow: "0 0 16px rgba(59,130,246,.4)",
+        fontSize: "20px", flexShrink: 0, boxShadow: "0 0 16px var(--accent-glow)",
       }}>🚆</div>
       <div>
         <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "14px", lineHeight: 1.3 }}>Indian Railways</div>
-        <div style={{ color: "#3b82f6", fontSize: "10px", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>Command Center</div>
+        <div style={{ color: "var(--accent)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>Command Center</div>
       </div>
     </div>
 
@@ -49,10 +49,10 @@ const Sidebar = () => (
           style={({ isActive }) => ({
             display: "flex", alignItems: "center", gap: "11px",
             padding: "10px 12px", marginBottom: "2px", borderRadius: "10px",
-            textDecoration: "none", cursor: "pointer", transition: "all .18s",
+            textDecoration: "none", cursor: "pointer", transition: "all var(--transition)",
             background: isActive ? "rgba(37,99,235,.18)" : "transparent",
-            color: isActive ? "#60a5fa" : "#5a7a9e",
-            borderLeft: isActive ? "3px solid #3b82f6" : "3px solid transparent",
+            color: isActive ? "var(--accent)" : "#5a7a9e",
+            borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
             fontWeight: isActive ? 600 : 400, fontSize: "13px",
           })}>
           <Icon size={15} style={{ flexShrink: 0 }} />
@@ -62,7 +62,7 @@ const Sidebar = () => (
     </nav>
 
     {/* Footer */}
-    <div style={{ padding: "14px 18px", borderTop: "1px solid #0f2040", flexShrink: 0 }}>
+    <div style={{ padding: "14px 18px", borderTop: "1px solid var(--border-color)", flexShrink: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
         <span className="dot dot-green" />
         <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>System Operational</span>

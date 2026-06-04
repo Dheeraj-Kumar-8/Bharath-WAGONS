@@ -29,20 +29,35 @@ const TYPES = ["Routine Check","Wheel Inspection","Brake Inspection","Engine Ove
 const TECHS = ["Ramesh Kumar","Suresh Verma","Pradeep Singh","Vijay Patel","Arjun Sharma","Ravi Nair","Anil Gupta"];
 
 const Maintenance = () => {
+  const [upcoming, setUpcoming] = useState(UPCOMING);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ wagon:"", type:"Routine Check", date:"", tech:"Ramesh Kumar", priority:"Medium" });
   const [saved, setSaved] = useState(false);
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleSave = () => { setSaved(true); setTimeout(() => { setModal(false); setSaved(false); }, 1200); };
+  const handleSave = () => {
+    if (!form.wagon.trim() || !form.date) return;
+    const newEntry = {
+      id: `MNT-${String(upcoming.length + 1).padStart(3, "0")}`,
+      wagon: form.wagon.trim().toUpperCase(),
+      type: form.type,
+      date: form.date,
+      tech: form.tech,
+      priority: form.priority,
+      status: "Scheduled",
+    };
+    setUpcoming(p => [...p, newEntry]);
+    setSaved(true);
+    setTimeout(() => { setModal(false); setSaved(false); setForm({ wagon:"", type:"Routine Check", date:"", tech:"Ramesh Kumar", priority:"Medium" }); }, 1200);
+  };
 
   return (
     <DashboardLayout title="Maintenance" sub="Schedule, track, and manage wagon maintenance operations">
       <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
-        <StatCard title="Scheduled"       value={UPCOMING.filter(m=>m.status==="Scheduled").length}         color="#3b82f6" icon={FiCalendar} />
-        <StatCard title="Pending Approval"value={UPCOMING.filter(m=>m.status==="Pending Approval").length}  color="#f59e0b" icon={FiClock} />
+        <StatCard title="Scheduled"       value={upcoming.filter(m=>m.status==="Scheduled").length}         color="#3b82f6" icon={FiCalendar} />
+        <StatCard title="Pending Approval"value={upcoming.filter(m=>m.status==="Pending Approval").length}  color="#f59e0b" icon={FiClock} />
         <StatCard title="Completed (7d)"  value={COMPLETED.length}                                          color="#22c55e" icon={FiCheckCircle} />
-        <StatCard title="Critical"        value={UPCOMING.filter(m=>m.priority==="Critical").length}        color="#ef4444" icon={FiAlertTriangle} />
+        <StatCard title="Critical"        value={upcoming.filter(m=>m.priority==="Critical").length}        color="#ef4444" icon={FiAlertTriangle} />
       </div>
 
       {/* Upcoming */}
@@ -59,7 +74,7 @@ const Maintenance = () => {
               <tr><th>ID</th><th>Wagon</th><th>Type</th><th>Scheduled Date</th><th>Technician</th><th>Priority</th><th>Status</th></tr>
             </thead>
             <tbody>
-              {UPCOMING.map(m => (
+              {upcoming.map(m => (
                 <tr key={m.id}>
                   <td style={{ color:"#4a6fa5", fontWeight:600 }}>{m.id}</td>
                   <td style={{ color:"#60a5fa", fontWeight:700 }}>{m.wagon}</td>

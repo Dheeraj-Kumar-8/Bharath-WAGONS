@@ -1,19 +1,30 @@
 import { useState } from "react";
 import { FiUser, FiSettings, FiBell, FiSun, FiSave, FiCheck } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
+import { useTheme, ACCENT_MAP, SCHEME_MAP } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 const TAB_ICONS = { Profile:FiUser, System:FiSettings, Notifications:FiBell, Theme:FiSun };
 
 const Settings = () => {
+  const { theme: savedTheme, saveTheme } = useTheme();
+  const { admin } = useAuth();
   const [tab, setTab] = useState("Profile");
   const [saved, setSaved] = useState(false);
 
-  const [profile, setProfile] = useState({ name:"Admin User", email:"admin@railways.gov.in", phone:"+91 98765 43210", zone:"All Zones", role:"Super Admin" });
+  const [profile, setProfile] = useState({
+    name:  admin?.name  || "Admin User",
+    email: admin?.email || "admin@railways.gov.in",
+    phone: "+91 98765 43210",
+    zone:  admin?.zone  || "NR",
+    role:  "Admin",
+  });
   const [system,  setSystem]  = useState({ timezone:"IST (UTC+5:30)", language:"English", gpsRefresh:"5", dataRetention:"90", autoBackup:true, maintenanceMode:false });
   const [notifs,  setNotifs]  = useState({ gpsAlerts:true, routeDeviation:true, maintenanceAlerts:true, cargoAlerts:true, systemAlerts:true, emailNotifs:true, smsNotifs:false, dailyReport:true });
-  const [theme,   setTheme]   = useState({ colorScheme:"Dark Navy", accentColor:"Blue", fontSize:"Medium", compactMode:false, animationsEnabled:true });
+  const [theme,   setTheme]   = useState(savedTheme);
 
   const handleSave = () => {
+    saveTheme(theme);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -145,20 +156,23 @@ const Settings = () => {
               <div className="section-title">Theme Settings</div>
               <Field label="Color Scheme">
                 <div style={{ display:"flex", gap:"10px" }}>
-                  {["Dark Navy","Dark","Midnight"].map(s => (
+                  {Object.keys(SCHEME_MAP).map(s => (
                     <div key={s} onClick={() => setTheme(p=>({...p,colorScheme:s}))}
-                      style={{ padding:"10px 18px", borderRadius:"10px", cursor:"pointer", border:`2px solid ${theme.colorScheme===s?"#3b82f6":"#1a3356"}`, background: theme.colorScheme===s?"rgba(37,99,235,.15)":"#071628", color: theme.colorScheme===s?"#60a5fa":"#94a3b8", fontSize:13, fontWeight:600 }}>
+                      style={{ padding:"10px 18px", borderRadius:"10px", cursor:"pointer", border:`2px solid ${theme.colorScheme===s?"var(--accent)":"#1a3356"}`, background: theme.colorScheme===s?"rgba(37,99,235,.15)":"#071628", color: theme.colorScheme===s?"var(--accent)":"#94a3b8", fontSize:13, fontWeight:600, transition:"all .15s" }}>
                       {s}
                     </div>
                   ))}
                 </div>
               </Field>
               <Field label="Accent Color">
-                <div style={{ display:"flex", gap:"10px" }}>
-                  {[["Blue","#3b82f6"],["Green","#22c55e"],["Purple","#8b5cf6"],["Cyan","#06b6d4"]].map(([name,color]) => (
+                <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
+                  {Object.entries(ACCENT_MAP).map(([name, val]) => (
                     <div key={name} onClick={() => setTheme(p=>({...p,accentColor:name}))}
-                      style={{ width:36, height:36, borderRadius:"10px", background:color, cursor:"pointer", border: theme.accentColor===name?"3px solid white":"3px solid transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      {theme.accentColor===name && <FiCheck color="white" size={16} />}
+                      style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, cursor:"pointer" }}>
+                      <div style={{ width:36, height:36, borderRadius:"10px", background:val.primary, border: theme.accentColor===name?"3px solid white":"3px solid transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        {theme.accentColor===name && <FiCheck color="white" size={16} />}
+                      </div>
+                      <span style={{ color: theme.accentColor===name ? val.primary : "#64748b", fontSize:11, fontWeight:600 }}>{name}</span>
                     </div>
                   ))}
                 </div>
