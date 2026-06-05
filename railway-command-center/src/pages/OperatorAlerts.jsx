@@ -1,16 +1,8 @@
 import { useState } from "react";
-import { FiAlertTriangle, FiEye, FiCheckCircle, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiEye, FiCheckCircle, FiX, FiActivity } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
-
-const INIT_ALERTS = [
-  { id:"ALT-001", wagon:"WGN-2187", type:"Speed Anomaly",       severity:"Critical", time:"10:14 AM", detail:"Wagon detected at 142 km/h on a 90 km/h restricted zone near Vizag Station. Immediate brake check required." },
-  { id:"ALT-002", wagon:"WGN-4056", type:"Brake Wear",          severity:"High",     time:"09:32 AM", detail:"Brake pad thickness below 8mm threshold on Axle 3 & 4. Maintenance flagged." },
-  { id:"ALT-003", wagon:"WGN-1042", type:"Route Deviation",     severity:"Medium",   time:"08:50 AM", detail:"Wagon deviated 2.3 km from planned route near Kota Jn. Driver alerted via cabin display." },
-  { id:"ALT-004", wagon:"WGN-6613", type:"GPS Signal Lost",     severity:"High",     time:"08:22 AM", detail:"GPS module unresponsive for 14 minutes. Last known location: Bhopal Jn. Reconnection attempt underway." },
-  { id:"ALT-005", wagon:"WGN-8421", type:"Cargo Overload",      severity:"Critical", time:"07:58 AM", detail:"Cargo weight detected at 108% of rated capacity. Immediate load redistribution advised before departure." },
-  { id:"ALT-006", wagon:"WGN-5774", type:"Temperature Alert",   severity:"Medium",   time:"07:30 AM", detail:"Axle bearing temperature reached 78°C (threshold: 70°C). Wagon speed reduced as precautionary measure." },
-  { id:"ALT-007", wagon:"WGN-3301", type:"Engine Vibration",    severity:"Low",      time:"07:10 AM", detail:"Unusual vibration pattern detected in coupling unit. Scheduled for inspection at next halt." },
-];
+import StatCard from "../components/StatCard";
+import { useOperatorData } from "../context/OperatorDataContext";
 
 const SEV_COLOR = { Critical:"#ef4444", High:"#f97316", Medium:"#f59e0b", Low:"#22c55e" };
 const SEV_BADGE = { Critical:"badge-critical", High:"badge-high", Medium:"badge-medium", Low:"badge-low" };
@@ -47,25 +39,22 @@ function AlertModal({ alert, onClose }) {
 }
 
 export default function OperatorAlerts() {
-  const [active,   setActive]   = useState(INIT_ALERTS);
-  const [resolved, setResolved] = useState([]);
-  const [detail,   setDetail]   = useState(null);
-  const [filter,   setFilter]   = useState("All");
-  const [toast,    setToast]    = useState("");
+  const { alerts, resolvedAlerts, resolveAlert } = useOperatorData();
+  const [detail,  setDetail]  = useState(null);
+  const [filter,  setFilter]  = useState("All");
+  const [toast,   setToast]   = useState("");
 
   const showToast = msg => { setToast(msg); setTimeout(()=>setToast(""),2500); };
 
   const resolve = id => {
-    const item = active.find(a=>a.id===id);
-    setActive(a => a.filter(x=>x.id!==id));
-    setResolved(r => [{ ...item, resolvedAt: new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}) }, ...r]);
+    resolveAlert(id);
     showToast(`✓ Alert ${id} resolved`);
   };
 
-  const filtered = active.filter(a => filter==="All" || a.severity===filter);
+  const filtered = alerts.filter(a => filter==="All" || a.severity===filter);
 
   return (
-    <OperatorLayout title="AI Alerts" sub="Monitor and resolve AI-generated operational alerts" alertCount={active.length}>
+    <OperatorLayout title="AI Alerts" sub="Monitor and resolve AI-generated operational alerts" moduleKey="alerts">
       {toast && (
         <div style={{position:"fixed",top:"20px",right:"24px",background:"#16a34a",color:"#fff",padding:"12px 20px",borderRadius:"10px",fontWeight:600,zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,.4)"}}>
           {toast}
@@ -73,18 +62,11 @@ export default function OperatorAlerts() {
       )}
 
       {/* KPIs */}
-      <div className="grid-4 mb-20">
-        {[
-          ["Active Alerts",  active.length,                              "#ef4444"],
-          ["Critical",       active.filter(a=>a.severity==="Critical").length, "#ef4444"],
-          ["High",           active.filter(a=>a.severity==="High").length,     "#f97316"],
-          ["Resolved Today", resolved.length,                           "#22c55e"],
-        ].map(([l,v,c])=>(
-          <div key={l} className="glass" style={{textAlign:"center"}}>
-            <div style={{color:c,fontSize:"32px",fontWeight:800}}>{v}</div>
-            <div style={{color:"#64748b",fontSize:"12px",marginTop:"4px"}}>{l}</div>
-          </div>
-        ))}
+      <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
+        <StatCard title="Active Alerts"  value={alerts.length}                                       color="#ef4444" icon={FiAlertTriangle} />
+        <StatCard title="Critical"       value={alerts.filter(a=>a.severity==="Critical").length}    color="#ef4444" icon={FiAlertTriangle} />
+        <StatCard title="High"           value={alerts.filter(a=>a.severity==="High").length}        color="#f97316" icon={FiActivity} />
+        <StatCard title="Resolved Today" value={resolvedAlerts.length}                               color="#22c55e" icon={FiCheckCircle} />
       </div>
 
       {/* Filter */}
@@ -137,14 +119,14 @@ export default function OperatorAlerts() {
       </div>
 
       {/* Resolved Log */}
-      {resolved.length > 0 && (
-        <div className="card" style={{border:"1px solid rgba(34,197,94,.15)"}}>
-          <div className="section-title" style={{marginBottom:"16px",color:"#22c55e"}}>✓ Resolved Alerts ({resolved.length})</div>
+      {resolvedAlerts.length > 0 && (
+        <div className="card">
+          <div className="section-title" style={{marginBottom:"16px"}}>✓ Resolved Alerts ({resolvedAlerts.length})</div>
           <div className="table-wrap">
             <table>
               <thead><tr><th>Alert ID</th><th>Wagon ID</th><th>Alert Type</th><th>Severity</th><th>Resolved At</th></tr></thead>
               <tbody>
-                {resolved.map(a=>(
+                {resolvedAlerts.map(a=>(
                   <tr key={a.id} style={{opacity:.65}}>
                     <td style={{color:"#4a6fa5"}}>{a.id}</td>
                     <td>{a.wagon}</td>

@@ -1,17 +1,8 @@
 import { useState } from "react";
 import { FiBox, FiThermometer, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
-
-const CARGO = [
-  { wagon:"WGN-1042", type:"Steel Coils",       weight:58.4, capacity:72,  temp:28,  tempLimit:40,  status:"Normal",   destination:"Mumbai",    origin:"New Delhi",  seal:"SEALED",  id:"CGO-4421" },
-  { wagon:"WGN-2187", type:"Chemical Drums",    weight:45.1, capacity:60,  temp:18,  tempLimit:25,  status:"Warning",  destination:"Chennai",   origin:"Kolkata",    seal:"SEALED",  id:"CGO-4422" },
-  { wagon:"WGN-3301", type:"Auto Parts",        weight:61.8, capacity:65,  temp:31,  tempLimit:45,  status:"Critical", destination:"Hyderabad", origin:"Mumbai",     seal:"BROKEN",  id:"CGO-4423" },
-  { wagon:"WGN-4056", type:"Food Grain",        weight:0,    capacity:80,  temp:22,  tempLimit:30,  status:"Empty",    destination:"Delhi",     origin:"Chennai",    seal:"OPEN",    id:"CGO-4424" },
-  { wagon:"WGN-5774", type:"Coal",              weight:71.2, capacity:90,  temp:35,  tempLimit:50,  status:"Normal",   destination:"Kolkata",   origin:"Hyderabad",  seal:"SEALED",  id:"CGO-4425" },
-  { wagon:"WGN-6613", type:"Petroleum Products",weight:52.0, capacity:60,  temp:42,  tempLimit:40,  status:"Critical", destination:"Bengaluru", origin:"Delhi",      seal:"SEALED",  id:"CGO-4426" },
-  { wagon:"WGN-7890", type:"Cotton Bales",      weight:38.5, capacity:70,  temp:27,  tempLimit:40,  status:"Normal",   destination:"Kolkata",   origin:"Mumbai",     seal:"SEALED",  id:"CGO-4427" },
-  { wagon:"WGN-8421", type:"Machinery",         weight:63.0, capacity:75,  temp:29,  tempLimit:45,  status:"Normal",   destination:"Delhi",     origin:"Bengaluru",  seal:"SEALED",  id:"CGO-4428" },
-];
+import StatCard from "../components/StatCard";
+import { useOperatorData } from "../context/OperatorDataContext";
 
 const statusStyle = s => ({
   Normal:   { badge:"badge-active",   color:"#22c55e" },
@@ -24,38 +15,27 @@ const loadColor = pct => pct >= 95 ? "#ef4444" : pct >= 80 ? "#f59e0b" : "#22c55
 const tempColor = (temp, limit) => temp > limit ? "#ef4444" : temp > limit * 0.85 ? "#f59e0b" : "#22c55e";
 
 export default function OperatorCargo() {
+  const { cargo } = useOperatorData();
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
 
-  const filtered = CARGO.filter(c =>
+  const filtered = cargo.filter(c =>
     (filter === "All" || c.status === filter) &&
     (c.wagon.toLowerCase().includes(search.toLowerCase()) || c.type.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const totalWeight = CARGO.reduce((s,c)=>s+c.weight,0).toFixed(1);
-  const avgLoad     = Math.round(CARGO.reduce((s,c)=>s+(c.weight/c.capacity*100),0)/CARGO.length);
-  const critical    = CARGO.filter(c=>c.status==="Critical").length;
+  const totalWeight = cargo.reduce((s,c)=>s+c.weight,0).toFixed(1);
+  const avgLoad     = Math.round(cargo.reduce((s,c)=>s+(c.weight/c.capacity*100),0)/cargo.length);
+  const critical    = cargo.filter(c=>c.status==="Critical").length;
 
   return (
-    <OperatorLayout title="Cargo Monitoring" sub="Real-time cargo weight, temperature, and load monitoring">
+    <OperatorLayout title="Cargo Monitoring" sub="Real-time cargo weight, temperature, and load monitoring" moduleKey="cargo">
       {/* KPIs */}
-      <div className="grid-4 mb-20">
-        <div className="glass" style={{display:"flex",gap:"14px",alignItems:"center"}}>
-          <div style={{width:"48px",height:"48px",borderRadius:"12px",background:"#3b82f618",display:"flex",alignItems:"center",justifyContent:"center"}}><FiBox size={20} color="#3b82f6"/></div>
-          <div><div style={{color:"#64748b",fontSize:"11px",textTransform:"uppercase"}}>Total Wagons</div><div style={{color:"#f1f5f9",fontSize:"26px",fontWeight:800}}>{CARGO.length}</div></div>
-        </div>
-        <div className="glass" style={{display:"flex",gap:"14px",alignItems:"center"}}>
-          <div style={{width:"48px",height:"48px",borderRadius:"12px",background:"#22c55e18",display:"flex",alignItems:"center",justifyContent:"center"}}><FiBox size={20} color="#22c55e"/></div>
-          <div><div style={{color:"#64748b",fontSize:"11px",textTransform:"uppercase"}}>Total Weight</div><div style={{color:"#f1f5f9",fontSize:"26px",fontWeight:800}}>{totalWeight} T</div></div>
-        </div>
-        <div className="glass" style={{display:"flex",gap:"14px",alignItems:"center"}}>
-          <div style={{width:"48px",height:"48px",borderRadius:"12px",background:"#f59e0b18",display:"flex",alignItems:"center",justifyContent:"center"}}><FiBox size={20} color="#f59e0b"/></div>
-          <div><div style={{color:"#64748b",fontSize:"11px",textTransform:"uppercase"}}>Avg Load</div><div style={{color:"#f1f5f9",fontSize:"26px",fontWeight:800}}>{avgLoad}%</div></div>
-        </div>
-        <div className="glass" style={{display:"flex",gap:"14px",alignItems:"center"}}>
-          <div style={{width:"48px",height:"48px",borderRadius:"12px",background:"#ef444418",display:"flex",alignItems:"center",justifyContent:"center"}}><FiAlertTriangle size={20} color="#ef4444"/></div>
-          <div><div style={{color:"#64748b",fontSize:"11px",textTransform:"uppercase"}}>Critical</div><div style={{color:"#f1f5f9",fontSize:"26px",fontWeight:800}}>{critical}</div></div>
-        </div>
+      <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
+        <StatCard title="Total Wagons" value={cargo.length}    color="#3b82f6" icon={FiBox} />
+        <StatCard title="Total Weight" value={`${totalWeight}T`} color="#22c55e" icon={FiBox} />
+        <StatCard title="Avg Load"     value={`${avgLoad}%`}   color="#f59e0b" icon={FiBox} />
+        <StatCard title="Critical"     value={critical}        color="#ef4444" icon={FiAlertTriangle} />
       </div>
 
       {/* Filters */}
@@ -88,7 +68,6 @@ export default function OperatorCargo() {
               onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.35)"; }}
               onMouseLeave={e=>{ e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-16">
                 <div>
                   <div style={{color:"#60a5fa",fontWeight:700,fontSize:"14px"}}>{c.wagon}</div>
@@ -97,14 +76,12 @@ export default function OperatorCargo() {
                 <span className={`badge ${ss.badge}`}>{c.status}</span>
               </div>
 
-              {/* Cargo type */}
               <div style={{background:"#071628",border:"1px solid #1a3356",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px"}}>
                 <div style={{color:"#4a6fa5",fontSize:"11px",marginBottom:"2px"}}>CARGO TYPE</div>
                 <div style={{color:"#f1f5f9",fontWeight:700}}>{c.type}</div>
                 <div style={{color:"#64748b",fontSize:"11px",marginTop:"2px"}}>{c.origin} → {c.destination}</div>
               </div>
 
-              {/* Weight / Load */}
               <div style={{marginBottom:"12px"}}>
                 <div className="flex items-center justify-between mb-6">
                   <span style={{color:"#64748b",fontSize:"12px"}}>Load — {c.weight}T / {c.capacity}T</span>
@@ -115,7 +92,6 @@ export default function OperatorCargo() {
                 </div>
               </div>
 
-              {/* Temperature */}
               <div style={{marginBottom:"12px"}}>
                 <div className="flex items-center justify-between mb-6">
                   <span className="flex items-center gap-6" style={{color:"#64748b",fontSize:"12px"}}>
@@ -128,7 +104,6 @@ export default function OperatorCargo() {
                 </div>
               </div>
 
-              {/* Seal */}
               <div className="flex items-center justify-between">
                 <span style={{color:"#64748b",fontSize:"12px"}}>Cargo Seal</span>
                 <span style={{display:"flex",alignItems:"center",gap:"5px"}}>

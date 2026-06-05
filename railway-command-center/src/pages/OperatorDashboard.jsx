@@ -2,34 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTruck, FiCheckCircle, FiAlertTriangle, FiClipboard, FiMapPin, FiActivity, FiArrowRight } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
-
-const WAGONS = [
-  { id: "WGN-1042", route: "New Delhi → Mumbai", location: "Kota Jn.", status: "On Time",    eta: "14:30" },
-  { id: "WGN-2187", route: "Kolkata → Chennai",  location: "Vizag",     status: "Delayed",   eta: "18:45" },
-  { id: "WGN-3301", route: "Mumbai → Hyderabad", location: "Pune",      status: "On Time",   eta: "12:10" },
-  { id: "WGN-4056", route: "Chennai → Delhi",    location: "Nagpur",    status: "Maintenance",eta: "--" },
-  { id: "WGN-5774", route: "Hyderabad → Kolkata",location: "Raipur",    status: "On Time",   eta: "20:00" },
-];
-
-const TASKS = [
-  { id: 1, text: "Inspect Wagon WGN-1042 at Kota Jn.", priority: "High",   done: false },
-  { id: 2, text: "Update GPS status for WGN-2187",     priority: "Medium", done: false },
-  { id: 3, text: "Verify cargo load — WGN-3301",        priority: "Low",    done: true  },
-  { id: 4, text: "Brake inspection — WGN-4056",         priority: "High",   done: false },
-  { id: 5, text: "Route deviation review — WGN-5774",   priority: "Medium", done: true  },
-];
-
-const ALERTS = [
-  { id: "ALT-001", wagon: "WGN-2187", type: "Speed Anomaly",    severity: "Critical", time: "10:14 AM" },
-  { id: "ALT-002", wagon: "WGN-4056", type: "Brake Wear",       severity: "High",     time: "09:32 AM" },
-  { id: "ALT-003", wagon: "WGN-1042", type: "Route Deviation",  severity: "Medium",   time: "08:50 AM" },
-];
-
-const MAINT = [
-  { wagon: "WGN-4056", type: "Brake Inspection", status: "In Progress", pct: 60 },
-  { wagon: "WGN-2187", type: "Wheel Alignment",  status: "Pending",     pct: 0  },
-  { wagon: "WGN-3301", type: "Routine Check",    status: "Completed",   pct: 100},
-];
+import StatCard from "../components/StatCard";
+import { useOperatorData } from "../context/OperatorDataContext";
+import { useAuth } from "../context/AuthContext";
 
 const statusBadge = s => {
   const m = { "On Time":"badge-ontime","Delayed":"badge-delayed","Maintenance":"badge-maint","Active":"badge-active","Pending":"badge-pending","Completed":"badge-completed","In Progress":"badge-info" };
@@ -41,42 +16,34 @@ const sevBadge = s => {
 };
 const priorityColor = p => ({ High:"#ef4444",Medium:"#f59e0b",Low:"#22c55e" }[p] || "#3b82f6");
 
-const KPI = ({ icon: Icon, title, value, color, sub }) => (
-  <div className="glass" style={{ display:"flex", gap:"16px", alignItems:"center" }}>
-    <div style={{ width:"52px",height:"52px",borderRadius:"14px",background:`${color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
-      <Icon size={22} color={color} />
-    </div>
-    <div>
-      <div style={{ color:"#64748b",fontSize:"12px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px" }}>{title}</div>
-      <div style={{ color:"#f1f5f9",fontSize:"28px",fontWeight:800,lineHeight:1.1 }}>{value}</div>
-      {sub && <div style={{ color:color,fontSize:"11px",marginTop:"2px" }}>{sub}</div>}
-    </div>
-  </div>
-);
-
 export default function OperatorDashboard() {
   const navigate = useNavigate();
-  const [tasks, setTasks]   = useState(TASKS);
+  const { operator } = useAuth();
+  const { wagons, alerts, maintenance, tasks, stats, toggleTask } = useOperatorData();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
-  const toggleTask = id => setTasks(t => t.map(x => x.id === id ? { ...x, done: !x.done } : x));
-
-  const filteredWagons = WAGONS.filter(w =>
+  const filteredWagons = wagons.filter(w =>
     (filter === "All" || w.status === filter) &&
     (w.id.toLowerCase().includes(search.toLowerCase()) || w.route.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const completed = tasks.filter(t => t.done).length;
+  const recentAlerts = alerts.slice(0, 3);
+  const maintSummary = maintenance.slice(0, 3).map(m => ({
+    wagon: m.wagon, type: m.type, status: m.status,
+    pct: m.status === "Completed" ? 100 : m.status === "In Progress" ? 60 : 0,
+  }));
+
+  const onTimeRate = wagons.length ? Math.round((stats.onTime / wagons.length) * 100) : 0;
 
   return (
-    <OperatorLayout title="Operator Dashboard" sub="Railway Operations Center · Zone NR" alertCount={ALERTS.length}>
+    <OperatorLayout title="Operator Dashboard" sub={`Railway Operations Center · Zone ${operator?.zone || ""}`}>
       {/* KPIs */}
-      <div className="grid-4 mb-20">
-        <KPI icon={FiTruck}         title="Assigned Wagons" value="48"       color="#3b82f6" sub="+2 today" />
-        <KPI icon={FiClipboard}     title="Pending Tasks"   value={tasks.filter(t=>!t.done).length} color="#f59e0b" sub="Due today" />
-        <KPI icon={FiCheckCircle}   title="Completed Tasks" value={completed} color="#22c55e" sub="Today" />
-        <KPI icon={FiAlertTriangle} title="Critical Alerts" value={ALERTS.filter(a=>a.severity==="Critical").length} color="#ef4444" sub="Needs attention" />
+      <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
+        <StatCard title="Assigned Wagons" value={stats.totalWagons}                       color="#3b82f6" icon={FiTruck}         trend="+2 today"  trendUp />
+        <StatCard title="Pending Tasks"   value={stats.tasksPending}                      color="#f59e0b" icon={FiClipboard}    trend="Due today" trendUp={false} />
+        <StatCard title="Completed Tasks" value={stats.tasksDone}                          color="#22c55e" icon={FiCheckCircle}  trend="Today"    trendUp />
+        <StatCard title="Critical Alerts" value={stats.criticalAlerts}                    color="#ef4444" icon={FiAlertTriangle} trend="Attention" trendUp={false} />
       </div>
 
       {/* Assigned Wagons Table */}
@@ -117,7 +84,7 @@ export default function OperatorDashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-16">
             <div className="section-title" style={{margin:0}}>Today's Tasks</div>
-            <span style={{color:"#64748b",fontSize:"12px"}}>{completed}/{tasks.length} done</span>
+            <span style={{color:"#64748b",fontSize:"12px"}}>{stats.tasksDone}/{tasks.length} done</span>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
             {tasks.map(t=>(
@@ -148,7 +115,7 @@ export default function OperatorDashboard() {
             <button className="btn btn-ghost btn-sm" onClick={()=>navigate("/operator/alerts")}>View All</button>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
-            {ALERTS.map(a=>(
+            {recentAlerts.map(a=>(
               <div key={a.id} style={{
                 padding:"14px",background:"#071628",
                 border:"1px solid #1a3356",borderRadius:"12px",
@@ -162,6 +129,11 @@ export default function OperatorDashboard() {
                 <div style={{color:"#4a6fa5",fontSize:"11px"}}>{a.id} · {a.time}</div>
               </div>
             ))}
+            {recentAlerts.length === 0 && (
+              <div style={{textAlign:"center",padding:"24px",color:"#4a6fa5",fontSize:"13px"}}>
+                <FiCheckCircle size={24} style={{marginBottom:8,opacity:.4}}/><br/>No active alerts
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -173,8 +145,8 @@ export default function OperatorDashboard() {
             <div className="section-title" style={{margin:0}}>Maintenance Summary</div>
             <button className="btn btn-ghost btn-sm" onClick={()=>navigate("/operator/maintenance")}>Manage</button>
           </div>
-          {MAINT.map(m=>(
-            <div key={m.wagon} style={{marginBottom:"16px"}}>
+          {maintSummary.map(m=>(
+            <div key={`${m.wagon}-${m.type}`} style={{marginBottom:"16px"}}>
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <span style={{color:"#60a5fa",fontWeight:700,fontSize:"13px"}}>{m.wagon}</span>
@@ -190,17 +162,17 @@ export default function OperatorDashboard() {
           ))}
         </div>
 
-        <div className="card" style={{background:"linear-gradient(135deg,rgba(13,31,60,0.9),rgba(7,22,40,0.95))",border:"1px solid rgba(34,197,94,.2)"}}>
+        <div className="card">
           <div className="flex items-center justify-between mb-16">
             <div className="section-title" style={{margin:0}}>Live Monitoring</div>
             <span className="badge badge-active">● Live</span>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"16px"}}>
             {[
-              {label:"Active GPS",value:"43/48",color:"#22c55e",icon:"📡"},
-              {label:"Avg Speed",value:"72 km/h",color:"#3b82f6",icon:"⚡"},
-              {label:"On-Time Rate",value:"89%",color:"#22c55e",icon:"✅"},
-              {label:"Delayed",value:"5",color:"#f59e0b",icon:"⚠️"},
+              {label:"Active GPS",  value:`${stats.gpsActive}/${stats.totalWagons}`, color:"#22c55e",icon:"📡"},
+              {label:"Avg Speed",   value:`${stats.avgSpeed} km/h`,                  color:"#3b82f6",icon:"⚡"},
+              {label:"On-Time Rate",value:`${onTimeRate}%`,                          color:"#22c55e",icon:"✅"},
+              {label:"Delayed",     value:stats.delayed,                              color:"#f59e0b",icon:"⚠️"},
             ].map(s=>(
               <div key={s.label} style={{background:"rgba(255,255,255,.03)",border:"1px solid #1a3356",borderRadius:"10px",padding:"12px"}}>
                 <div style={{fontSize:"18px",marginBottom:"4px"}}>{s.icon}</div>

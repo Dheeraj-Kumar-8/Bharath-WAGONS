@@ -1,17 +1,7 @@
 import { useState } from "react";
 import { FiMapPin, FiEye, FiRefreshCw, FiX, FiTruck } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
-
-const INIT_WAGONS = [
-  { id:"WGN-1042", route:"New Delhi → Mumbai",    location:"Kota Jn.",      status:"On Time",    eta:"14:30", speed:"78 km/h", load:"82%", type:"Freight",  gps:"Active"   },
-  { id:"WGN-2187", route:"Kolkata → Chennai",     location:"Vizag",          status:"Delayed",    eta:"18:45", speed:"54 km/h", load:"67%", type:"Tank",     gps:"Active"   },
-  { id:"WGN-3301", route:"Mumbai → Hyderabad",    location:"Pune",           status:"On Time",    eta:"12:10", speed:"85 km/h", load:"91%", type:"Flatbed",  gps:"Active"   },
-  { id:"WGN-4056", route:"Chennai → Delhi",       location:"Nagpur Yard",    status:"Maintenance",eta:"--",    speed:"0 km/h",  load:"0%",  type:"Freight",  gps:"Offline"  },
-  { id:"WGN-5774", route:"Hyderabad → Kolkata",   location:"Raipur",         status:"On Time",    eta:"20:00", speed:"91 km/h", load:"74%", type:"Container",gps:"Active"   },
-  { id:"WGN-6613", route:"Delhi → Bengaluru",     location:"Bhopal Jn.",     status:"Delayed",    eta:"22:15", speed:"44 km/h", load:"88%", type:"Freight",  gps:"Active"   },
-  { id:"WGN-7890", route:"Mumbai → Kolkata",      location:"Wardha",         status:"On Time",    eta:"16:50", speed:"80 km/h", load:"55%", type:"Tank",     gps:"Active"   },
-  { id:"WGN-8421", route:"Bengaluru → Delhi",     location:"Secunderabad",   status:"On Time",    eta:"09:20", speed:"76 km/h", load:"63%", type:"Flatbed",  gps:"Active"   },
-];
+import { useOperatorData } from "../context/OperatorDataContext";
 
 const STATUSES = ["On Time","Delayed","Maintenance","Halted"];
 
@@ -34,8 +24,8 @@ function DetailModal({ wagon, onClose }) {
             ["Location", wagon.location],
             ["Status",   null, badge(wagon.status)],
             ["ETA",      wagon.eta],
-            ["Speed",    wagon.speed],
-            ["Load",     wagon.load],
+            ["Speed",    `${wagon.speed} km/h`],
+            ["Load",     `${wagon.load}%`],
             ["Type",     wagon.type],
             ["GPS",      null, badge(wagon.gps)],
           ].map(([label,val,node])=>(
@@ -76,17 +66,17 @@ function StatusModal({ wagon, onSave, onClose }) {
 }
 
 export default function OperatorWagons() {
-  const [wagons, setWagons]       = useState(INIT_WAGONS);
-  const [search, setSearch]       = useState("");
-  const [filter, setFilter]       = useState("All");
-  const [detail, setDetail]       = useState(null);
-  const [updateW, setUpdateW]     = useState(null);
-  const [toast, setToast]         = useState("");
+  const { wagons, updateWagonStatus } = useOperatorData();
+  const [search, setSearch]   = useState("");
+  const [filter, setFilter]   = useState("All");
+  const [detail, setDetail]   = useState(null);
+  const [updateW, setUpdateW] = useState(null);
+  const [toast, setToast]     = useState("");
 
   const showToast = msg => { setToast(msg); setTimeout(()=>setToast(""),2500); };
 
   const handleSaveStatus = (status) => {
-    setWagons(ws => ws.map(w => w.id===updateW.id ? {...w,status} : w));
+    updateWagonStatus(updateW.id, status);
     showToast(`✓ ${updateW.id} status updated to "${status}"`);
     setUpdateW(null);
   };
@@ -97,7 +87,7 @@ export default function OperatorWagons() {
   );
 
   return (
-    <OperatorLayout title="Assigned Wagons" sub="Manage and monitor your assigned wagon fleet">
+    <OperatorLayout title="Assigned Wagons" sub="Manage and monitor your assigned wagon fleet" moduleKey="wagons">
       {toast && (
         <div style={{position:"fixed",top:"20px",right:"24px",background:"#16a34a",color:"#fff",padding:"12px 20px",borderRadius:"10px",fontWeight:600,zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,.4)"}}>
           {toast}
@@ -140,13 +130,13 @@ export default function OperatorWagons() {
                   <td><span className="flex items-center gap-8"><FiMapPin size={12} color="#4a6fa5"/>{w.location}</span></td>
                   <td>{badge(w.status)}</td>
                   <td style={{color:"#94a3b8"}}>{w.eta}</td>
-                  <td style={{color:"#94a3b8"}}>{w.speed}</td>
+                  <td style={{color:"#94a3b8"}}>{w.speed} km/h</td>
                   <td>
                     <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
                       <div className="progress-bg" style={{width:"60px"}}>
-                        <div className="progress-fill" style={{width:w.load,background:parseInt(w.load)>80?"#ef4444":parseInt(w.load)>60?"#f59e0b":"#22c55e"}}/>
+                        <div className="progress-fill" style={{width:`${w.load}%`,background:w.load>80?"#ef4444":w.load>60?"#f59e0b":"#22c55e"}}/>
                       </div>
-                      <span style={{color:"#94a3b8",fontSize:"12px"}}>{w.load}</span>
+                      <span style={{color:"#94a3b8",fontSize:"12px"}}>{w.load}%</span>
                     </div>
                   </td>
                   <td>
@@ -168,8 +158,8 @@ export default function OperatorWagons() {
         )}
       </div>
 
-      {detail   && <DetailModal wagon={detail}   onClose={()=>setDetail(null)}/>}
-      {updateW  && <StatusModal wagon={updateW}  onSave={handleSaveStatus} onClose={()=>setUpdateW(null)}/>}
+      {detail  && <DetailModal wagon={detail}  onClose={()=>setDetail(null)}/>}
+      {updateW && <StatusModal wagon={updateW} onSave={handleSaveStatus} onClose={()=>setUpdateW(null)}/>}
     </OperatorLayout>
   );
 }
