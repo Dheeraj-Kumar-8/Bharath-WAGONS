@@ -17,11 +17,24 @@ import Maintenance        from "../pages/Maintenance";
 import Reports            from "../pages/Reports";
 import UsersRoles         from "../pages/UsersRoles";
 import Settings           from "../pages/Settings";
+import OperatorDashboard  from "../pages/OperatorDashboard";
+import OperatorWagons    from "../pages/OperatorWagons";
+import OperatorTracking  from "../pages/OperatorTracking";
+import OperatorMaintenance from "../pages/OperatorMaintenance";
+import OperatorAlerts    from "../pages/OperatorAlerts";
+import OperatorCargo     from "../pages/OperatorCargo";
+import OperatorReports   from "../pages/OperatorReports";
 
-// Redirects to /login if not authenticated
+// Admin guard — redirects to /login if not authenticated
 const Guard = ({ children }) => {
   const { admin } = useAuth();
   return admin ? children : <Navigate to="/login" replace />;
+};
+
+// Operator guard — redirects to /login if operator not authenticated
+const OperatorGuard = ({ children }) => {
+  const { operator } = useAuth();
+  return operator ? children : <Navigate to="/login" replace />;
 };
 
 const AppRoutes = () => (
@@ -44,6 +57,13 @@ const AppRoutes = () => (
       <Route path="/reports"             element={<Guard><Reports /></Guard>} />
       <Route path="/users-roles"         element={<Guard><UsersRoles /></Guard>} />
       <Route path="/settings"            element={<Guard><Settings /></Guard>} />
+      <Route path="/operator"              element={<OperatorGuard><OperatorDashboard /></OperatorGuard>} />
+      <Route path="/operator/wagons"        element={<OperatorGuard><OperatorWagons /></OperatorGuard>} />
+      <Route path="/operator/tracking"      element={<OperatorGuard><OperatorTracking /></OperatorGuard>} />
+      <Route path="/operator/maintenance"   element={<OperatorGuard><OperatorMaintenance /></OperatorGuard>} />
+      <Route path="/operator/alerts"        element={<OperatorGuard><OperatorAlerts /></OperatorGuard>} />
+      <Route path="/operator/cargo"         element={<OperatorGuard><OperatorCargo /></OperatorGuard>} />
+      <Route path="/operator/reports"       element={<OperatorGuard><OperatorReports /></OperatorGuard>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
