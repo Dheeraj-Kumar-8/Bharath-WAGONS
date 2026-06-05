@@ -270,6 +270,7 @@ const cellColor = v => {
 function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES }) {
   const meta = REPORT_TYPES.find(r => r.key === rtype);
   const col  = meta?.color || "#3b82f6";
+  const MetaIcon = meta?.icon || FiFileText;
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -282,7 +283,7 @@ function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES }) {
         <div style={{ padding:"16px 22px", borderBottom:"1px solid #1a3356", display:"flex", justifyContent:"space-between", alignItems:"center", background:"linear-gradient(135deg,#0d1f3c,#071628)", flexShrink:0 }}>
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
-              <meta.icon size={14} color={col}/>
+              <MetaIcon size={14} color={col}/>
               <span style={{ color:"#f1f5f9", fontWeight:700, fontSize:15 }}>{data.title}</span>
             </div>
             <span style={{ color:"#4a6fa5", fontSize:12 }}>Period: {data.period} · Generated {new Date().toLocaleTimeString("en-IN")}</span>

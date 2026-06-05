@@ -1,6 +1,6 @@
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
-import SidebarChatBot from "./SidebarChatBot";
+import AdminChatBot from "./AdminChatBot";
 import "../styles/global.css";
 
 const DashboardLayout = ({ children, title, sub }) => (
@@ -18,7 +18,7 @@ const DashboardLayout = ({ children, title, sub }) => (
         {children}
       </div>
     </div>
-    <SidebarChatBot />
+    <AdminChatBot />
   </div>
 );
 

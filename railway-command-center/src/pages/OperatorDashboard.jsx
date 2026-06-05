@@ -20,12 +20,12 @@ export default function OperatorDashboard() {
   const navigate = useNavigate();
   const { operator } = useAuth();
   const { wagons, alerts, maintenance, tasks, stats, toggleTask } = useOperatorData();
-  const [search, setSearch] = useState("");
+  const [wagonSearch, setWagonSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
   const filteredWagons = wagons.filter(w =>
     (filter === "All" || w.status === filter) &&
-    (w.id.toLowerCase().includes(search.toLowerCase()) || w.route.toLowerCase().includes(search.toLowerCase()))
+    (w.id.toLowerCase().includes(wagonSearch.toLowerCase()) || w.route.toLowerCase().includes(wagonSearch.toLowerCase()))
   );
 
   const recentAlerts = alerts.slice(0, 3);
@@ -37,7 +37,7 @@ export default function OperatorDashboard() {
   const onTimeRate = wagons.length ? Math.round((stats.onTime / wagons.length) * 100) : 0;
 
   return (
-    <OperatorLayout title="Operator Dashboard" sub={`Railway Operations Center · Zone ${operator?.zone || ""}`}>
+    <OperatorLayout title="Operator Dashboard" sub={`Railway Operations Center · ${operator?.region || operator?.zone || ""}`}>
       {/* KPIs */}
       <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
         <StatCard title="Assigned Wagons" value={stats.totalWagons}                       color="#3b82f6" icon={FiTruck}         trend="+2 today"  trendUp />
@@ -53,7 +53,7 @@ export default function OperatorDashboard() {
           <div className="flex items-center gap-12">
             <div className="search-box" style={{width:"200px"}}>
               <FiMapPin size={13} color="#4a6fa5" />
-              <input placeholder="Search wagons…" value={search} onChange={e=>setSearch(e.target.value)} />
+              <input placeholder="Search wagons…" value={wagonSearch} onChange={e=>setWagonSearch(e.target.value)} />
             </div>
             <select className="form-select" style={{width:"140px",padding:"8px 12px"}} value={filter} onChange={e=>setFilter(e.target.value)}>
               {["All","On Time","Delayed","Maintenance"].map(s=><option key={s}>{s}</option>)}

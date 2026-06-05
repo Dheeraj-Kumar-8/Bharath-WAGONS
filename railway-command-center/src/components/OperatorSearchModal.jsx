@@ -6,7 +6,6 @@ import {
   FiChevronDown, FiNavigation,
 } from "react-icons/fi";
 import { useSearch } from "../context/SearchContext";
-import { OPERATOR_INDEX } from "../data/operatorSearchData";
 
 // ── Per-type config ───────────────────────────────────────────────────────────
 const TYPE_CFG = {
@@ -139,7 +138,7 @@ function DetailPane({ item, onNavigate }) {
 // ── Main Modal ─────────────────────────────────────────────────────────────────
 const OperatorSearchModal = () => {
   const navigate = useNavigate();
-  const { open, closeSearch, query, setQuery, history, pushHistory, clearHistory, removeHistory, search, suggest, indexSize } = useSearch();
+  const { open, closeSearch, query, setQuery, history, pushHistory, clearHistory, removeHistory, search, suggest, indexSize, indexCounts } = useSearch();
 
   const [filter,      setFilter]      = useState("All");
   const [sort,        setSort]        = useState("relevance");
@@ -179,7 +178,10 @@ const OperatorSearchModal = () => {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const results = query.trim() ? search(query, { type: filter, sort }) : [];
+  const results = useMemo(
+    () => query.trim() ? search(query, { type: filter, sort }) : [],
+    [query, filter, sort, search]
+  );
 
   // Suggestions
   useEffect(() => {
@@ -200,11 +202,16 @@ const OperatorSearchModal = () => {
     inputRef.current?.focus();
   };
 
+  const handleNavigate = useCallback((item) => {
+    pushHistory(query.trim() || item.title);
+    navigate(item.path);
+    closeSearch();
+  }, [pushHistory, query, navigate, closeSearch]);
+
   const handleKeyDown = useCallback(e => {
-    const list = results;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIdx(i => Math.min(i + 1, list.length - 1));
+      setActiveIdx(i => Math.min(i + 1, results.length - 1));
       setShowSug(false);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -212,13 +219,13 @@ const OperatorSearchModal = () => {
     } else if (e.key === "Enter") {
       e.preventDefault();
       setShowSug(false);
-      if (activeIdx >= 0 && list[activeIdx]) {
-        handleNavigate(list[activeIdx]);
-      } else if (list.length === 1) {
-        handleNavigate(list[0]);
+      if (activeIdx >= 0 && results[activeIdx]) {
+        handleNavigate(results[activeIdx]);
+      } else if (results.length === 1) {
+        handleNavigate(results[0]);
       }
     }
-  }, [results, activeIdx]); // eslint-disable-line
+  }, [results, activeIdx, handleNavigate]);
 
   // Scroll active result into view
   useEffect(() => {
@@ -228,21 +235,19 @@ const OperatorSearchModal = () => {
     }
   }, [activeIdx]);
 
-  const handleNavigate = (item) => {
-    pushHistory(query.trim() || item.title);
-    navigate(item.path);
-    closeSearch();
-  };
-
   const typeCounts = useMemo(() => {
     const allResults = query.trim() ? search(query, { type: "All" }) : [];
     return TYPES.reduce((acc, t) => {
-      acc[t] = t === "All"
-        ? (query.trim() ? allResults.length : indexSize)
-        : (query.trim() ? allResults.filter(r => r.type === t).length : 0);
+      if (t === "All") {
+        acc[t] = query.trim() ? allResults.length : indexSize;
+      } else if (query.trim()) {
+        acc[t] = allResults.filter(r => r.type === t).length;
+      } else {
+        acc[t] = indexCounts[t] || 0;
+      }
       return acc;
     }, {});
-  }, [query, search, indexSize]); // eslint-disable-line
+  }, [query, search, indexSize, indexCounts]);
 
   if (!open) return null;
 
@@ -404,7 +409,7 @@ const OperatorSearchModal = () => {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
                     {Object.entries(TYPE_CFG).map(([type, cfg]) => {
                       const Icon = cfg.icon;
-                      const count = OPERATOR_INDEX.filter(i => i.type === type).length;
+                      const count = typeCounts[type] || 0;
                       return (
                         <button key={type} onClick={() => { setFilter(type); setQuery(""); setSelected(null); inputRef.current?.focus(); }}
                           style={{ background: cfg.bg, border: `1px solid ${cfg.color}28`, borderRadius: 10, padding: "10px 8px", cursor: "pointer", textAlign: "center" }}

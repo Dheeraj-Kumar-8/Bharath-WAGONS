@@ -7,6 +7,8 @@ import OperatorSearchModal from "../components/OperatorSearchModal";
 import LandingPage        from "../pages/LandingPage";
 import LoginPage          from "../pages/LoginPage";
 import CreateAccount      from "../pages/CreateAccount";
+import ActivatePage       from "../pages/ActivatePage";
+import PasswordResetPage  from "../pages/PasswordResetPage";
 import AdminDashboard     from "../pages/AdminDashboard";
 import LiveTracking       from "../pages/LiveTracking";
 import Wagons             from "../pages/Wagons";
@@ -27,6 +29,7 @@ import OperatorMaintenance from "../pages/OperatorMaintenance";
 import OperatorAlerts     from "../pages/OperatorAlerts";
 import OperatorCargo      from "../pages/OperatorCargo";
 import OperatorReports    from "../pages/OperatorReports";
+import OperatorSettings   from "../pages/OperatorSettings";
 
 const Guard = ({ children }) => {
   const { admin } = useAuth();
@@ -60,6 +63,8 @@ const AppRoutes = () => (
       <Route path="/"               element={<LandingPage />} />
       <Route path="/login"          element={<LoginPage />} />
       <Route path="/create-account" element={<CreateAccount />} />
+      <Route path="/activate/:token"       element={<ActivatePage />} />
+      <Route path="/reset-password/:token" element={<PasswordResetPage />} />
 
       {/* Admin routes — completely untouched */}
       <Route path="/admin"               element={<Guard><AdminDashboard /></Guard>} />
@@ -84,6 +89,7 @@ const AppRoutes = () => (
       <Route path="/operator/alerts"     element={<OperatorShell><OperatorAlerts /></OperatorShell>} />
       <Route path="/operator/cargo"      element={<OperatorShell><OperatorCargo /></OperatorShell>} />
       <Route path="/operator/reports"    element={<OperatorShell><OperatorReports /></OperatorShell>} />
+      <Route path="/operator/settings"   element={<OperatorShell><OperatorSettings /></OperatorShell>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

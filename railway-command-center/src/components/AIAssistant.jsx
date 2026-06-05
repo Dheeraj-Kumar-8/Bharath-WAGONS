@@ -1,1 +1,1 @@
-export { default } from "./SidebarChatBot";
+export { default } from "./AdminChatBot";

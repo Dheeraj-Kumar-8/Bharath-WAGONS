@@ -6,6 +6,7 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { useSearch } from "../context/SearchContext";
+import { useOperatorData } from "../context/OperatorDataContext";
 
 const SEV_META = {
   Critical: { color:"#ef4444", Icon: FiAlertTriangle, badgeClass:"badge-critical" },
@@ -13,9 +14,6 @@ const SEV_META = {
   Medium:   { color:"#f59e0b", Icon: FiActivity,        badgeClass:"badge-medium"   },
   Low:      { color:"#3b82f6", Icon: FiBox,             badgeClass:"badge-low"      },
 };
-
-let _useOperatorData = null;
-try { _useOperatorData = require("../context/OperatorDataContext").useOperatorData; } catch {}
 
 function useOutside(ref, cb) {
   useEffect(() => {
@@ -30,6 +28,7 @@ const OperatorNavbar = () => {
   const { operator, logoutOperator } = useAuth();
   const searchCtx = useSearch();
   const openSearch = searchCtx?.openSearch;
+  const { alerts: liveAlerts } = useOperatorData();
 
   const [time,        setTime]        = useState(new Date());
   const [showNotif,   setShowNotif]   = useState(false);
@@ -37,10 +36,6 @@ const OperatorNavbar = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [readIds,     setReadIds]     = useState(new Set());
   const [dismissed,   setDismissed]   = useState(new Set());
-
-  // Live alerts from context (graceful fallback)
-  let liveAlerts = [];
-  try { if (_useOperatorData) liveAlerts = _useOperatorData().alerts; } catch {}
 
   const notifs = liveAlerts
     .filter(a => !dismissed.has(a.id))
@@ -55,7 +50,6 @@ const OperatorNavbar = () => {
     return () => clearInterval(t);
   }, []);
 
-  // Ctrl+K opens search
   useEffect(() => {
     const h = e => { if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); openSearch?.(); } };
     document.addEventListener("keydown", h);
@@ -235,7 +229,7 @@ const OperatorNavbar = () => {
                 </div>
                 {[
                   { label:"My Dashboard", Icon:FiUser,     path:"/operator" },
-                  { label:"Settings",     Icon:FiSettings, path:"/operator" },
+                  { label:"Settings",     Icon:FiSettings, path:"/operator/settings" },
                 ].map(({ label, Icon, path }) => (
                   <div key={label} onClick={() => { navigate(path); setShowProfile(false); }}
                     style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 16px", cursor:"pointer", color:"#94a3b8", fontSize:13 }}

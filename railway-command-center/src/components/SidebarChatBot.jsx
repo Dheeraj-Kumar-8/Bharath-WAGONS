@@ -440,7 +440,11 @@ function getAIResponse(input, WAGONS, CARGO, ALERTS, MAINTENANCE) {
 
 // ─── Chat Component ───────────────────────────────────────────────────────────
 const SidebarChatBot = () => {
-  const { wagons: WAGONS, cargo: CARGO, alerts: ALERTS, maintenance: MAINTENANCE } = useOperatorData();
+  const opData = useOperatorData();
+  const WAGONS      = opData?.wagons      || [];
+  const CARGO       = opData?.cargo       || [];
+  const ALERTS      = opData?.alerts      || [];
+  const MAINTENANCE = opData?.maintenance || [];
   const [open,     setOpen]     = useState(false);
   const [min,      setMin]      = useState(false);
   const [input,    setInput]    = useState("");
@@ -490,6 +494,8 @@ const SidebarChatBot = () => {
   };
 
   const handleKey = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
+
+  if (!opData) return null;
 
   return (
     <>

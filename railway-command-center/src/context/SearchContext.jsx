@@ -1,11 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo } from "react";
-
-// Try to use live context — gracefully falls back if not inside OperatorDataProvider
-let _useOperatorData = null;
-try {
-  // Dynamic import to avoid circular dep at module load time
-  _useOperatorData = require("../context/OperatorDataContext").useOperatorData;
-} catch { /* outside operator shell */ }
+import { useOperatorData } from "./OperatorDataContext";
+import { OPERATOR_INDEX } from "../data/operatorSearchData";
 
 const SearchContext = createContext(null);
 
@@ -20,7 +15,6 @@ function saveHistory(h) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch {}
 }
 
-// Build search index entry from raw data
 function buildIndex(wagons, cargo, alerts, maintenance) {
   const items = [];
 
@@ -66,27 +60,26 @@ function buildIndex(wagons, cargo, alerts, maintenance) {
   return items;
 }
 
-export function SearchProvider({ children }) {
+// Inner provider that safely consumes OperatorDataContext
+function SearchProviderInner({ children }) {
   const [open,    setOpen]    = useState(false);
   const [query,   setQuery]   = useState("");
   const [history, setHistory] = useState(loadHistory);
 
-  // Safely consume live operator data if available
-  let liveData = null;
-  try {
-    if (_useOperatorData) liveData = _useOperatorData();
-  } catch { /* not in provider */ }
+  const { wagons, cargo, alerts, maintenance } = useOperatorData();
 
-  const liveIndex = useMemo(() => {
-    if (!liveData) return null;
-    return buildIndex(liveData.wagons, liveData.cargo, liveData.alerts, liveData.maintenance);
-  }, [liveData?.wagons, liveData?.cargo, liveData?.alerts, liveData?.maintenance]); // eslint-disable-line
+  const liveIndex = useMemo(
+    () => buildIndex(wagons, cargo, alerts, maintenance),
+    [wagons, cargo, alerts, maintenance]
+  );
 
-  // Fallback to static index if live data unavailable
-  const getIndex = useCallback(() => {
-    if (liveIndex) return liveIndex;
-    try { return require("../data/operatorSearchData").OPERATOR_INDEX; }
-    catch { return []; }
+  const getIndex = useCallback(() => liveIndex, [liveIndex]);
+
+  // Per-type counts from the full index (no query needed)
+  const indexCounts = useMemo(() => {
+    const counts = {};
+    liveIndex.forEach(item => { counts[item.type] = (counts[item.type] || 0) + 1; });
+    return counts;
   }, [liveIndex]);
 
   const openSearch  = useCallback(() => setOpen(true), []);
@@ -145,9 +138,78 @@ export function SearchProvider({ children }) {
       .map(item => item.title);
   }, [getIndex]);
 
-  const indexSize = liveIndex ? liveIndex.length : (() => {
-    try { return require("../data/operatorSearchData").OPERATOR_INDEX.length; } catch { return 0; }
-  })();
+  return (
+    <SearchContext.Provider value={{
+      open, openSearch, closeSearch,
+      query, setQuery,
+      history, pushHistory, clearHistory, removeHistory,
+      search, suggest,
+      indexSize: liveIndex.length,
+      indexCounts,
+    }}>
+      {children}
+    </SearchContext.Provider>
+  );
+}
+
+// Fallback provider for contexts outside OperatorDataProvider (e.g. admin pages)
+function SearchProviderFallback({ children }) {
+  const [open,    setOpen]    = useState(false);
+  const [query,   setQuery]   = useState("");
+  const [history, setHistory] = useState(loadHistory);
+
+  const getIndex = useCallback(() => OPERATOR_INDEX, []);
+  const openSearch  = useCallback(() => setOpen(true), []);
+  const closeSearch = useCallback(() => { setOpen(false); setQuery(""); }, []);
+
+  const fallbackCounts = useMemo(() => {
+    const counts = {};
+    OPERATOR_INDEX.forEach(item => { counts[item.type] = (counts[item.type] || 0) + 1; });
+    return counts;
+  }, []);
+
+  const pushHistory = useCallback((term) => {
+    if (!term.trim()) return;
+    setHistory(prev => {
+      const next = [term, ...prev.filter(h => h !== term)].slice(0, MAX_HISTORY);
+      saveHistory(next);
+      return next;
+    });
+  }, []);
+
+  const clearHistory = useCallback(() => { setHistory([]); saveHistory([]); }, []);
+  const removeHistory = useCallback((term) => {
+    setHistory(prev => { const next = prev.filter(h => h !== term); saveHistory(next); return next; });
+  }, []);
+
+  const search = useCallback((q, { type = "All", sort = "relevance" } = {}) => {
+    const raw = q.trim().toLowerCase();
+    if (!raw) return [];
+    const index = getIndex();
+    const tokens = raw.split(/\s+/);
+    let results = index.map(item => {
+      if (type !== "All" && item.type !== type) return null;
+      let score = 0;
+      if (item.id.toLowerCase() === raw) score += 100;
+      if (item.title.toLowerCase().includes(raw)) score += 50;
+      const allTokens  = tokens.every(t => item.keywords.includes(t));
+      const someTokens = tokens.some(t  => item.keywords.includes(t));
+      if (allTokens)  score += 30;
+      if (someTokens) score += 10;
+      if (item.keywords.startsWith(raw)) score += 20;
+      return score > 0 ? { ...item, score } : null;
+    }).filter(Boolean);
+    if (sort === "relevance") results.sort((a, b) => b.score - a.score);
+    else if (sort === "type")   results.sort((a, b) => a.type.localeCompare(b.type));
+    else if (sort === "status") results.sort((a, b) => a.status.localeCompare(b.status));
+    return results;
+  }, [getIndex]);
+
+  const suggest = useCallback((q) => {
+    const raw = q.trim().toLowerCase();
+    if (raw.length < 2) return [];
+    return getIndex().filter(item => item.keywords.includes(raw)).slice(0, 6).map(item => item.title);
+  }, [getIndex]);
 
   return (
     <SearchContext.Provider value={{
@@ -155,11 +217,30 @@ export function SearchProvider({ children }) {
       query, setQuery,
       history, pushHistory, clearHistory, removeHistory,
       search, suggest,
-      indexSize,
+      indexSize: OPERATOR_INDEX.length,
+      indexCounts: fallbackCounts,
     }}>
       {children}
     </SearchContext.Provider>
   );
+}
+
+// Safe wrapper: try live provider first, fall back gracefully
+function SearchProviderSafe({ children }) {
+  // OperatorDataContext throws if not inside its provider —
+  // we catch that at mount time by attempting to use it conditionally.
+  // Since hooks can't be conditional, we gate this at the component tree level
+  // via the OperatorShell in AppRoutes which wraps OperatorDataProvider first.
+  return <SearchProviderInner>{children}</SearchProviderInner>;
+}
+
+export function SearchProvider({ children }) {
+  return <SearchProviderSafe>{children}</SearchProviderSafe>;
+}
+
+// Standalone fallback for use outside operator shell
+export function SearchProviderStandalone({ children }) {
+  return <SearchProviderFallback>{children}</SearchProviderFallback>;
 }
 
 export const useSearch = () => useContext(SearchContext);
