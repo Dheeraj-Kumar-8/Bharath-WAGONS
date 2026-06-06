@@ -95,7 +95,7 @@ export function AdvancedFilters({ filters, onChange }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {[
-              { key: "zone",     label: "Zone",     options: ["All", "NR", "SR", "ER", "WR", "CR", "SCR"] },
+              { key: "zone",     label: "Zone",     options: ["All", "NR", "SR", "ER", "WR", "NER", "NWR", "SER", "SWR"] },
               { key: "status",   label: "Status",   options: ["All", "Active", "Delayed", "Maintenance"] },
               { key: "severity", label: "Severity", options: ["All", "Critical", "Warning", "Low"] },
               { key: "period",   label: "Period",   options: ["All", "Today", "This Week", "This Month"] },
@@ -191,10 +191,14 @@ export function DateRangePicker({ value, onChange }) {
 
 // ── Drill-Down Analytics ──────────────────────────────────────────────────────
 const DRILL_DATA = {
-  NR: { wagons: 312, onTime: 300, delayed: 7, maint: 5, routes: ["DEL–LKO", "DEL–AMB", "LKO–BSB"], topAlert: "GPS Signal Lost" },
-  SR: { wagons: 198, onTime: 188, delayed: 6, maint: 4, routes: ["MAS–BLR", "MAS–HYD", "BLR–CBE"], topAlert: "Route Deviation" },
-  ER: { wagons: 224, onTime: 212, delayed: 8, maint: 4, routes: ["HWH–BBS", "HWH–RNC", "BBS–VSKP"], topAlert: "Brake Warning" },
-  WR: { wagons: 178, onTime: 166, delayed: 8, maint: 4, routes: ["MMCT–ADI", "ADI–RJT", "MMCT–BRC"], topAlert: "Cargo Alert" },
+  NR:  { wagons: 312, onTime: 300, delayed: 7,  maint: 5, routes: ["DEL–LKO", "DEL–AMB", "LKO–BSB"],    topAlert: "GPS Signal Lost"  },
+  SR:  { wagons: 198, onTime: 188, delayed: 6,  maint: 4, routes: ["MAS–BLR", "MAS–HYD", "BLR–CBE"],    topAlert: "Route Deviation"  },
+  ER:  { wagons: 224, onTime: 212, delayed: 8,  maint: 4, routes: ["HWH–BBS", "HWH–RNC", "BBS–VSKP"],   topAlert: "Brake Warning"     },
+  WR:  { wagons: 178, onTime: 166, delayed: 8,  maint: 4, routes: ["MMCT–ADI", "ADI–RJT", "MMCT–BRC"],  topAlert: "Cargo Alert"       },
+  NER: { wagons: 156, onTime: 149, delayed: 5,  maint: 2, routes: ["GHY–DBRG", "GHY–KYQ", "DBRG–SCL"], topAlert: "GPS Signal Lost"  },
+  NWR: { wagons: 143, onTime: 136, delayed: 4,  maint: 3, routes: ["JP–AII", "JP–BKN", "AII–ADI"],      topAlert: "Speed Exceeded"   },
+  SER: { wagons: 127, onTime: 122, delayed: 4,  maint: 1, routes: ["KGP–VSKP", "KGP–BBS", "VSKP–BBS"], topAlert: "Route Deviation"  },
+  SWR: { wagons: 100, onTime:  97, delayed: 2,  maint: 1, routes: ["SBC–MYS", "SBC–UBL", "MYS–UBL"],   topAlert: "Cargo Alert"       },
 };
 
 export function DrillDownAnalytics() {
@@ -216,7 +220,7 @@ export function DrillDownAnalytics() {
 
       {/* Zone selector */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        {Object.entries({ NR: "#3b82f6", SR: "#22c55e", ER: "#f59e0b", WR: "#a855f7" }).map(([zone, color]) => (
+        {Object.entries({ NR: "#3b82f6", SR: "#22c55e", ER: "#f59e0b", WR: "#a855f7", NER: "#06b6d4", NWR: "#f97316", SER: "#22c55e", SWR: "#8b5cf6" }).map(([zone, color]) => (
           <button key={zone} onClick={() => setSelected(zone === selected ? null : zone)} style={{
             padding: "8px 18px", borderRadius: 10, border: `2px solid ${selected === zone ? color : "var(--border-color,#1a3356)"}`,
             background: selected === zone ? `${color}20` : "transparent",
@@ -542,7 +546,7 @@ export function ReportGenerationPanel() {
           <div>
             <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>Zones</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["All", "NR", "SR", "ER", "WR"].map(z => (
+              {["All", "NR", "SR", "ER", "WR", "NER", "NWR", "SER", "SWR"].map(z => (
                 <button key={z} onClick={() => toggleZone(z)} style={{
                   padding: "5px 12px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: 600,
                   border: `1px solid ${zones.includes(z) ? "var(--accent,#3b82f6)" : "var(--border-color,#1a3356)"}`,

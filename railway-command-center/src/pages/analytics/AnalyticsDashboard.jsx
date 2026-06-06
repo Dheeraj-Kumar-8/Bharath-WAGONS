@@ -74,10 +74,14 @@ const AnalyticsDashboard = () => {
           </div>
         </div>
         {[
-          { label: "North Railway", val: "96.1%", pct: "96%" },
-          { label: "South Railway", val: "95.2%", pct: "95%" },
-          { label: "East Railway",  val: "94.8%", pct: "95%", c: "#f59e0b" },
-          { label: "West Railway",  val: "93.4%", pct: "93%", c: "#f59e0b" },
+          { label: "NR",  val: "96.1%", pct: "96%" },
+          { label: "SR",  val: "95.2%", pct: "95%" },
+          { label: "ER",  val: "94.8%", pct: "95%", c: "#f59e0b" },
+          { label: "WR",  val: "93.4%", pct: "93%", c: "#f59e0b" },
+          { label: "NER", val: "95.5%", pct: "96%" },
+          { label: "NWR", val: "95.1%", pct: "95%" },
+          { label: "SER", val: "96.1%", pct: "96%" },
+          { label: "SWR", val: "97.0%", pct: "97%" },
         ].map(z => (
           <div key={z.label} style={{ textAlign: "center" }}>
             <div style={{ color: "#64748b", fontSize: 11, marginBottom: 4 }}>{z.label}</div>

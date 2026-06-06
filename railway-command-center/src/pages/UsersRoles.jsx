@@ -14,7 +14,6 @@ import { useAuth, ALL_PERMISSIONS } from "../context/AuthContext";
 const SHIFTS          = ["Shift A","Shift B","Shift C"];
 const DEPARTMENTS     = ["Operations","Logistics","Maintenance","Cargo","Safety","IT","Administration"];
 const ANL_DEPARTMENTS = ["Analytics","Data Science","Reporting","Business Intelligence","IT","Administration"];
-const ZONES           = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 
 const accountStatusBadge = (s) => {
   const map = {
@@ -180,9 +179,8 @@ function AnalystModal({ anl, adminZone, onSave, onClose }) {
           </div>
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Assigned Zone</label>
-            <select className="form-select" value={form.zone} onChange={e => set("zone", e.target.value)}>
-              {ZONES.map(z => <option key={z}>{z}</option>)}
-            </select>
+            <input className="form-input" value={form.zone} readOnly
+              style={{ opacity:.6, cursor:"not-allowed" }}/>
           </div>
         </div>
         {isEdit && (
@@ -514,11 +512,11 @@ const UsersRoles = () => {
     adminResetAnalystPassword, adminResendAnalystActivation,
   } = useAuth();
 
-  const myZone      = admin?.zone || "NR";
-  const zoneOps     = operators.filter(o => o.zone === myZone);
-  const zoneReqs    = requests.filter(r => r.zone === myZone);
-  const pending     = zoneReqs.filter(r => r.status === "Pending");
-  const allAnalysts = analystUsers || [];
+  const myZone   = admin?.zone || "NR";
+  const zoneOps  = operators.filter(o => o.zone === myZone);
+  const zoneReqs = requests.filter(r => r.zone === myZone);
+  const pending  = zoneReqs.filter(r => r.status === "Pending");
+  const zoneAnalysts = (analystUsers || []).filter(a => a.zone === myZone);
 
   const [tab,           setTab]         = useState("operators");
   const [query,         setQuery]        = useState("");
@@ -606,13 +604,13 @@ const UsersRoles = () => {
 
   // Analyst handlers
   const handleAnlCreate = (form) => {
-    const result = adminCreateAnalyst(form);
+    const result = adminCreateAnalyst({ ...form, zone: myZone, region: `${myZone} Railway` });
     setAnlCreate(false);
     setAnlActivLink({ link: result.activationLink, name: result.name });
     showToast(`✓ Analyst account created for "${result.name}". Activation link ready.`);
   };
   const handleAnlEdit = (form) => {
-    adminUpdateAnalyst(anlEditTarget.id, { name:form.name, email:form.email, employeeId:form.employeeId, department:form.department, designation:form.designation, zone:form.zone, status:form.status });
+    adminUpdateAnalyst(anlEditTarget.id, { name:form.name, email:form.email, employeeId:form.employeeId, department:form.department, designation:form.designation, zone:myZone, status:form.status });
     setAnlEdit(null);
     showToast(`✓ "${form.name}" updated.`);
   };
@@ -631,17 +629,17 @@ const UsersRoles = () => {
     showToast(`✓ New activation link for ${a.name}.`);
   };
 
-  const anlFiltered = allAnalysts.filter(a =>
+  const anlFiltered = zoneAnalysts.filter(a =>
     (anlStatusF === "All" || a.status === anlStatusF || a.accountStatus === anlStatusF) &&
     (`${a.name} ${a.email} ${a.id} ${a.employeeId||""}`.toLowerCase().includes(anlQuery.toLowerCase()))
   );
 
   const TABS = [
-    { key:"operators",   label:"Operators",      count:zoneOps.length          },
-    { key:"analysts",    label:"Analysts",        count:allAnalysts.length      },
+    { key:"operators",   label:"Operators",      count:zoneOps.length             },
+    { key:"analysts",    label:"Analysts",        count:zoneAnalysts.length        },
     { key:"requests",    label:"Access Requests", count:pending.length, alert:pending.length > 0 },
-    { key:"permissions", label:"Permissions",     count:null                    },
-    { key:"logs",        label:"Audit Logs",      count:null                    },
+    { key:"permissions", label:"Permissions",     count:null                       },
+    { key:"logs",        label:"Audit Logs",      count:null                       },
   ];
 
   const isLocked = (op) => op.lockedUntil && Date.now() < op.lockedUntil;
@@ -655,7 +653,7 @@ const UsersRoles = () => {
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, background:"rgba(59,130,246,.08)", border:"1px solid rgba(59,130,246,.2)", borderRadius:12, padding:"12px 18px", marginBottom:20 }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <FiLock size={14} color="#3b82f6"/>
-          <span style={{ color:"#60a5fa", fontSize:13, fontWeight:600 }}>Zone <strong>{myZone}</strong> — you can only manage operators in your zone.</span>
+          <span style={{ color:"#60a5fa", fontSize:13, fontWeight:600 }}>Zone <strong>{myZone}</strong> — you can only manage operators and analysts in your zone.</span>
         </div>
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           <span className="badge badge-info" style={{ fontSize:10 }}>🔒 No plain-text passwords</span>
@@ -667,8 +665,8 @@ const UsersRoles = () => {
       <div style={{ display:"flex", gap:14, marginBottom:20, flexWrap:"wrap" }}>
         <StatCard title="Zone Operators"   value={zoneOps.length}                                                    color="#3b82f6" icon={FiUsers}        />
         <StatCard title="Active Operators" value={zoneOps.filter(o=>o.accountStatus==="active").length}              color="#22c55e" icon={FiShield}       />
-        <StatCard title="Total Analysts"   value={allAnalysts.length}                                                color="#a855f7" icon={FiActivity}     />
-        <StatCard title="Active Analysts"  value={allAnalysts.filter(a=>a.accountStatus==="active").length}          color="#22c55e" icon={FiShield}       />
+        <StatCard title="Zone Analysts"   value={zoneAnalysts.length}                                                 color="#a855f7" icon={FiActivity}     />
+        <StatCard title="Active Analysts" value={zoneAnalysts.filter(a=>a.accountStatus==="active").length}           color="#22c55e" icon={FiShield}       />
         <StatCard title="Pending Requests" value={pending.length}                                                    color="#f97316" icon={FiAlertTriangle} />
       </div>
 

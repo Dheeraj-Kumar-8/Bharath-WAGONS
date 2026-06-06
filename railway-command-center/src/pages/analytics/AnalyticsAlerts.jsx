@@ -35,23 +35,28 @@ const trendData = [
 ];
 
 const RECENT = [
-  { id: "ALT-1091", type: "GPS Signal Lost",    zone: "NR", severity: "Critical", time: "2 min ago",  status: "Active" },
-  { id: "ALT-1088", type: "Route Deviation",    zone: "SR", severity: "Warning",  time: "7 min ago",  status: "Active" },
-  { id: "ALT-1085", type: "Brake Warning",      zone: "ER", severity: "Critical", time: "12 min ago", status: "Active" },
-  { id: "ALT-1080", type: "Cargo Overweight",   zone: "WR", severity: "Warning",  time: "18 min ago", status: "Resolved" },
-  { id: "ALT-1074", type: "Speed Exceeded",     zone: "NR", severity: "Warning",  time: "25 min ago", status: "Resolved" },
-  { id: "ALT-1070", type: "Engine Anomaly",     zone: "SR", severity: "Critical", time: "31 min ago", status: "Resolved" },
+  { id: "ALT-1091", type: "GPS Signal Lost",    zone: "NR",  severity: "Critical", time: "2 min ago",  status: "Active" },
+  { id: "ALT-1088", type: "Route Deviation",    zone: "SR",  severity: "Warning",  time: "7 min ago",  status: "Active" },
+  { id: "ALT-1085", type: "Brake Warning",      zone: "ER",  severity: "Critical", time: "12 min ago", status: "Active" },
+  { id: "ALT-1080", type: "Cargo Overweight",   zone: "WR",  severity: "Warning",  time: "18 min ago", status: "Resolved" },
+  { id: "ALT-1074", type: "Speed Exceeded",     zone: "NER", severity: "Warning",  time: "25 min ago", status: "Resolved" },
+  { id: "ALT-1070", type: "Engine Anomaly",     zone: "NWR", severity: "Critical", time: "31 min ago", status: "Resolved" },
+  { id: "ALT-1065", type: "Door Sensor Alert",  zone: "SER", severity: "Warning",  time: "42 min ago", status: "Resolved" },
+  { id: "ALT-1060", type: "GPS Signal Lost",    zone: "SWR", severity: "Critical", time: "58 min ago", status: "Resolved" },
 ];
 
 const TT = { contentStyle: { background: "#0d1f3c", border: "1px solid #1a3356", borderRadius: 10, color: "#f1f5f9" } };
 const sevColor = s => s === "Critical" ? "#ef4444" : s === "Warning" ? "#f59e0b" : "#22c55e";
 
 const AnalyticsAlerts = () => {
-  const [filter, setFilter] = useState("All");
+  const [filter,     setFilter]     = useState("All");
+  const [zoneFilter, setZoneFilter] = useState("All");
 
-  const filtered = filter === "All" ? RECENT : RECENT.filter(a =>
-    filter === "Active" ? a.status === "Active" : a.status === "Resolved"
-  );
+  const filtered = RECENT.filter(a => {
+    const statusMatch = filter === "All" || a.status === filter;
+    const zoneMatch   = zoneFilter === "All" || a.zone === zoneFilter;
+    return statusMatch && zoneMatch;
+  });
 
   return (
     <AnalyticsLayout title="Alert Analytics" sub="Critical, warning and resolved alert distribution and trends">
@@ -131,15 +136,24 @@ const AnalyticsAlerts = () => {
 
       {/* Recent alerts table */}
       <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
           <div className="section-title" style={{ marginBottom: 0 }}>Recent Alerts</div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
             {["All", "Active", "Resolved"].map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`btn btn-sm ${filter === f ? "btn-primary" : "btn-ghost"}`}
                 style={filter === f ? { background: "rgba(168,85,247,.2)", color: "#a855f7", border: "1px solid #a855f7" } : {}}>
                 {f}
               </button>
+            ))}
+            <span style={{ color: "#1a3356", margin: "0 4px" }}>|</span>
+            {["All", "NR", "SR", "ER", "WR", "NER", "NWR", "SER", "SWR"].map(z => (
+              <button key={z} onClick={() => setZoneFilter(z)} style={{
+                padding: "5px 9px", borderRadius: 20, cursor: "pointer", fontSize: 11, fontWeight: 700,
+                border: `1px solid ${zoneFilter === z ? "#a855f7" : "#1a3356"}`,
+                background: zoneFilter === z ? "rgba(168,85,247,.15)" : "transparent",
+                color: zoneFilter === z ? "#a855f7" : "#64748b",
+              }}>{z}</button>
             ))}
           </div>
         </div>

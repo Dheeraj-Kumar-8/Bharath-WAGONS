@@ -394,7 +394,7 @@ export default function AnalyticsSettings() {
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
                 <Field label="Default Zone">
                   <select className="form-select" value={dash.defaultZone} onChange={e => setDash(p => ({ ...p, defaultZone:e.target.value }))}>
-                    {["All Zones","NR","SR","ER","CR","WR","SCR","SWR","NWR"].map(z => <option key={z}>{z}</option>)}
+                    {["All Zones","NR","SR","ER","CR","WR","SCR","SWR","NWR","NER","SER"].map(z => <option key={z}>{z}</option>)}
                   </select>
                 </Field>
                 <Field label="Default Period">
