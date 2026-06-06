@@ -23,7 +23,7 @@ const TABS = [
 
 const Toggle = ({ val, onChange }) => (
   <div onClick={() => onChange(!val)}
-    style={{ width:44, height:24, borderRadius:12, background: val ? "#a855f7" : "#1a3356", cursor:"pointer", position:"relative", transition:"background .2s", flexShrink:0 }}>
+    style={{ width:44, height:24, borderRadius:12, background: val ? "var(--accent,#a855f7)" : "#1a3356", cursor:"pointer", position:"relative", transition:"background .2s", flexShrink:0 }}>
     <div style={{ position:"absolute", top:3, left: val ? 23 : 3, width:18, height:18, borderRadius:"50%", background:"white", transition:"left .2s" }}/>
   </div>
 );
@@ -106,7 +106,7 @@ export default function AnalyticsSettings() {
               cursor:"pointer", textAlign:"left", fontSize:13, transition:"all .15s",
               fontWeight: tab===key ? 700 : 400,
               background: tab===key ? "rgba(168,85,247,.18)" : "transparent",
-              color:      tab===key ? "#a855f7" : "#64748b",
+              color:      tab===key ? "var(--accent,#a855f7)" : "#64748b",
             }}>
               <Icon size={14}/>{label}
             </button>
@@ -194,9 +194,9 @@ export default function AnalyticsSettings() {
                     return (
                       <button key={name} onClick={() => handleThemeChange(preset)} style={{
                         padding:"14px 10px", borderRadius:12,
-                        border:`2px solid ${isActive ? "#a855f7" : "#1a3356"}`,
+                        border:`2px solid ${isActive ? "var(--accent,#a855f7)" : "#1a3356"}`,
                         background: isActive ? "rgba(168,85,247,.15)" : "#071628",
-                        color: isActive ? "#a855f7" : "#94a3b8",
+                        color: isActive ? "var(--accent,#a855f7)" : "#94a3b8",
                         cursor:"pointer", textAlign:"center", transition:"all .15s",
                       }}>
                         <div style={{ fontSize:22, marginBottom:6 }}>{PRESET_ICONS[name]}</div>
@@ -213,9 +213,9 @@ export default function AnalyticsSettings() {
                   {Object.keys(FULL_SCHEME_MAP).map(s => (
                     <div key={s} onClick={() => handleThemeChange({ colorScheme:s })}
                       style={{ padding:"10px 18px", borderRadius:10, cursor:"pointer", fontSize:13, fontWeight:600, transition:"all .15s",
-                        border:`2px solid ${theme.colorScheme===s ? "#a855f7" : "#1a3356"}`,
+                        border:`2px solid ${theme.colorScheme===s ? "var(--accent,#a855f7)" : "#1a3356"}`,
                         background: theme.colorScheme===s ? "rgba(168,85,247,.15)" : "#071628",
-                        color:      theme.colorScheme===s ? "#a855f7" : "#94a3b8",
+                        color:      theme.colorScheme===s ? "var(--accent,#a855f7)" : "#94a3b8",
                       }}>{s}</div>
                   ))}
                 </div>
@@ -283,9 +283,9 @@ export default function AnalyticsSettings() {
                     {Object.keys(CARD_STYLE_MAP).map(s => (
                       <div key={s} onClick={() => handleThemeChange({ cardStyle:s })}
                         style={{ padding:"8px 14px", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:600, transition:"all .15s", textTransform:"capitalize",
-                          border:`2px solid ${theme.cardStyle===s ? "#a855f7" : "#1a3356"}`,
+                          border:`2px solid ${theme.cardStyle===s ? "var(--accent,#a855f7)" : "#1a3356"}`,
                           background: theme.cardStyle===s ? "rgba(168,85,247,.15)" : "#071628",
-                          color:      theme.cardStyle===s ? "#a855f7" : "#94a3b8",
+                          color:      theme.cardStyle===s ? "var(--accent,#a855f7)" : "#94a3b8",
                         }}>{s}</div>
                     ))}
                   </div>
@@ -295,9 +295,9 @@ export default function AnalyticsSettings() {
                     {Object.keys(BORDER_RADIUS_MAP).map(s => (
                       <div key={s} onClick={() => handleThemeChange({ borderRadius:s })}
                         style={{ padding:"8px 14px", borderRadius:8, cursor:"pointer", fontSize:12, fontWeight:600, transition:"all .15s", textTransform:"capitalize",
-                          border:`2px solid ${theme.borderRadius===s ? "#a855f7" : "#1a3356"}`,
+                          border:`2px solid ${theme.borderRadius===s ? "var(--accent,#a855f7)" : "#1a3356"}`,
                           background: theme.borderRadius===s ? "rgba(168,85,247,.15)" : "#071628",
-                          color:      theme.borderRadius===s ? "#a855f7" : "#94a3b8",
+                          color:      theme.borderRadius===s ? "var(--accent,#a855f7)" : "#94a3b8",
                         }}>{s}</div>
                     ))}
                   </div>
@@ -457,8 +457,7 @@ export default function AnalyticsSettings() {
           {/* Save button — not needed for Theme (live preview) or Profile/Security */}
           {tab !== "Profile" && tab !== "Security" && tab !== "Theme" && (
             <div style={{ marginTop:24, display:"flex", justifyContent:"flex-end" }}>
-              <button className="btn btn-primary btn-lg" onClick={handleSave}
-                style={{ background:"linear-gradient(135deg,#7c3aed,#a855f7)", borderColor:"#a855f7" }}>
+              <button className="btn btn-primary btn-lg" onClick={handleSave}>
                 {saved ? <><FiCheck size={16}/> Saved!</> : <><FiSave size={16}/> Save Changes</>}
               </button>
             </div>

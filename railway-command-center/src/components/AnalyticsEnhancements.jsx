@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { useAuth } from "../context/AuthContext";
+import { exportReportPDF, exportReportExcel, exportReportCSV, REPORT_DEFINITIONS } from "../utils/reportExportService";
 import {
   AreaChart, Area, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -67,8 +69,18 @@ const btnStyle = {
 
 // ── Advanced Filters ──────────────────────────────────────────────────────────
 export function AdvancedFilters({ filters, onChange }) {
+  const { analyst } = useAuth();
+  const analystZone = analyst?.zone;
   const [open, setOpen] = useState(false);
-  const active = Object.values(filters).filter(v => v && v !== "All" && v !== "").length;
+
+  // Only count non-zone filters as "active" (zone is locked)
+  const active = ["status", "severity", "period"].filter(k => filters[k] && filters[k] !== "All").length;
+
+  const FILTER_FIELDS = [
+    { key: "status",   label: "Status",   options: ["All", "Active", "Delayed", "Maintenance"] },
+    { key: "severity", label: "Severity", options: ["All", "Critical", "Warning", "Low"] },
+    { key: "period",   label: "Period",   options: ["All", "Today", "This Week", "This Month"] },
+  ];
 
   return (
     <div style={{ position: "relative" }}>
@@ -87,19 +99,23 @@ export function AdvancedFilters({ filters, onChange }) {
         <div style={{
           position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 400,
           background: "var(--dropdown-bg,#0d1f3c)", border: "1px solid var(--border-color,#1a3356)",
-          borderRadius: 14, padding: 16, minWidth: 320, boxShadow: "0 16px 40px rgba(0,0,0,.4)",
+          borderRadius: 14, padding: 16, minWidth: 300, boxShadow: "0 16px 40px rgba(0,0,0,.4)",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ color: "var(--text-strong,#f1f5f9)", fontWeight: 700, fontSize: 13 }}>Advanced Filters</span>
+            <span style={{ color: "var(--text-strong,#f1f5f9)", fontWeight: 700, fontSize: 13 }}>Filters</span>
             <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><FiX size={14} /></button>
           </div>
+
+          {/* Zone locked badge */}
+          {analystZone && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "7px 10px", background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)", borderRadius: 8 }}>
+              <FiFilter size={11} color="#a855f7" />
+              <span style={{ color: "#a855f7", fontSize: 12, fontWeight: 600 }}>Zone {analystZone} — your assigned zone</span>
+            </div>
+          )}
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[
-              { key: "zone",     label: "Zone",     options: ["All", "NR", "SR", "ER", "WR", "NER", "NWR", "SER", "SWR"] },
-              { key: "status",   label: "Status",   options: ["All", "Active", "Delayed", "Maintenance"] },
-              { key: "severity", label: "Severity", options: ["All", "Critical", "Warning", "Low"] },
-              { key: "period",   label: "Period",   options: ["All", "Today", "This Week", "This Month"] },
-            ].map(({ key, label, options }) => (
+            {FILTER_FIELDS.map(({ key, label, options }) => (
               <div key={key}>
                 <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 5 }}>{label}</div>
                 <select value={filters[key] || "All"} onChange={e => onChange({ ...filters, [key]: e.target.value })}
@@ -110,7 +126,7 @@ export function AdvancedFilters({ filters, onChange }) {
             ))}
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
-            <button onClick={() => { onChange({ zone: "All", status: "All", severity: "All", period: "All" }); setOpen(false); }}
+            <button onClick={() => { onChange({ zone: analystZone || "All", status: "All", severity: "All", period: "All" }); setOpen(false); }}
               style={{ ...btnStyle, fontSize: 12 }}>Reset</button>
             <button onClick={() => setOpen(false)}
               style={{ ...btnStyle, background: "rgba(168,85,247,.2)", color: "#a855f7", border: "1px solid #a855f7", fontSize: 12 }}>Apply</button>
@@ -202,7 +218,9 @@ const DRILL_DATA = {
 };
 
 export function DrillDownAnalytics() {
-  const [selected, setSelected] = useState(null);
+  const { analyst } = useAuth();
+  const analystZone = analyst?.zone;
+  const [selected] = useState(analystZone || null);
   const d = selected ? DRILL_DATA[selected] : null;
 
   return (
@@ -211,28 +229,20 @@ export function DrillDownAnalytics() {
         <div className="section-title" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 0 }}>
           <FiChevronRight size={16} color="#a855f7" /> Drill-Down Analytics
         </div>
-        {selected && (
-          <button onClick={() => setSelected(null)} style={{ ...btnStyle, fontSize: 12 }}>
-            <FiX size={11} /> Clear
-          </button>
-        )}
       </div>
 
-      {/* Zone selector */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        {Object.entries({ NR: "#3b82f6", SR: "#22c55e", ER: "#f59e0b", WR: "#a855f7", NER: "#06b6d4", NWR: "#f97316", SER: "#22c55e", SWR: "#8b5cf6" }).map(([zone, color]) => (
-          <button key={zone} onClick={() => setSelected(zone === selected ? null : zone)} style={{
-            padding: "8px 18px", borderRadius: 10, border: `2px solid ${selected === zone ? color : "var(--border-color,#1a3356)"}`,
-            background: selected === zone ? `${color}20` : "transparent",
-            color: selected === zone ? color : "var(--text-muted,#94a3b8)",
-            cursor: "pointer", fontWeight: 700, fontSize: 13, transition: "all .15s",
-          }}>{zone}</button>
-        ))}
+      {/* Zone is locked — just show the assigned zone as a static badge */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+        <span style={{
+          padding: "8px 18px", borderRadius: 10,
+          border: "2px solid #a855f7", background: "rgba(168,85,247,.15)",
+          color: "#a855f7", fontWeight: 700, fontSize: 13,
+        }}>Zone {analystZone}</span>
       </div>
 
       {!selected && (
         <div style={{ color: "var(--text-muted,#64748b)", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
-          Click a zone above to drill down into detailed metrics
+          No zone data available
         </div>
       )}
 
@@ -459,45 +469,37 @@ export function AIInsights() {
 
 // ── Report Generation Panel ───────────────────────────────────────────────────
 const RPT_TYPES = [
-  { key: "performance", label: "Performance Summary", icon: "📊", desc: "KPIs, on-time rates, delay analysis" },
-  { key: "zone",        label: "Zone Comparison",     icon: "🗺️", desc: "Cross-zone metrics and rankings" },
-  { key: "alerts",      label: "Alert Analysis",      icon: "⚠️", desc: "Alert distribution and resolution stats" },
-  { key: "predictive",  label: "Predictive Report",   icon: "🔮", desc: "AI forecast and trend projections" },
+  { key: "performance", label: "Performance Summary", icon: "📊", desc: "KPIs, on-time rates, delay analysis",     defKey: "monthly_performance" },
+  { key: "zone",        label: "Zone Comparison",     icon: "🗺️", desc: "Cross-zone metrics and rankings",         defKey: "zone_performance"   },
+  { key: "alerts",      label: "Alert Analysis",      icon: "⚠️", desc: "Alert distribution and resolution stats", defKey: "alert_summary"      },
+  { key: "predictive",  label: "Predictive Report",   icon: "🔮", desc: "AI forecast and trend projections",       defKey: "movement_trends"    },
 ];
-
-const SAMPLE_ROWS = {
-  performance: [["Metric","Value"],["Total Active","1,089"],["On-Time Rate","95.7%"],["Avg Delay","48 min"],["Fleet Utilisation","87.3%"]],
-  zone:        [["Zone","Wagons","On-Time%"],["NR","312","96.1%"],["SR","198","95.2%"],["ER","224","94.8%"],["WR","178","93.4%"]],
-  alerts:      [["Type","Critical","Warning","Resolved"],["GPS","8","6","18"],["Route","4","10","22"],["Brake","5","7","17"]],
-  predictive:  [["Month","Forecast","CI Low","CI High"],["Aug","4520","4360","4680"],["Sep","4710","4520","4900"],["Oct","4890","4680","5100"]],
-};
 
 export function ReportGenerationPanel() {
   const [type,   setType]   = useState("performance");
-  const [format, setFormat] = useState("CSV");
+  const [format, setFormat] = useState("PDF");
   const [period, setPeriod] = useState("This Week");
-  const [zones,  setZones]  = useState(["All"]);
   const [gen,    setGen]    = useState(false);
   const [done,   setDone]   = useState(false);
-
-  const toggleZone = z => setZones(prev =>
-    z === "All" ? ["All"] : prev.includes(z) ? prev.filter(x => x !== z) : [...prev.filter(x => x !== "All"), z]
-  );
+  const [err,    setErr]    = useState("");
 
   const generate = () => {
-    setGen(true); setDone(false);
+    setGen(true); setDone(false); setErr("");
     setTimeout(() => {
-      const rows = SAMPLE_ROWS[type];
-      if (format === "CSV") {
-        const csv = rows.map(r => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-        a.download = `${type}_report_${period.replace(/\s+/g,"-")}.csv`; a.click();
-        URL.revokeObjectURL(a.href);
+      try {
+        const selected = RPT_TYPES.find(r => r.key === type);
+        const def = REPORT_DEFINITIONS.find(d => d.key === selected?.defKey);
+        if (!def) { setErr("Report definition not found."); setGen(false); return; }
+        if (format === "PDF")   exportReportPDF(def, "", "");
+        if (format === "Excel") exportReportExcel(def, "", "");
+        if (format === "CSV")   exportReportCSV(def, "", "");
+        setDone(true);
+        setTimeout(() => setDone(false), 3000);
+      } catch(e) {
+        setErr("Export failed. Please try again.");
       }
-      setGen(false); setDone(true);
-      setTimeout(() => setDone(false), 3000);
-    }, 1200);
+      setGen(false);
+    }, 800);
   };
 
   return (
@@ -507,8 +509,13 @@ export function ReportGenerationPanel() {
       </div>
 
       {done && (
-        <div style={{ background: "rgba(34,197,94,.1)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, color: "#22c55e", fontSize: 13, fontWeight: 600 }}>
+        <div style={{ background:"rgba(34,197,94,.1)", border:"1px solid rgba(34,197,94,.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, color:"#22c55e", fontSize:13, fontWeight:600 }}>
           ✓ Report generated and downloaded
+        </div>
+      )}
+      {err && (
+        <div style={{ background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, color:"#ef4444", fontSize:13 }}>
+          {err}
         </div>
       )}
 
@@ -544,22 +551,13 @@ export function ReportGenerationPanel() {
             </select>
           </div>
           <div>
-            <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>Zones</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["All", "NR", "SR", "ER", "WR", "NER", "NWR", "SER", "SWR"].map(z => (
-                <button key={z} onClick={() => toggleZone(z)} style={{
-                  padding: "5px 12px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: 600,
-                  border: `1px solid ${zones.includes(z) ? "var(--accent,#3b82f6)" : "var(--border-color,#1a3356)"}`,
-                  background: zones.includes(z) ? "rgba(59,130,246,.15)" : "transparent",
-                  color: zones.includes(z) ? "var(--accent,#60a5fa)" : "var(--text-muted,#94a3b8)",
-                }}>{z}</button>
-              ))}
-            </div>
+            <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>Zone</div>
+            <ReportZonePicker />
           </div>
           <div>
             <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>Format</div>
             <div style={{ display: "flex", gap: 6 }}>
-              {["CSV", "JSON"].map(f => (
+              {["PDF", "Excel", "CSV"].map(f => (
                 <button key={f} onClick={() => setFormat(f)} style={{
                   padding: "6px 16px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 700,
                   border: `1px solid ${format === f ? "var(--accent,#3b82f6)" : "var(--border-color,#1a3356)"}`,
@@ -586,17 +584,43 @@ export function ReportGenerationPanel() {
   );
 }
 
+// ── Report zone picker — locked to analyst's zone ─────────────────────────────
+function ReportZonePicker() {
+  const { analyst } = useAuth();
+  const analystZone = analyst?.zone;
+  // Analyst can only select their own zone
+  return (
+    <span style={{
+      padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+      border: "1px solid #a855f7", background: "rgba(168,85,247,.15)", color: "#a855f7",
+    }}>Zone {analystZone}</span>
+  );
+}
+
 // ── Toolbar: filters + date range together ────────────────────────────────────
 export function AnalyticsToolbar({ filters, onFiltersChange, dateRange, onDateRangeChange }) {
+  const { analyst } = useAuth();
+  const analystZone = analyst?.zone;
+
+  // Always lock the zone filter to the analyst's zone
+  const handleFiltersChange = (next) => {
+    onFiltersChange({ ...next, zone: analystZone || "All" });
+  };
+
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-      <AdvancedFilters filters={filters} onChange={onFiltersChange} />
-      <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
-      {(dateRange?.from || Object.values(filters).some(v => v && v !== "All")) && (
-        <span style={{ color: "var(--text-muted,#64748b)", fontSize: 12 }}>
-          Filters active — data would be fetched from API in production
-        </span>
+      {/* Zone locked badge */}
+      {analystZone && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 6,
+          background: "rgba(168,85,247,.12)", border: "1px solid rgba(168,85,247,.35)",
+          borderRadius: 8, padding: "7px 12px",
+        }}>
+          <span style={{ color: "#a855f7", fontSize: 12, fontWeight: 700 }}>📍 Zone {analystZone}</span>
+        </div>
       )}
+      <AdvancedFilters filters={filters} onChange={handleFiltersChange} />
+      <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
     </div>
   );
 }
