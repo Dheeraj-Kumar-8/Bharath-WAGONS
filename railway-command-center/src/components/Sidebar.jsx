@@ -36,14 +36,14 @@ const Sidebar = () => (
         fontSize: "20px", flexShrink: 0, boxShadow: "0 0 16px var(--accent-glow)",
       }}>🚆</div>
       <div>
-        <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "14px", lineHeight: 1.3 }}>Indian Railways</div>
+        <div style={{ color: "var(--text-strong,#f1f5f9)", fontWeight: 700, fontSize: "14px", lineHeight: 1.3 }}>Indian Railways</div>
         <div style={{ color: "var(--accent)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>Command Center</div>
       </div>
     </div>
 
     {/* Nav */}
     <nav style={{ flex: 1, overflowY: "auto", padding: "14px 10px" }}>
-      <div style={{ color: "#1e3a5f", fontSize: "10px", fontWeight: 700, letterSpacing: "2px", marginBottom: "10px", paddingLeft: "8px" }}>NAVIGATION</div>
+      <div style={{ color: "var(--nav-label,#1e3a5f)", fontSize: "10px", fontWeight: 700, letterSpacing: "2px", marginBottom: "10px", paddingLeft: "8px" }}>NAVIGATION</div>
       {NAV.map(({ icon: Icon, label, to }) => (
         <NavLink key={to} to={to} end={to === "/admin"}
           style={({ isActive }) => ({
@@ -51,7 +51,7 @@ const Sidebar = () => (
             padding: "10px 12px", marginBottom: "2px", borderRadius: "10px",
             textDecoration: "none", cursor: "pointer", transition: "all var(--transition)",
             background: isActive ? "rgba(37,99,235,.18)" : "transparent",
-            color: isActive ? "var(--accent)" : "#5a7a9e",
+            color: isActive ? "var(--accent)" : "var(--nav-item,#5a7a9e)",
             borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
             fontWeight: isActive ? 600 : 400, fontSize: "13px",
           })}>
@@ -67,8 +67,8 @@ const Sidebar = () => (
         <span className="dot dot-green" />
         <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>System Operational</span>
       </div>
-      <div style={{ color: "#2a4a6e", fontSize: "11px", marginBottom: "3px" }}>v2.4.1 · NavIC GPS Active</div>
-      <div style={{ color: "#1a3356", fontSize: "11px" }}>Ministry of Railways</div>
+      <div style={{ color: "var(--nav-footer-sub,#2a4a6e)", fontSize: "11px", marginBottom: "3px" }}>v2.4.1 · NavIC GPS Active</div>
+      <div style={{ color: "var(--nav-footer-dim,#1a3356)", fontSize: "11px" }}>Ministry of Railways</div>
     </div>
   </div>
 );

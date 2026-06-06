@@ -30,10 +30,21 @@ import OperatorAlerts     from "../pages/OperatorAlerts";
 import OperatorCargo      from "../pages/OperatorCargo";
 import OperatorReports    from "../pages/OperatorReports";
 import OperatorSettings   from "../pages/OperatorSettings";
+import AnalyticsDashboard  from "../pages/analytics/AnalyticsDashboard";
+import AnalyticsPerformance from "../pages/analytics/AnalyticsPerformance";
+import AnalyticsZone        from "../pages/analytics/AnalyticsZone";
+import AnalyticsAlerts      from "../pages/analytics/AnalyticsAlerts";
+import AnalyticsReports     from "../pages/analytics/AnalyticsReports";
+import AnalyticsSettings    from "../pages/analytics/AnalyticsSettings";
 
 const Guard = ({ children }) => {
   const { admin } = useAuth();
   return admin ? children : <Navigate to="/login" replace />;
+};
+
+const AnalyticsGuard = ({ children }) => {
+  const { analyst } = useAuth();
+  return analyst ? children : <Navigate to="/login" replace />;
 };
 
 const OperatorGuard = ({ children }) => {
@@ -80,6 +91,14 @@ const AppRoutes = () => (
       <Route path="/reports"             element={<Guard><Reports /></Guard>} />
       <Route path="/users-roles"         element={<Guard><UsersRoles /></Guard>} />
       <Route path="/settings"            element={<Guard><Settings /></Guard>} />
+
+      {/* Analytics Dashboard routes */}
+      <Route path="/analytics-dashboard"             element={<AnalyticsGuard><AnalyticsDashboard /></AnalyticsGuard>} />
+      <Route path="/analytics-dashboard/performance" element={<AnalyticsGuard><AnalyticsPerformance /></AnalyticsGuard>} />
+      <Route path="/analytics-dashboard/zone"        element={<AnalyticsGuard><AnalyticsZone /></AnalyticsGuard>} />
+      <Route path="/analytics-dashboard/alerts"      element={<AnalyticsGuard><AnalyticsAlerts /></AnalyticsGuard>} />
+      <Route path="/analytics-dashboard/reports"     element={<AnalyticsGuard><AnalyticsReports /></AnalyticsGuard>} />
+      <Route path="/analytics-dashboard/settings"    element={<AnalyticsGuard><AnalyticsSettings /></AnalyticsGuard>} />
 
       {/* Operator routes — single shared shell */}
       <Route path="/operator"            element={<OperatorShell><OperatorDashboard /></OperatorShell>} />

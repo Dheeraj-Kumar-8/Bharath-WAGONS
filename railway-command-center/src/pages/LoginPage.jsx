@@ -101,7 +101,7 @@ function ForgotPasswordForm({ onBack }) {
 // ── Main Login Page ───────────────────────────────────────────────────────────
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loginOperator } = useAuth();
+  const { login, loginOperator, loginAnalyst } = useAuth();
 
   const [tab,        setTab]        = useState("admin");
   const [email,      setEmail]      = useState("");
@@ -127,11 +127,12 @@ const LoginPage = () => {
       setLoading(false);
       if (tab === "admin") {
         const result = login(trimmedEmail, trimmedPassword);
-        if (result.success) {
-          navigate("/admin");
-        } else {
-          setError("Invalid credentials. Please try again.");
-        }
+        if (result.success) { navigate("/admin"); }
+        else { setError("Invalid credentials. Please try again."); }
+      } else if (tab === "analytics") {
+        const result = loginAnalyst(trimmedEmail, trimmedPassword);
+        if (result.success) { navigate("/analytics-dashboard"); }
+        else { setError("Invalid analytics credentials. Please try again."); }
       } else {
         const result = loginOperator(trimmedEmail, trimmedPassword);
         if (result.success) {
@@ -153,7 +154,8 @@ const LoginPage = () => {
   };
 
   const handleKey = e => { if (e.key === "Enter") handleLogin(); };
-  const isOp = tab === "operator";
+  const isOp  = tab === "operator";
+  const isAnl = tab === "analytics";
 
   if (showForgot) {
     return (
@@ -178,13 +180,13 @@ const LoginPage = () => {
 
         {/* Role Tabs */}
         <div style={{ display:"flex", background:"rgba(0,0,0,0.3)", borderRadius:"14px", padding:"4px", marginBottom:"24px", border:"1px solid rgba(255,255,255,0.06)" }}>
-          {[["admin","🏛 Admin"],["operator","🚆 Operator"]].map(([key, label]) => (
+          {[["admin","🏛 Admin"],["operator","🚆 Operator"],["analytics","📊 Analytics"]].map(([key, label]) => (
             <button key={key} onClick={() => switchTab(key)} style={{
               flex:1, padding:"9px 0", border:"none", borderRadius:"10px", cursor:"pointer",
               fontSize:"13px", fontWeight:700, transition:"all .2s",
-              background: tab === key ? "#1d4ed8" : "transparent",
-              color:       tab === key ? "#fff"    : "#64748b",
-              boxShadow:   tab === key ? "0 2px 12px rgba(37,99,235,.4)" : "none",
+              background: tab === key ? (key === "analytics" ? "#0369a1" : "#1d4ed8") : "transparent",
+              color:       tab === key ? "#fff" : "#64748b",
+              boxShadow:   tab === key ? (key === "analytics" ? "0 2px 12px rgba(3,105,161,.4)" : "0 2px 12px rgba(37,99,235,.4)") : "none",
             }}>
               {label}
             </button>
@@ -192,15 +194,15 @@ const LoginPage = () => {
         </div>
 
         {/* Icon */}
-        <div style={{ width:64, height:64, margin:"0 auto 12px", borderRadius:20, background:"linear-gradient(135deg,#1d4ed8,#3b82f6)", display:"flex", justifyContent:"center", alignItems:"center", fontSize:26, boxShadow:"0 0 28px rgba(59,130,246,0.5)" }}>
-          {isOp ? "🚆" : "🏛"}
+        <div style={{ width:64, height:64, margin:"0 auto 12px", borderRadius:20, background: isAnl ? "linear-gradient(135deg,#0369a1,#0ea5e9)" : "linear-gradient(135deg,#1d4ed8,#3b82f6)", display:"flex", justifyContent:"center", alignItems:"center", fontSize:26, boxShadow: isAnl ? "0 0 28px rgba(14,165,233,0.5)" : "0 0 28px rgba(59,130,246,0.5)" }}>
+          {isAnl ? "📊" : isOp ? "🚆" : "🏛"}
         </div>
 
         <h1 style={{ textAlign:"center", fontSize:28, margin:0, fontWeight:700 }}>
-          {isOp ? "Operator Login" : "Welcome Back"}
+          {isAnl ? "Analytics Login" : isOp ? "Operator Login" : "Welcome Back"}
         </h1>
         <p style={{ textAlign:"center", color:"#94a3b8", fontSize:14, marginTop:6, marginBottom:24 }}>
-          {isOp ? "Sign in to your Operator Portal" : "Sign in to your regional command center"}
+          {isAnl ? "Sign in to the Analytics & Reporting Portal" : isOp ? "Sign in to your Operator Portal" : "Sign in to your regional command center"}
         </p>
 
         {/* Account lock banner */}
@@ -224,7 +226,7 @@ const LoginPage = () => {
             <input
               type="email" value={email}
               onChange={e => setEmail(e.target.value)} onKeyDown={handleKey}
-              placeholder={isOp ? "operator.nr@railways.gov.in" : "admin.nr@railways.gov.in"}
+              placeholder={isAnl ? "analyst.nr@railways.gov.in" : isOp ? "operator.nr@railways.gov.in" : "admin.nr@railways.gov.in"}
               style={{ width:"100%", padding:"12px 14px 12px 38px", borderRadius:12, border:INPUT_BORDER, background:"rgba(0,0,0,0.35)", color:"white", fontSize:14, outline:"none", boxSizing:"border-box", transition:"border-color .2s" }}
               onFocus={e => e.target.style.borderColor="#3b82f6"}
               onBlur={e  => e.target.style.borderColor="rgba(59,130,246,.25)"}
@@ -273,13 +275,13 @@ const LoginPage = () => {
           disabled={loading || !!lockMins}
           style={{
             width:"100%", padding:"13px", border:"none", borderRadius:14,
-            background: (loading || lockMins) ? "rgba(255,255,255,.1)" : BTN_BG,
+            background: (loading || lockMins) ? "rgba(255,255,255,.1)" : isAnl ? "linear-gradient(135deg,#0369a1,#0ea5e9)" : BTN_BG,
             color:"white", fontSize:16, fontWeight:700,
             cursor: (loading || lockMins) ? "not-allowed" : "pointer",
-            boxShadow: lockMins ? "none" : "0 0 24px rgba(37,99,235,0.4)",
+            boxShadow: lockMins ? "none" : isAnl ? "0 0 24px rgba(14,165,233,0.4)" : "0 0 24px rgba(37,99,235,0.4)",
             marginTop:8, opacity: (loading || lockMins) ? .7 : 1,
           }}>
-          {loading ? "Signing in…" : isOp ? "Sign In as Operator →" : "Sign In →"}
+          {loading ? "Signing in…" : isAnl ? "Sign In as Analyst →" : isOp ? "Sign In as Operator →" : "Sign In →"}
         </button>
 
         {/* Request access link */}

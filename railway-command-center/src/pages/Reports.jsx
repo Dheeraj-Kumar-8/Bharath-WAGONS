@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
+import ReportExportPanel from "../components/ReportExportPanel";
 
 const REPORTS = {
   Daily: [
@@ -593,6 +594,7 @@ const Reports = () => {
   const [preview, setPreview] = useState(null);
   const [generating, setGen]  = useState(null);
   const [toast, setToast]     = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
@@ -603,6 +605,7 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Reports" sub="Generate and export operational reports for all time periods">
+      <ReportExportPanel role="admin" isOpen={exportOpen} onClose={() => setExportOpen(false)} />
       <div style={{ display:"flex", gap:14, marginBottom:20, flexWrap:"wrap" }}>
         <StatCard title="Daily Reports"   value={REPORTS.Daily.length}                 color="#3b82f6" icon={FiFileText} />
         <StatCard title="Weekly Reports"  value={REPORTS.Weekly.length}                color="#22c55e" icon={FiBarChart2} />
@@ -630,6 +633,9 @@ const Reports = () => {
               <FiDownload size={12} /> Export All {fmt}
             </button>
           ))}
+          <button className="btn btn-primary btn-sm" onClick={() => setExportOpen(true)}>
+            <FiDownload size={12} /> Export Centre
+          </button>
         </div>
       </div>
 

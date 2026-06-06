@@ -11,8 +11,10 @@ import StatCard from "../components/StatCard";
 import { useAuth, ALL_PERMISSIONS } from "../context/AuthContext";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const SHIFTS       = ["Shift A","Shift B","Shift C"];
-const DEPARTMENTS  = ["Operations","Logistics","Maintenance","Cargo","Safety","IT","Administration"];
+const SHIFTS          = ["Shift A","Shift B","Shift C"];
+const DEPARTMENTS     = ["Operations","Logistics","Maintenance","Cargo","Safety","IT","Administration"];
+const ANL_DEPARTMENTS = ["Analytics","Data Science","Reporting","Business Intelligence","IT","Administration"];
+const ZONES           = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 
 const accountStatusBadge = (s) => {
   const map = {
@@ -118,6 +120,148 @@ function ResetLinkModal({ link, name, onClose }) {
           </button>
           <button className="btn btn-outline" onClick={onClose}>Close</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Create/Edit Analyst Modal ─────────────────────────────────────────────────
+function AnalystModal({ anl, adminZone, onSave, onClose }) {
+  const isEdit = !!anl;
+  const [form, setForm] = useState(isEdit ? {
+    name:anl.name, email:anl.email, employeeId:anl.employeeId||"",
+    department:anl.department||"Analytics", designation:anl.designation||"",
+    zone:anl.zone, status:anl.status,
+  } : {
+    name:"", email:"", employeeId:"", department:"Analytics", designation:"",
+    zone:adminZone, status:"Active",
+  });
+  const set = (k, v) => setForm(p => ({ ...p, [k]:v }));
+  const valid = form.name.trim() && form.email.trim();
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:540, maxHeight:"90vh", overflowY:"auto" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div className="modal-title" style={{ margin:0 }}>{isEdit ? "Edit Analyst" : "Create Analyst Account"}</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        {!isEdit && (
+          <div style={{ background:"rgba(168,85,247,.08)", border:"1px solid rgba(168,85,247,.2)", borderRadius:10, padding:"10px 14px", marginBottom:14, display:"flex", gap:8 }}>
+            <FiLock size={13} color="#a855f7" style={{ flexShrink:0, marginTop:2 }}/>
+            <span style={{ color:"#c084fc", fontSize:12, lineHeight:1.6 }}>No password required. A secure activation link will be generated for the analyst to set their own password.</span>
+          </div>
+        )}
+        <div style={{ background:"rgba(168,85,247,.06)", border:"1px solid rgba(168,85,247,.2)", borderRadius:10, padding:"10px 14px", marginBottom:14, display:"flex", gap:8, alignItems:"center" }}>
+          <FiShield size={13} color="#a855f7"/>
+          <span style={{ color:"#c084fc", fontSize:12, fontWeight:600 }}>Role: Analytics &amp; Reporting — read-only analytics data access</span>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Full Name *</label>
+            <input className="form-input" placeholder="e.g. Priya Sharma" value={form.name} onChange={e => set("name", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Email *</label>
+            <input className="form-input" type="email" placeholder="analyst@railways.gov.in" value={form.email} onChange={e => set("email", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Employee ID</label>
+            <input className="form-input" placeholder="EMP-ANL-NR-042" value={form.employeeId} onChange={e => set("employeeId", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Designation</label>
+            <input className="form-input" placeholder="Senior Analyst" value={form.designation} onChange={e => set("designation", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Department</label>
+            <select className="form-select" value={form.department} onChange={e => set("department", e.target.value)}>
+              {ANL_DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Assigned Zone</label>
+            <select className="form-select" value={form.zone} onChange={e => set("zone", e.target.value)}>
+              {ZONES.map(z => <option key={z}>{z}</option>)}
+            </select>
+          </div>
+        </div>
+        {isEdit && (
+          <div className="form-group" style={{ marginTop:12, marginBottom:0 }}>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={form.status} onChange={e => set("status", e.target.value)}>
+              <option>Active</option><option>Inactive</option>
+            </select>
+          </div>
+        )}
+        <div style={{ display:"flex", gap:10, marginTop:20 }}>
+          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center", background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" }} disabled={!valid} onClick={() => onSave(form)}>
+            {isEdit ? "Update Analyst" : <><FiLink size={13}/> Create &amp; Get Activation Link</>}
+          </button>
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Analyst Activation Link Modal ─────────────────────────────────────────────
+function AnalystActivationModal({ link, name, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => { navigator.clipboard?.writeText(link).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000); };
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:520 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div className="modal-title" style={{ margin:0 }}>Analyst Account Created</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        <div style={{ background:"rgba(168,85,247,.08)", border:"1px solid rgba(168,85,247,.25)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+          <div style={{ color:"#a855f7", fontWeight:700, fontSize:13, marginBottom:4 }}>✓ Analyst account created for {name}</div>
+          <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.6 }}>The analyst must click the activation link below to <strong>set their own password</strong>. No password has been generated or stored.</div>
+        </div>
+        <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.2)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+          <div style={{ color:"#f59e0b", fontSize:12, fontWeight:700, marginBottom:4 }}>📧 Email Workflow (Simulated)</div>
+          <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.7 }}>Subject: "Your Analytics Dashboard access has been created."<br/>Body: "Click the secure activation link to create your password. Expires in 72 hours."<br/><strong style={{ color:"#ef4444" }}>No password is ever included in this email.</strong></div>
+        </div>
+        <div style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+          <div style={{ color:"#64748b", fontSize:11, marginBottom:6, textTransform:"uppercase", letterSpacing:1 }}>Secure Activation Link (valid 72h)</div>
+          <div style={{ color:"#c084fc", fontSize:12, wordBreak:"break-all", lineHeight:1.6 }}>{link}</div>
+        </div>
+        <div style={{ display:"flex", gap:10 }}>
+          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center", background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" }} onClick={copy}>
+            {copied ? <><FiCheck size={13}/> Copied!</> : <><FiLink size={13}/> Copy Link</>}
+          </button>
+          <button className="btn btn-outline" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Analyst Log Modal ─────────────────────────────────────────────────────────
+function AnalystLogModal({ anl, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:520 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <div className="modal-title" style={{ margin:0 }}>Audit Log — {anl.name}</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        <div style={{ maxHeight:340, overflowY:"auto", display:"flex", flexDirection:"column", gap:5 }}>
+          {(anl.activityLog||[]).length === 0
+            ? <div style={{ color:"#4a6fa5", textAlign:"center", padding:32 }}>No activity recorded yet.</div>
+            : (anl.activityLog||[]).map((l, i) => (
+              <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"9px 12px", background:"#071628", borderRadius:8, borderLeft:"3px solid #7c3aed" }}>
+                <FiClock size={12} color="#a855f7" style={{ marginTop:2, flexShrink:0 }}/>
+                <div style={{ flex:1 }}>
+                  <div style={{ color:"#cbd5e1", fontSize:12, fontWeight:600 }}>{l.action}</div>
+                  <div style={{ color:"#4a6fa5", fontSize:11, marginTop:2 }}>{l.at}</div>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+        <button className="btn btn-outline" style={{ marginTop:16, width:"100%", justifyContent:"center" }} onClick={onClose}>Close</button>
       </div>
     </div>
   );
@@ -364,24 +508,37 @@ const UsersRoles = () => {
     adminDeactivateOperator, adminReactivateOperator, adminUnlockOperator,
     adminResetPassword, adminApproveRequest, adminRejectRequest,
     adminDeleteOperator, adminResendActivation,
+    analystUsers,
+    adminCreateAnalyst, adminUpdateAnalyst, adminDeleteAnalyst,
+    adminSuspendAnalyst, adminDeactivateAnalyst, adminReactivateAnalyst,
+    adminResetAnalystPassword, adminResendAnalystActivation,
   } = useAuth();
 
-  const myZone   = admin?.zone || "NR";
-  const zoneOps  = operators.filter(o => o.zone === myZone);
-  const zoneReqs = requests.filter(r => r.zone === myZone);
-  const pending  = zoneReqs.filter(r => r.status === "Pending");
+  const myZone      = admin?.zone || "NR";
+  const zoneOps     = operators.filter(o => o.zone === myZone);
+  const zoneReqs    = requests.filter(r => r.zone === myZone);
+  const pending     = zoneReqs.filter(r => r.status === "Pending");
+  const allAnalysts = analystUsers || [];
 
-  const [tab,          setTab]         = useState("operators");
-  const [query,        setQuery]        = useState("");
-  const [statusF,      setStatusF]      = useState("All");
-  const [createOpen,   setCreate]       = useState(false);
-  const [editTarget,   setEdit]         = useState(null);
-  const [delTarget,    setDel]          = useState(null);
-  const [logTarget,    setLog]          = useState(null);
-  const [approveReq,   setApprove]      = useState(null);
-  const [activLink,    setActivLink]    = useState(null); // { link, name }
-  const [resetLink,    setResetLink]    = useState(null); // { link, name }
-  const [toast,        setToast]        = useState({ msg:"", ok:true });
+  const [tab,           setTab]         = useState("operators");
+  const [query,         setQuery]        = useState("");
+  const [statusF,       setStatusF]      = useState("All");
+  const [createOpen,    setCreate]       = useState(false);
+  const [editTarget,    setEdit]         = useState(null);
+  const [delTarget,     setDel]          = useState(null);
+  const [logTarget,     setLog]          = useState(null);
+  const [approveReq,    setApprove]      = useState(null);
+  const [activLink,     setActivLink]    = useState(null);
+  const [resetLink,     setResetLink]    = useState(null);
+  const [toast,         setToast]        = useState({ msg:"", ok:true });
+  const [anlQuery,      setAnlQuery]     = useState("");
+  const [anlStatusF,    setAnlStatusF]   = useState("All");
+  const [anlCreateOpen, setAnlCreate]    = useState(false);
+  const [anlEditTarget, setAnlEdit]      = useState(null);
+  const [anlDelTarget,  setAnlDel]       = useState(null);
+  const [anlLogTarget,  setAnlLog]       = useState(null);
+  const [anlActivLink,  setAnlActivLink] = useState(null);
+  const [anlResetLink,  setAnlResetLink] = useState(null);
 
   const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast({ msg:"", ok:true }), 3200); };
 
@@ -447,17 +604,50 @@ const UsersRoles = () => {
     adminUpdateOperator(opId, { permissions: perms });
   };
 
+  // Analyst handlers
+  const handleAnlCreate = (form) => {
+    const result = adminCreateAnalyst(form);
+    setAnlCreate(false);
+    setAnlActivLink({ link: result.activationLink, name: result.name });
+    showToast(`✓ Analyst account created for "${result.name}". Activation link ready.`);
+  };
+  const handleAnlEdit = (form) => {
+    adminUpdateAnalyst(anlEditTarget.id, { name:form.name, email:form.email, employeeId:form.employeeId, department:form.department, designation:form.designation, zone:form.zone, status:form.status });
+    setAnlEdit(null);
+    showToast(`✓ "${form.name}" updated.`);
+  };
+  const handleAnlSuspend    = (a) => { adminSuspendAnalyst(a.id);    showToast(`${a.name} suspended.`, false); };
+  const handleAnlDeactivate = (a) => { adminDeactivateAnalyst(a.id); showToast(`${a.name} deactivated.`, false); };
+  const handleAnlReactivate = (a) => { adminReactivateAnalyst(a.id); showToast(`✓ ${a.name} reactivated.`); };
+  const handleAnlDelete = () => { adminDeleteAnalyst(anlDelTarget.id); setAnlDel(null); showToast(`✓ "${anlDelTarget.name}" removed.`); };
+  const handleAnlResetPassword = (a) => {
+    const result = adminResetAnalystPassword(a.id);
+    setAnlResetLink({ link: result.resetLink, name: a.name });
+    showToast(`✓ Reset link generated for ${a.name}.`);
+  };
+  const handleAnlResendActivation = (a) => {
+    const result = adminResendAnalystActivation(a.id);
+    setAnlActivLink({ link: result.activationLink, name: a.name });
+    showToast(`✓ New activation link for ${a.name}.`);
+  };
+
+  const anlFiltered = allAnalysts.filter(a =>
+    (anlStatusF === "All" || a.status === anlStatusF || a.accountStatus === anlStatusF) &&
+    (`${a.name} ${a.email} ${a.id} ${a.employeeId||""}`.toLowerCase().includes(anlQuery.toLowerCase()))
+  );
+
   const TABS = [
-    { key:"operators",   label:"Operators",       count:zoneOps.length          },
+    { key:"operators",   label:"Operators",      count:zoneOps.length          },
+    { key:"analysts",    label:"Analysts",        count:allAnalysts.length      },
     { key:"requests",    label:"Access Requests", count:pending.length, alert:pending.length > 0 },
-    { key:"permissions", label:"Permissions",     count:null            },
-    { key:"logs",        label:"Audit Logs",      count:null            },
+    { key:"permissions", label:"Permissions",     count:null                    },
+    { key:"logs",        label:"Audit Logs",      count:null                    },
   ];
 
   const isLocked = (op) => op.lockedUntil && Date.now() < op.lockedUntil;
 
   return (
-    <DashboardLayout title="Operator Management" sub={`Zone ${myZone} — ${admin?.name||""} · Secure RBAC`}>
+    <DashboardLayout title="User Management" sub={`Zone ${myZone} — ${admin?.name||""} · Operators & Analysts RBAC`}>
 
       <Toast msg={toast.msg} ok={toast.ok}/>
 
@@ -475,11 +665,11 @@ const UsersRoles = () => {
 
       {/* KPIs */}
       <div style={{ display:"flex", gap:14, marginBottom:20, flexWrap:"wrap" }}>
-        <StatCard title="Zone Operators"   value={zoneOps.length}                                          color="#3b82f6" icon={FiUsers}        />
-        <StatCard title="Active"           value={zoneOps.filter(o=>o.accountStatus==="active").length}    color="#22c55e" icon={FiShield}       />
-        <StatCard title="Pending Activate" value={zoneOps.filter(o=>o.accountStatus==="pending_activation").length} color="#f59e0b" icon={FiClock} />
-        <StatCard title="Suspended"        value={zoneOps.filter(o=>o.accountStatus==="suspended"||o.accountStatus==="deactivated").length} color="#ef4444" icon={FiSlash} />
-        <StatCard title="Pending Requests" value={pending.length}                                          color="#f97316" icon={FiAlertTriangle} />
+        <StatCard title="Zone Operators"   value={zoneOps.length}                                                    color="#3b82f6" icon={FiUsers}        />
+        <StatCard title="Active Operators" value={zoneOps.filter(o=>o.accountStatus==="active").length}              color="#22c55e" icon={FiShield}       />
+        <StatCard title="Total Analysts"   value={allAnalysts.length}                                                color="#a855f7" icon={FiActivity}     />
+        <StatCard title="Active Analysts"  value={allAnalysts.filter(a=>a.accountStatus==="active").length}          color="#22c55e" icon={FiShield}       />
+        <StatCard title="Pending Requests" value={pending.length}                                                    color="#f97316" icon={FiAlertTriangle} />
       </div>
 
       {/* Tab bar */}
@@ -500,6 +690,92 @@ const UsersRoles = () => {
           </button>
         ))}
       </div>
+
+      {/* ── TAB: Analysts ── */}
+      {tab === "analysts" && (
+        <>
+          <div style={{ display:"flex", gap:12, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
+            <div className="search-box" style={{ flex:1 }}>
+              <FiSearch size={14} color="#4a6fa5"/>
+              <input value={anlQuery} onChange={e => setAnlQuery(e.target.value)} placeholder="Search by name, email, ID…"/>
+            </div>
+            <select className="form-select" style={{ width:"auto", padding:"8px 12px" }} value={anlStatusF} onChange={e => setAnlStatusF(e.target.value)}>
+              {["All","Active","Inactive","pending_activation","suspended","deactivated"].map(s => (
+                <option key={s} value={s}>{s==="All"?"All Statuses":s==="pending_activation"?"Pending Activation":s.charAt(0).toUpperCase()+s.slice(1)}</option>
+              ))}
+            </select>
+            <button className="btn btn-primary" style={{ background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" }} onClick={() => setAnlCreate(true)}>
+              <FiPlus size={13}/> New Analyst
+            </button>
+          </div>
+
+          <div className="card">
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Analyst</th><th>Email / Emp ID</th><th>Department</th><th>Zone</th><th>Account Status</th><th>Last Login</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {anlFiltered.map(a => (
+                    <tr key={a.id}>
+                      <td>
+                        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                          <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:12, fontWeight:700, flexShrink:0 }}>{a.name[0]}</div>
+                          <div>
+                            <div style={{ color:"#f1f5f9", fontWeight:600, fontSize:13 }}>{a.name}</div>
+                            <div style={{ color:"#a855f7", fontSize:11 }}>{a.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ color:"#64748b", fontSize:12 }}>{a.email}</div>
+                        {a.employeeId && <div style={{ color:"#4a6fa5", fontSize:11 }}>{a.employeeId}</div>}
+                      </td>
+                      <td>
+                        <div style={{ color:"#94a3b8", fontSize:12 }}>{a.department||"Analytics"}</div>
+                        {a.designation && <div style={{ color:"#4a6fa5", fontSize:11 }}>{a.designation}</div>}
+                      </td>
+                      <td><span className="badge badge-info" style={{ fontSize:10 }}>{a.zone}</span></td>
+                      <td>{accountStatusBadge(a.accountStatus||(a.status==="Active"?"active":"suspended"))}</td>
+                      <td style={{ color:"#4a6fa5", fontSize:12 }}>{a.lastLogin}</td>
+                      <td>
+                        <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+                          <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => setAnlEdit(a)}><FiEdit2 size={11}/></button>
+                          {a.accountStatus==="pending_activation" && (
+                            <button className="btn btn-ghost btn-sm" title="Resend Activation" style={{ color:"#a855f7" }} onClick={() => handleAnlResendActivation(a)}><FiLink size={11}/></button>
+                          )}
+                          {a.accountStatus==="active" && (
+                            <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => handleAnlResetPassword(a)}><FiKey size={11}/></button>
+                          )}
+                          {a.accountStatus==="active" && (
+                            <button className="btn btn-ghost btn-sm" title="Suspend" style={{ color:"#f59e0b" }} onClick={() => handleAnlSuspend(a)}><FiUserX size={11}/></button>
+                          )}
+                          {(a.accountStatus==="suspended"||a.accountStatus==="deactivated") && (
+                            <button className="btn btn-ghost btn-sm" title="Reactivate" style={{ color:"#22c55e" }} onClick={() => handleAnlReactivate(a)}><FiUserCheck size={11}/></button>
+                          )}
+                          {a.accountStatus==="active" && (
+                            <button className="btn btn-ghost btn-sm" title="Deactivate" style={{ color:"#ef4444" }} onClick={() => handleAnlDeactivate(a)}><FiSlash size={11}/></button>
+                          )}
+                          <button className="btn btn-ghost btn-sm" title="Audit Log" onClick={() => setAnlLog(a)}><FiActivity size={11}/></button>
+                          <button className="btn btn-sm" style={{ background:"rgba(239,68,68,.12)", color:"#ef4444" }} title="Delete" onClick={() => setAnlDel(a)}><FiTrash2 size={11}/></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {anlFiltered.length === 0 && (
+                    <tr><td colSpan={7} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>No analysts found. Click "New Analyst" to create one.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ marginTop:12, background:"rgba(168,85,247,.06)", border:"1px solid rgba(168,85,247,.15)", borderRadius:10, padding:"10px 16px", display:"flex", alignItems:"center", gap:10 }}>
+            <FiShield size={14} color="#a855f7"/>
+            <span style={{ color:"#94a3b8", fontSize:12 }}>Analysts have <strong style={{ color:"#c084fc" }}>read-only access</strong> to Analytics Dashboard, Performance Reports, Zone Analytics, Alert Analytics, and Reports. No operational data access.</span>
+          </div>
+        </>
+      )}
 
       {/* ── TAB: Operators ── */}
       {tab === "operators" && (
@@ -776,7 +1052,26 @@ const UsersRoles = () => {
         </div>
       )}
 
-      {/* ── Modals ── */}
+      {/* ── Analyst Modals ── */}
+      {anlCreateOpen && <AnalystModal adminZone={myZone} onSave={handleAnlCreate} onClose={() => setAnlCreate(false)}/>}
+      {anlEditTarget && <AnalystModal anl={anlEditTarget} adminZone={myZone} onSave={handleAnlEdit} onClose={() => setAnlEdit(null)}/>}
+      {anlLogTarget  && <AnalystLogModal anl={anlLogTarget} onClose={() => setAnlLog(null)}/>}
+      {anlActivLink  && <AnalystActivationModal link={anlActivLink.link} name={anlActivLink.name} onClose={() => setAnlActivLink(null)}/>}
+      {anlResetLink  && <ResetLinkModal link={anlResetLink.link} name={anlResetLink.name} onClose={() => setAnlResetLink(null)}/>}
+      {anlDelTarget && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setAnlDel(null)}>
+          <div className="modal-box" style={{ maxWidth:380 }}>
+            <div className="modal-title">Remove Analyst</div>
+            <p style={{ color:"#94a3b8", marginBottom:24 }}>Permanently remove <strong style={{ color:"#c084fc" }}>{anlDelTarget.name}</strong> ({anlDelTarget.id})? All analytics access will be revoked immediately.</p>
+            <div style={{ display:"flex", gap:10 }}>
+              <button className="btn btn-danger" style={{ flex:1, justifyContent:"center" }} onClick={handleAnlDelete}>Remove Permanently</button>
+              <button className="btn btn-outline" onClick={() => setAnlDel(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Operator Modals ── */}
       {createOpen  && <OperatorModal adminZone={myZone} onSave={handleCreate} onClose={() => setCreate(false)}/>}
       {editTarget  && <OperatorModal op={editTarget} adminZone={myZone} onSave={handleEdit} onClose={() => setEdit(null)}/>}
       {logTarget   && <LogModal op={logTarget} onClose={() => setLog(null)}/>}

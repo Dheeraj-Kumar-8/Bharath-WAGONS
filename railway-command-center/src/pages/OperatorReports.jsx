@@ -10,6 +10,7 @@ import {
 import OperatorLayout from "../components/OperatorLayout";
 import StatCard from "../components/StatCard";
 import { useOperatorData } from "../context/OperatorDataContext";
+import ReportExportPanel from "../components/ReportExportPanel";
 
 const OPERATOR_ACTIVITY = [
   { action:"Logged in",                 at:"08:30 AM", module:"Portal",      wagon:"—"       },
@@ -370,11 +371,12 @@ export default function OperatorReports() {
   const REPORT_TYPES = REPORT_TYPES_DEF;
   const [fromDate, setFromDate] = useState(MINUS(7));
   const [toDate,   setToDate]   = useState(TODAY);
-  const [preview,  setPreview]  = useState(null); // { data, rtype }
-  const [history,  setHistory]  = useState([]);   // [{ id, title, rtype, format, ts }]
+  const [preview,  setPreview]  = useState(null);
+  const [history,  setHistory]  = useState([]);
   const [generating, setGen]    = useState(null);
   const [toast,    setToast]    = useState("");
   const [historyOpen, setHistOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const showToast = (msg, ok = true) => {
     setToast({ msg, ok });
@@ -426,6 +428,8 @@ export default function OperatorReports() {
   return (
     <OperatorLayout title="Reports" sub="Generate, preview and download operational reports" moduleKey="reports">
 
+      <ReportExportPanel role="operator" isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -475,6 +479,9 @@ export default function OperatorReports() {
                 <FiClock size={12}/> History ({history.length})
               </button>
             )}
+            <button className="btn btn-primary btn-sm" onClick={() => setExportOpen(true)}>
+              <FiDownload size={12}/> Export Centre
+            </button>
           </div>
         </div>
       </div>

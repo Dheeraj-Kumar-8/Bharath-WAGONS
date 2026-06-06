@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useCallback } from "react";
 
+export const ANALYTICS_CREDENTIALS = [
+  { id:"ANL-NR", name:"Priya Sharma",   email:"analyst.nr@railways.gov.in", password:"NR@2025", zone:"NR", region:"North Railway" },
+  { id:"ANL-SR", name:"Kiran Babu",     email:"analyst.sr@railways.gov.in", password:"SR@2025", zone:"SR", region:"South Railway" },
+  { id:"ANL-ER", name:"Debashish Roy",  email:"analyst.er@railways.gov.in", password:"ER@2025", zone:"ER", region:"East Railway"  },
+  { id:"ANL-WR", name:"Sneha Joshi",    email:"analyst.wr@railways.gov.in", password:"WR@2025", zone:"WR", region:"West Railway"  },
+];
+
 export const ADMIN_CREDENTIALS = [
   { id:"ADM-NR",  name:"Rajesh Kumar",     email:"admin.nr@railways.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
   { id:"ADM-SR",  name:"Kavitha Reddy",    email:"admin.sr@railways.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
@@ -166,8 +173,57 @@ const SEED_REQUESTS = [
 ];
 
 // v4 key — forces fresh seed load, wiping all previous stale data
-const STORE_KEY_OPS  = "rcc_rbac_operators_v4";
-const STORE_KEY_REQS = "rcc_rbac_requests_v4";
+const STORE_KEY_OPS      = "rcc_rbac_operators_v4";
+const STORE_KEY_REQS     = "rcc_rbac_requests_v4";
+const STORE_KEY_ANALYSTS = "rcc_rbac_analysts_v1";
+
+// ── Seed analysts (mirrors ANALYTICS_CREDENTIALS with full RBAC fields) ───────
+const SEED_ANALYSTS = [
+  {
+    id:"ANL-NR", name:"Priya Sharma",   email:"analyst.nr@railways.gov.in",
+    passwordHash: hashPassword("NR@2025"),
+    zone:"NR", region:"North Railway",
+    status:"Active", accountStatus:"active",
+    employeeId:"EMP-ANL-NR-001", department:"Analytics", designation:"Senior Analyst",
+    createdAt:"01 Jul 2025", lastLogin:"Today 09:00 AM",
+    activationToken:null, activationExpiry:null, activated:true,
+    resetToken:null, resetExpiry:null,
+    activityLog:[{ action:"Logged in", at:"Today 09:00 AM", ip:"—" }],
+  },
+  {
+    id:"ANL-SR", name:"Kiran Babu",     email:"analyst.sr@railways.gov.in",
+    passwordHash: hashPassword("SR@2025"),
+    zone:"SR", region:"South Railway",
+    status:"Active", accountStatus:"active",
+    employeeId:"EMP-ANL-SR-001", department:"Analytics", designation:"Analyst",
+    createdAt:"01 Jul 2025", lastLogin:"Today 08:45 AM",
+    activationToken:null, activationExpiry:null, activated:true,
+    resetToken:null, resetExpiry:null,
+    activityLog:[{ action:"Logged in", at:"Today 08:45 AM", ip:"—" }],
+  },
+  {
+    id:"ANL-ER", name:"Debashish Roy",  email:"analyst.er@railways.gov.in",
+    passwordHash: hashPassword("ER@2025"),
+    zone:"ER", region:"East Railway",
+    status:"Active", accountStatus:"active",
+    employeeId:"EMP-ANL-ER-001", department:"Analytics", designation:"Analyst",
+    createdAt:"01 Jul 2025", lastLogin:"Yesterday 22:00 PM",
+    activationToken:null, activationExpiry:null, activated:true,
+    resetToken:null, resetExpiry:null,
+    activityLog:[{ action:"Logged in", at:"Yesterday 22:00 PM", ip:"—" }],
+  },
+  {
+    id:"ANL-WR", name:"Sneha Joshi",    email:"analyst.wr@railways.gov.in",
+    passwordHash: hashPassword("WR@2025"),
+    zone:"WR", region:"West Railway",
+    status:"Active", accountStatus:"active",
+    employeeId:"EMP-ANL-WR-001", department:"Analytics", designation:"Analyst",
+    createdAt:"01 Jul 2025", lastLogin:"Yesterday 14:30 PM",
+    activationToken:null, activationExpiry:null, activated:true,
+    resetToken:null, resetExpiry:null,
+    activityLog:[{ action:"Logged in", at:"Yesterday 14:30 PM", ip:"—" }],
+  },
+];
 
 function loadStore(key, seed) {
   try {
@@ -208,16 +264,63 @@ export function AuthProvider({ children }) {
     catch { return null; }
   });
 
+  const [analyst, setAnalyst] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem("rcc_analyst")) || null; }
+    catch { return null; }
+  });
+
   const [operator, setOperator] = useState(() => {
     try { return JSON.parse(localStorage.getItem("rcc_operator")) || null; }
     catch { return null; }
   });
 
-  const [operators, setOperators] = useState(() => loadStore(STORE_KEY_OPS,  SEED_OPERATORS));
-  const [requests,  setRequests]  = useState(() => loadStore(STORE_KEY_REQS, SEED_REQUESTS));
+  const [operators,     setOperators]     = useState(() => loadStore(STORE_KEY_OPS,      SEED_OPERATORS));
+  const [requests,      setRequests]      = useState(() => loadStore(STORE_KEY_REQS,     SEED_REQUESTS));
+  const [analystUsers,  setAnalystUsers]  = useState(() => loadStore(STORE_KEY_ANALYSTS, SEED_ANALYSTS));
 
-  const persistOps  = (data) => { setOperators(data); saveStore(STORE_KEY_OPS,  data); };
-  const persistReqs = (data) => { setRequests(data);  saveStore(STORE_KEY_REQS, data); };
+  const persistOps      = (data) => { setOperators(data);    saveStore(STORE_KEY_OPS,      data); };
+  const persistReqs     = (data) => { setRequests(data);     saveStore(STORE_KEY_REQS,     data); };
+  const persistAnalysts = (data) => { setAnalystUsers(data); saveStore(STORE_KEY_ANALYSTS, data); };
+
+  // Analytics login — checks dynamic store first, then static fallback
+  const loginAnalyst = useCallback((email, password) => {
+    const e = email.trim().toLowerCase();
+    const p = password.trim();
+
+    // Check dynamic analyst store (admin-managed accounts)
+    const dynFound = analystUsers.find(a => a.email.toLowerCase() === e);
+    if (dynFound) {
+      if (dynFound.accountStatus === "suspended")          return { success:false, reason:"account_suspended" };
+      if (dynFound.accountStatus === "deactivated")        return { success:false, reason:"account_deactivated" };
+      if (dynFound.accountStatus === "pending_activation") return { success:false, reason:"not_activated" };
+      if (dynFound.status !== "Active")                    return { success:false, reason:"account_inactive" };
+      if (!checkPassword(p, dynFound.passwordHash))        return { success:false, reason:"invalid_credentials" };
+      const now = new Date().toLocaleString("en-IN", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"short" });
+      persistAnalysts(analystUsers.map(a => a.id === dynFound.id ? {
+        ...a, lastLogin:"Just now",
+        activityLog:[{ action:"Logged in", at:now, ip:"—" }, ...(a.activityLog||[]).slice(0,19)],
+      } : a));
+      const session = { id:dynFound.id, name:dynFound.name, email:dynFound.email, zone:dynFound.zone, region:dynFound.region, role:"analyst" };
+      sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
+      setAnalyst(session);
+      return { success:true };
+    }
+
+    // Fallback: static ANALYTICS_CREDENTIALS (backwards compat)
+    const found = ANALYTICS_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
+    if (found) {
+      const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"analyst" };
+      sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
+      setAnalyst(session);
+      return { success:true };
+    }
+    return { success:false, reason:"invalid_credentials" };
+  }, [analystUsers]);
+
+  const logoutAnalyst = () => {
+    sessionStorage.removeItem("rcc_analyst");
+    setAnalyst(null);
+  };
 
   // Admin login
   const login = (email, password) => {
@@ -291,6 +394,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     sessionStorage.removeItem("rcc_admin");
     setAdmin(null);
+    // Also clear analyst session on admin logout for clean state
   };
 
   const logoutOperator = () => {
@@ -465,9 +569,75 @@ export function AuthProvider({ children }) {
   const getOperatorByActivationToken = useCallback((token) => operators.find(o => o.activationToken === token) || null, [operators]);
   const getOperatorByResetToken      = useCallback((token) => operators.find(o => o.resetToken === token) || null,      [operators]);
 
+  // ── Analyst management (admin-only, mirrors operator pattern) ────────────
+  const adminCreateAnalyst = useCallback((form) => {
+    const id    = `ANL-${Date.now().toString(36).toUpperCase()}`;
+    const token = genToken();
+    const expiry = Date.now() + 72 * 60 * 60 * 1000;
+    const newA = {
+      id, name:form.name, email:form.email,
+      passwordHash: null,
+      zone:form.zone, region:form.region || `${form.zone} Railway`,
+      status:"Inactive", accountStatus:"pending_activation",
+      employeeId:form.employeeId||"", department:form.department||"Analytics", designation:form.designation||"",
+      createdAt:new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
+      lastLogin:"Never",
+      activationToken:token, activationExpiry:expiry, activated:false,
+      resetToken:null, resetExpiry:null,
+      activityLog:[{ action:"Analyst account created by admin", at:new Date().toLocaleTimeString("en-IN"), ip:"Admin" }],
+    };
+    persistAnalysts([...analystUsers, newA]);
+    return { ...newA, activationLink:`${window.location.origin}/activate/${token}` };
+  }, [analystUsers]);
+
+  const adminUpdateAnalyst = useCallback((id, changes) => {
+    persistAnalysts(analystUsers.map(a => {
+      if (a.id !== id) return a;
+      return {
+        ...a, ...changes,
+        activityLog:[
+          { action:`Admin updated: ${Object.keys(changes).join(", ")}`, at:new Date().toLocaleTimeString("en-IN"), ip:"Admin" },
+          ...(a.activityLog||[]).slice(0,19),
+        ],
+      };
+    }));
+  }, [analystUsers]);
+
+  const adminDeleteAnalyst      = useCallback((id) => { persistAnalysts(analystUsers.filter(a => a.id !== id)); }, [analystUsers]);
+  const adminSuspendAnalyst     = useCallback((id) => { adminUpdateAnalyst(id, { status:"Inactive", accountStatus:"suspended" }); },   [adminUpdateAnalyst]);
+  const adminDeactivateAnalyst  = useCallback((id) => { adminUpdateAnalyst(id, { status:"Inactive", accountStatus:"deactivated" }); }, [adminUpdateAnalyst]);
+  const adminReactivateAnalyst  = useCallback((id) => { adminUpdateAnalyst(id, { status:"Active",   accountStatus:"active" }); },      [adminUpdateAnalyst]);
+
+  const adminResetAnalystPassword = useCallback((id) => {
+    const a = analystUsers.find(x => x.id === id);
+    if (!a) return { resetLink:"" };
+    const token  = genToken();
+    const expiry = Date.now() + 60 * 60 * 1000;
+    const now    = new Date().toLocaleTimeString("en-IN");
+    persistAnalysts(analystUsers.map(x => x.id === id ? {
+      ...x, resetToken:token, resetExpiry:expiry,
+      activityLog:[{ action:"Admin triggered password reset", at:now, ip:"Admin" }, ...(x.activityLog||[]).slice(0,19)],
+    } : x));
+    return { resetLink:`${window.location.origin}/reset-password/${token}`, name:a.name };
+  }, [analystUsers]);
+
+  const adminResendAnalystActivation = useCallback((id) => {
+    const a = analystUsers.find(x => x.id === id);
+    if (!a) return { activationLink:"" };
+    const token  = genToken();
+    const expiry = Date.now() + 72 * 60 * 60 * 1000;
+    const now    = new Date().toLocaleTimeString("en-IN");
+    persistAnalysts(analystUsers.map(x => x.id === id ? {
+      ...x, activationToken:token, activationExpiry:expiry,
+      activityLog:[{ action:"Activation link resent by admin", at:now, ip:"Admin" }, ...(x.activityLog||[]).slice(0,19)],
+    } : x));
+    return { activationLink:`${window.location.origin}/activate/${token}` };
+  }, [analystUsers]);
+
   return (
     <AuthContext.Provider value={{
       admin, login, logout,
+      analyst, loginAnalyst, logoutAnalyst,
       operator, loginOperator, logoutOperator,
       operators, requests, hasPermission,
       activateAccount,
@@ -481,6 +651,11 @@ export function AuthProvider({ children }) {
       adminRejectRequest, adminDeleteOperator,
       adminResendActivation,
       logActivity, submitAccessRequest,
+      // Analyst management
+      analystUsers,
+      adminCreateAnalyst, adminUpdateAnalyst, adminDeleteAnalyst,
+      adminSuspendAnalyst, adminDeactivateAnalyst, adminReactivateAnalyst,
+      adminResetAnalystPassword, adminResendAnalystActivation,
     }}>
       {children}
     </AuthContext.Provider>
