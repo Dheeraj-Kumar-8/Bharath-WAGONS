@@ -37,40 +37,43 @@ function Toast({ msg, ok = true }) {
 }
 
 // ── Activation Link Modal ─────────────────────────────────────────────────────
-function ActivationLinkModal({ link, name, onClose }) {
+function ActivationLinkModal({ link, name, role, onClose }) {
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(link).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000); };
+  const isAnl = role === "Analyst";
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth:520 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div className="modal-title" style={{ margin:0 }}>Activation Link Generated</div>
+          <div className="modal-title" style={{ margin:0 }}>Activation Email Dispatched</div>
           <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
         </div>
 
         <div style={{ background:"rgba(34,197,94,.08)", border:"1px solid rgba(34,197,94,.25)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
           <div style={{ color:"#22c55e", fontWeight:700, fontSize:13, marginBottom:4 }}>✓ Account created for {name}</div>
           <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.6 }}>
-            The operator must click the activation link below to <strong>set their own password</strong>. No password has been generated or stored.
+            A secure activation email has been <strong>automatically sent</strong> to the {isAnl ? "analyst's" : "operator's"} registered @railway.gov.in address.
+            They must click the link to set their own password.
           </div>
         </div>
 
-        <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.2)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#f59e0b", fontSize:12, fontWeight:700, marginBottom:4 }}>📧 Email Workflow (Simulated)</div>
+        <div style={{ background:"rgba(34,197,94,.06)", border:"1px solid rgba(34,197,94,.15)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
+          <div style={{ color:"#22c55e", fontSize:12, fontWeight:700, marginBottom:4 }}>📧 Email Sent (Simulated)</div>
           <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.7 }}>
-            Subject: "Your access request has been approved."<br/>
-            Body: "Your account has been created. Click the secure activation link below to create your password. This link expires in 72 hours."<br/>
+            Subject: "Your {isAnl ? "Analyst" : "Operator"} access has been approved"<br/>
+            Recipient: {isAnl ? "Analyst" : "Operator"} — {name}<br/>
+            Link valid for <strong style={{ color:"#60a5fa" }}>72 hours</strong> · Single-use · Permanently invalidated after activation<br/>
             <strong style={{ color:"#ef4444" }}>No password is ever included in this email.</strong>
           </div>
         </div>
 
         <div style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#64748b", fontSize:11, marginBottom:6, textTransform:"uppercase", letterSpacing:1 }}>Secure Activation Link (valid 72h)</div>
-          <div style={{ color:"#60a5fa", fontSize:12, wordBreak:"break-all", lineHeight:1.6 }}>{link}</div>
+          <div style={{ color:"#64748b", fontSize:11, marginBottom:6, textTransform:"uppercase", letterSpacing:1 }}>Simulated Activation Link (valid 72h)</div>
+          <div style={{ color: isAnl ? "#c084fc" : "#60a5fa", fontSize:12, wordBreak:"break-all", lineHeight:1.6 }}>{link}</div>
         </div>
 
         <div style={{ display:"flex", gap:10 }}>
-          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center" }} onClick={copy}>
+          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center", ...(isAnl ? { background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" } : {}) }} onClick={copy}>
             {copied ? <><FiCheck size={13}/> Copied!</> : <><FiLink size={13}/> Copy Link</>}
           </button>
           <button className="btn btn-outline" onClick={onClose}>Close</button>
@@ -196,40 +199,6 @@ function AnalystModal({ anl, adminZone, onSave, onClose }) {
             {isEdit ? "Update Analyst" : <><FiLink size={13}/> Create &amp; Get Activation Link</>}
           </button>
           <button className="btn btn-outline" onClick={onClose}>Cancel</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Analyst Activation Link Modal ─────────────────────────────────────────────
-function AnalystActivationModal({ link, name, onClose }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => { navigator.clipboard?.writeText(link).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000); };
-  return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth:520 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div className="modal-title" style={{ margin:0 }}>Analyst Account Created</div>
-          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
-        </div>
-        <div style={{ background:"rgba(168,85,247,.08)", border:"1px solid rgba(168,85,247,.25)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#a855f7", fontWeight:700, fontSize:13, marginBottom:4 }}>✓ Analyst account created for {name}</div>
-          <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.6 }}>The analyst must click the activation link below to <strong>set their own password</strong>. No password has been generated or stored.</div>
-        </div>
-        <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.2)", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#f59e0b", fontSize:12, fontWeight:700, marginBottom:4 }}>📧 Email Workflow (Simulated)</div>
-          <div style={{ color:"#94a3b8", fontSize:12, lineHeight:1.7 }}>Subject: "Your Analytics Dashboard access has been created."<br/>Body: "Click the secure activation link to create your password. Expires in 72 hours."<br/><strong style={{ color:"#ef4444" }}>No password is ever included in this email.</strong></div>
-        </div>
-        <div style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:10, padding:"12px 14px", marginBottom:16 }}>
-          <div style={{ color:"#64748b", fontSize:11, marginBottom:6, textTransform:"uppercase", letterSpacing:1 }}>Secure Activation Link (valid 72h)</div>
-          <div style={{ color:"#c084fc", fontSize:12, wordBreak:"break-all", lineHeight:1.6 }}>{link}</div>
-        </div>
-        <div style={{ display:"flex", gap:10 }}>
-          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center", background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" }} onClick={copy}>
-            {copied ? <><FiCheck size={13}/> Copied!</> : <><FiLink size={13}/> Copy Link</>}
-          </button>
-          <button className="btn btn-outline" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
@@ -373,6 +342,7 @@ function OperatorModal({ op, adminZone, onSave, onClose }) {
 
 // ── Approve Request Modal ─────────────────────────────────────────────────────
 function ApproveModal({ req, onApprove, onClose }) {
+  const isAnalyst = req.role === "Analyst";
   const [perms, setPerms] = useState(ALL_PERMISSIONS.map(p => p.key));
   const toggle = key => setPerms(p => p.includes(key) ? p.filter(x => x !== key) : [...p, key]);
   return (
@@ -386,6 +356,7 @@ function ApproveModal({ req, onApprove, onClose }) {
         <div style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:10, padding:14, marginBottom:16 }}>
           {[
             ["Email",        req.email],
+            ["Requested Role", req.role || "Operator"],
             ["Employee ID",  req.employeeId  || "—"],
             ["Department",   req.department  || "—"],
             ["Designation",  req.designation || "—"],
@@ -395,37 +366,47 @@ function ApproveModal({ req, onApprove, onClose }) {
           ].map(([k,v]) => (
             <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:"1px solid rgba(26,51,86,.4)" }}>
               <span style={{ color:"#64748b", fontSize:12 }}>{k}</span>
-              <span style={{ color:"#f1f5f9", fontSize:12, fontWeight:600 }}>{v}</span>
+              <span style={{ color: k==="Requested Role" ? (isAnalyst ? "#a855f7" : "#60a5fa") : "#f1f5f9", fontSize:12, fontWeight:600 }}>{v}</span>
             </div>
           ))}
           {req.note && <div style={{ color:"#94a3b8", fontSize:11, marginTop:8, fontStyle:"italic" }}>{req.note}</div>}
         </div>
 
-        <div style={{ background:"rgba(34,197,94,.08)", border:"1px solid rgba(34,197,94,.2)", borderRadius:10, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
-          <FiLock size={13} color="#22c55e" style={{ flexShrink:0, marginTop:2 }}/>
-          <span style={{ color:"#22c55e", fontSize:12, lineHeight:1.6 }}>
-            Approving will create the account and generate a <strong>secure activation link</strong>. No password will be generated or emailed.
+        <div style={{ background: isAnalyst ? "rgba(168,85,247,.08)" : "rgba(34,197,94,.08)", border: isAnalyst ? "1px solid rgba(168,85,247,.2)" : "1px solid rgba(34,197,94,.2)", borderRadius:10, padding:"10px 14px", marginBottom:16, display:"flex", gap:8 }}>
+          <FiLock size={13} color={isAnalyst ? "#a855f7" : "#22c55e"} style={{ flexShrink:0, marginTop:2 }}/>
+          <span style={{ color: isAnalyst ? "#c084fc" : "#22c55e", fontSize:12, lineHeight:1.6 }}>
+            {isAnalyst
+              ? "Approving will create an Analyst account and automatically send a secure activation email to the applicant's @railway.gov.in address."
+              : "Approving will create the Operator account and automatically send a secure activation email to the applicant's @railway.gov.in address. No password will be generated or emailed."}
           </span>
         </div>
 
-        <div style={{ color:"#64748b", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Grant Module Permissions</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
-          {ALL_PERMISSIONS.map(p => {
-            const on = perms.includes(p.key);
-            return (
-              <div key={p.key} onClick={() => toggle(p.key)}
-                style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", borderRadius:9, cursor:"pointer", border:`1px solid ${on ? "rgba(59,130,246,.3)" : "#1a3356"}`, background: on ? "rgba(59,130,246,.08)" : "transparent" }}>
-                <div style={{ width:15, height:15, borderRadius:4, border:`2px solid ${on ? "#3b82f6" : "#2a4a6e"}`, background: on ? "#3b82f6" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  {on && <FiCheck size={9} color="#fff"/>}
-                </div>
-                <span style={{ color: on ? "#60a5fa" : "#64748b", fontSize:11, fontWeight: on ? 600 : 400 }}>{p.label}</span>
-              </div>
-            );
-          })}
-        </div>
+        {!isAnalyst && (
+          <>
+            <div style={{ color:"#64748b", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Grant Module Permissions</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
+              {ALL_PERMISSIONS.map(p => {
+                const on = perms.includes(p.key);
+                return (
+                  <div key={p.key} onClick={() => toggle(p.key)}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 11px", borderRadius:9, cursor:"pointer", border:`1px solid ${on ? "rgba(59,130,246,.3)" : "#1a3356"}`, background: on ? "rgba(59,130,246,.08)" : "transparent" }}>
+                    <div style={{ width:15, height:15, borderRadius:4, border:`2px solid ${on ? "#3b82f6" : "#2a4a6e"}`, background: on ? "#3b82f6" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      {on && <FiCheck size={9} color="#fff"/>}
+                    </div>
+                    <span style={{ color: on ? "#60a5fa" : "#64748b", fontSize:11, fontWeight: on ? 600 : 400 }}>{p.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         <div style={{ display:"flex", gap:10 }}>
-          <button className="btn btn-success" style={{ flex:1, justifyContent:"center" }} onClick={() => onApprove(perms)}>
+          <button
+            className="btn btn-success"
+            style={{ flex:1, justifyContent:"center", ...(isAnalyst ? { background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none" } : {}) }}
+            onClick={() => onApprove(isAnalyst ? [] : perms)}
+          >
             <FiCheckCircle size={13}/> Approve & Generate Activation Link
           </button>
           <button className="btn btn-outline" onClick={onClose}>Cancel</button>
@@ -549,7 +530,7 @@ const UsersRoles = () => {
   const handleCreate = (form) => {
     const result = adminCreateOperator(form);
     setCreate(false);
-    setActivLink({ link: result.activationLink, name: result.name });
+    setActivLink({ link: result.activationLink, name: result.name, role: "Operator" });
     showToast(`Account created for "${result.name}". Activation link ready.`);
   };
 
@@ -571,9 +552,9 @@ const UsersRoles = () => {
     showToast(`✓ Reset link generated for ${op.name}.`);
   };
 
-  const handleResendActivation = (op) => {
-    const result = adminResendActivation(op.id);
-    setActivLink({ link: result.activationLink, name: op.name });
+  const handleResendActivation = async (op) => {
+    const result = await adminResendActivation(op.id);
+    setActivLink({ link: result.activationLink, name: op.name, role: "Operator" });
     showToast(`✓ New activation link generated for ${op.name}.`);
   };
 
@@ -583,15 +564,22 @@ const UsersRoles = () => {
     showToast(`✓ "${delTarget.name}" removed.`);
   };
 
-  const handleApprove = (perms) => {
-    const result = adminApproveRequest(approveReq.id, perms);
+  const handleApprove = async (perms) => {
+    const isAnalyst = approveReq.role === "Analyst";
+    const result = await adminApproveRequest(approveReq.id, perms, admin?.name || "Zone Admin");
     setApprove(null);
-    setActivLink({ link: result.activationLink, name: result.name });
-    showToast(`✓ Approved. Activation link generated for "${result.name}".`);
+    const link = result.activationLink;
+    const name = result.name;
+    if (isAnalyst) {
+      setAnlActivLink({ link, name, role: "Analyst" });
+    } else {
+      setActivLink({ link, name, role: "Operator" });
+    }
+    showToast(`✓ Approved. Activation email dispatched to "${name}".`);
   };
 
   const handleReject = (req) => {
-    adminRejectRequest(req.id);
+    adminRejectRequest(req.id, admin?.name || "Zone Admin");
     showToast(`Request from "${req.name}" rejected.`, false);
   };
 
@@ -606,7 +594,7 @@ const UsersRoles = () => {
   const handleAnlCreate = (form) => {
     const result = adminCreateAnalyst({ ...form, zone: myZone, region: `${myZone} Railway` });
     setAnlCreate(false);
-    setAnlActivLink({ link: result.activationLink, name: result.name });
+    setAnlActivLink({ link: result.activationLink, name: result.name, role: "Analyst" });
     showToast(`✓ Analyst account created for "${result.name}". Activation link ready.`);
   };
   const handleAnlEdit = (form) => {
@@ -623,9 +611,9 @@ const UsersRoles = () => {
     setAnlResetLink({ link: result.resetLink, name: a.name });
     showToast(`✓ Reset link generated for ${a.name}.`);
   };
-  const handleAnlResendActivation = (a) => {
-    const result = adminResendAnalystActivation(a.id);
-    setAnlActivLink({ link: result.activationLink, name: a.name });
+  const handleAnlResendActivation = async (a) => {
+    const result = await adminResendAnalystActivation(a.id);
+    setAnlActivLink({ link: result.activationLink, name: a.name, role: "Analyst" });
     showToast(`✓ New activation link for ${a.name}.`);
   };
 
@@ -916,7 +904,7 @@ const UsersRoles = () => {
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>Applicant</th><th>Employee ID</th><th>Department</th><th>Shift</th><th>Requested</th><th>Status</th><th>Actions</th></tr>
+                  <tr><th>Applicant</th><th>Employee ID</th><th>Requested Role</th><th>Department</th><th>Shift</th><th>Requested</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {zoneReqs.map(req => (
@@ -926,6 +914,11 @@ const UsersRoles = () => {
                         <div style={{ color:"#64748b", fontSize:11 }}>{req.email}</div>
                       </td>
                       <td style={{ color:"#94a3b8", fontSize:12 }}>{req.employeeId||"—"}</td>
+                      <td>
+                        <span className={`badge ${req.role === "Analyst" ? "badge-info" : "badge-medium"}`} style={{ fontSize:11 }}>
+                          {req.role === "Analyst" ? "📊 Analyst" : "🚆 Operator"}
+                        </span>
+                      </td>
                       <td>
                         <div style={{ color:"#94a3b8", fontSize:12 }}>{req.department||"—"}</div>
                         {req.designation && <div style={{ color:"#4a6fa5", fontSize:11 }}>{req.designation}</div>}
@@ -1054,7 +1047,7 @@ const UsersRoles = () => {
       {anlCreateOpen && <AnalystModal adminZone={myZone} onSave={handleAnlCreate} onClose={() => setAnlCreate(false)}/>}
       {anlEditTarget && <AnalystModal anl={anlEditTarget} adminZone={myZone} onSave={handleAnlEdit} onClose={() => setAnlEdit(null)}/>}
       {anlLogTarget  && <AnalystLogModal anl={anlLogTarget} onClose={() => setAnlLog(null)}/>}
-      {anlActivLink  && <AnalystActivationModal link={anlActivLink.link} name={anlActivLink.name} onClose={() => setAnlActivLink(null)}/>}
+      {anlActivLink  && <ActivationLinkModal link={anlActivLink.link} name={anlActivLink.name} role={anlActivLink.role || "Analyst"} onClose={() => setAnlActivLink(null)}/>}
       {anlResetLink  && <ResetLinkModal link={anlResetLink.link} name={anlResetLink.name} onClose={() => setAnlResetLink(null)}/>}
       {anlDelTarget && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setAnlDel(null)}>
@@ -1074,7 +1067,7 @@ const UsersRoles = () => {
       {editTarget  && <OperatorModal op={editTarget} adminZone={myZone} onSave={handleEdit} onClose={() => setEdit(null)}/>}
       {logTarget   && <LogModal op={logTarget} onClose={() => setLog(null)}/>}
       {approveReq  && <ApproveModal req={approveReq} onApprove={handleApprove} onClose={() => setApprove(null)}/>}
-      {activLink   && <ActivationLinkModal link={activLink.link} name={activLink.name} onClose={() => setActivLink(null)}/>}
+      {activLink   && <ActivationLinkModal link={activLink.link} name={activLink.name} role={activLink.role || "Operator"} onClose={() => setActivLink(null)}/>}
       {resetLink   && <ResetLinkModal link={resetLink.link} name={resetLink.name} onClose={() => setResetLink(null)}/>}
 
       {delTarget && (

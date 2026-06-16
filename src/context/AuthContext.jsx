@@ -1,25 +1,28 @@
 import { createContext, useContext, useState, useCallback } from "react";
+import { isValidRailwayEmail, DOMAIN_ERROR } from "../utils/emailValidator";
+import { generateActivationToken, verifyActivationToken } from "../utils/tokenService";
+import { sendActivationEmail } from "../utils/emailService";
 
 export const ANALYTICS_CREDENTIALS = [
-  { id:"ANL-NR",  name:"Priya Sharma",      email:"analyst.nr@railways.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
-  { id:"ANL-SR",  name:"Kiran Babu",        email:"analyst.sr@railways.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
-  { id:"ANL-ER",  name:"Debashish Roy",     email:"analyst.er@railways.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
-  { id:"ANL-WR",  name:"Sneha Joshi",       email:"analyst.wr@railways.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
-  { id:"ANL-NER", name:"Biren Kalita",      email:"analyst.ner@railways.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
-  { id:"ANL-NWR", name:"Geeta Choudhary",   email:"analyst.nwr@railways.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
-  { id:"ANL-SER", name:"Tanmay Mohanty",    email:"analyst.ser@railways.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
-  { id:"ANL-SWR", name:"Lakshmi Venkat",    email:"analyst.swr@railways.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
+  { id:"ANL-NR",  name:"Priya Sharma",      email:"analyst.nr@railway.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
+  { id:"ANL-SR",  name:"Kiran Babu",        email:"analyst.sr@railway.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
+  { id:"ANL-ER",  name:"Debashish Roy",     email:"analyst.er@railway.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
+  { id:"ANL-WR",  name:"Sneha Joshi",       email:"analyst.wr@railway.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
+  { id:"ANL-NER", name:"Biren Kalita",      email:"analyst.ner@railway.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
+  { id:"ANL-NWR", name:"Geeta Choudhary",   email:"analyst.nwr@railway.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
+  { id:"ANL-SER", name:"Tanmay Mohanty",    email:"analyst.ser@railway.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
+  { id:"ANL-SWR", name:"Lakshmi Venkat",    email:"analyst.swr@railway.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
 ];
 
 export const ADMIN_CREDENTIALS = [
-  { id:"ADM-NR",  name:"Rajesh Kumar",     email:"admin.nr@railways.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
-  { id:"ADM-SR",  name:"Kavitha Reddy",    email:"admin.sr@railways.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
-  { id:"ADM-ER",  name:"Subhash Ghosh",    email:"admin.er@railways.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
-  { id:"ADM-WR",  name:"Rohit Patel",      email:"admin.wr@railways.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
-  { id:"ADM-NER", name:"Biren Das",        email:"admin.ner@railways.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
-  { id:"ADM-NWR", name:"Suresh Choudhary", email:"admin.nwr@railways.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
-  { id:"ADM-SER", name:"Prasad Murthy",    email:"admin.ser@railways.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
-  { id:"ADM-SWR", name:"Anitha Nair",      email:"admin.swr@railways.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
+  { id:"ADM-NR",  name:"Rajesh Kumar",     email:"admin.nr@railway.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
+  { id:"ADM-SR",  name:"Kavitha Reddy",    email:"admin.sr@railway.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
+  { id:"ADM-ER",  name:"Subhash Ghosh",    email:"admin.er@railway.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
+  { id:"ADM-WR",  name:"Rohit Patel",      email:"admin.wr@railway.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
+  { id:"ADM-NER", name:"Biren Das",        email:"admin.ner@railway.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
+  { id:"ADM-NWR", name:"Suresh Choudhary", email:"admin.nwr@railway.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
+  { id:"ADM-SER", name:"Prasad Murthy",    email:"admin.ser@railway.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
+  { id:"ADM-SWR", name:"Anitha Nair",      email:"admin.swr@railway.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
 ];
 
 export const ALL_PERMISSIONS = [
@@ -47,7 +50,7 @@ const LOCK_DURATION_MS    = 15 * 60 * 1000;
 
 const SEED_OPERATORS = [
   {
-    id:"OPR-NR", name:"Rajan Verma", email:"operator.nr@railways.gov.in",
+    id:"OPR-NR", name:"Rajan Verma", email:"operator.nr@railway.gov.in",
     passwordHash: hashPassword("NR@2025"),
     zone:"NR", region:"North Railway", shift:"Shift A",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -60,7 +63,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Today 08:30 AM", ip:"10.0.1.12" }],
   },
   {
-    id:"OPR-SR", name:"Meena Pillai", email:"operator.sr@railways.gov.in",
+    id:"OPR-SR", name:"Meena Pillai", email:"operator.sr@railway.gov.in",
     passwordHash: hashPassword("SR@2025"),
     zone:"SR", region:"South Railway", shift:"Shift B",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -73,7 +76,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Today 07:50 AM", ip:"10.0.2.44" }],
   },
   {
-    id:"OPR-ER", name:"Arnab Sen", email:"operator.er@railways.gov.in",
+    id:"OPR-ER", name:"Arnab Sen", email:"operator.er@railway.gov.in",
     passwordHash: hashPassword("ER@2025"),
     zone:"ER", region:"East Railway", shift:"Shift A",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -86,7 +89,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Yesterday 22:10 PM", ip:"10.0.3.7" }],
   },
   {
-    id:"OPR-WR", name:"Sunita Desai", email:"operator.wr@railways.gov.in",
+    id:"OPR-WR", name:"Sunita Desai", email:"operator.wr@railway.gov.in",
     passwordHash: hashPassword("WR@2025"),
     zone:"WR", region:"West Railway", shift:"Shift C",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -99,7 +102,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Yesterday 14:20 PM", ip:"10.0.4.19" }],
   },
   {
-    id:"OPR-NER", name:"Bimal Chakraborty", email:"operator.ner@railways.gov.in",
+    id:"OPR-NER", name:"Bimal Chakraborty", email:"operator.ner@railway.gov.in",
     passwordHash: hashPassword("NER@2025"),
     zone:"NER", region:"North East Railway", shift:"Shift A",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -112,7 +115,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Today 09:00 AM", ip:"10.0.5.31" }],
   },
   {
-    id:"OPR-NWR", name:"Kavya Sharma", email:"operator.nwr@railways.gov.in",
+    id:"OPR-NWR", name:"Kavya Sharma", email:"operator.nwr@railway.gov.in",
     passwordHash: hashPassword("NWR@2025"),
     zone:"NWR", region:"North Western Railway", shift:"Shift B",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -125,7 +128,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Today 10:15 AM", ip:"10.0.6.55" }],
   },
   {
-    id:"OPR-SER", name:"Prasanna Reddy", email:"operator.ser@railways.gov.in",
+    id:"OPR-SER", name:"Prasanna Reddy", email:"operator.ser@railway.gov.in",
     passwordHash: hashPassword("SER@2025"),
     zone:"SER", region:"South Eastern Railway", shift:"Shift A",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -138,7 +141,7 @@ const SEED_OPERATORS = [
     activityLog:[{ action:"Logged in", at:"Today 08:00 AM", ip:"10.0.7.22" }],
   },
   {
-    id:"OPR-SWR", name:"Deepa Krishnamurthy", email:"operator.swr@railways.gov.in",
+    id:"OPR-SWR", name:"Deepa Krishnamurthy", email:"operator.swr@railway.gov.in",
     passwordHash: hashPassword("SWR@2025"),
     zone:"SWR", region:"South Western Railway", shift:"Shift C",
     status:"Active", accountStatus:"active", permissions:DEFAULT_PERMISSIONS,
@@ -154,37 +157,38 @@ const SEED_OPERATORS = [
 
 const SEED_REQUESTS = [
   {
-    id:"REQ-001", name:"Vikram Nair", email:"vikram.n@railways.gov.in",
+    id:"REQ-001", name:"Vikram Nair", email:"vikram.n@railway.gov.in",
     employeeId:"EMP-NR-042", department:"Operations", designation:"Senior Operator",
-    zone:"NR", region:"North Railway", shift:"Shift B",
+    zone:"NR", region:"North Railway", shift:"Shift B", role:"Operator",
     requestedAt:"03 Jul 2025 10:15 AM", status:"Pending",
     note:"Requesting operator access for North Railway wagon monitoring.",
   },
   {
-    id:"REQ-002", name:"Divya Krishnan", email:"divya.k@railways.gov.in",
-    employeeId:"EMP-NR-018", department:"Logistics", designation:"Operator",
-    zone:"NR", region:"North Railway", shift:"Shift A",
+    id:"REQ-002", name:"Divya Krishnan", email:"divya.k@railway.gov.in",
+    employeeId:"EMP-NR-018", department:"Logistics", designation:"Analyst",
+    zone:"NR", region:"North Railway", shift:"Shift A", role:"Analyst",
     requestedAt:"02 Jul 2025 03:40 PM", status:"Pending",
-    note:"Transfer from SR zone. Requires NR operator credentials.",
+    note:"Requesting Analyst access for North Railway analytics dashboard.",
   },
   {
-    id:"REQ-003", name:"Suresh Nambiar", email:"suresh.nb@railways.gov.in",
+    id:"REQ-003", name:"Suresh Nambiar", email:"suresh.nb@railway.gov.in",
     employeeId:"EMP-SR-009", department:"Maintenance", designation:"Maintenance Operator",
-    zone:"SR", region:"South Railway", shift:"Shift C",
+    zone:"SR", region:"South Railway", shift:"Shift C", role:"Operator",
     requestedAt:"01 Jul 2025 09:00 AM", status:"Approved",
     note:"New hire — South Railway depot.",
   },
 ];
 
-// v4 key — forces fresh seed load, wiping all previous stale data
-const STORE_KEY_OPS      = "rcc_rbac_operators_v4";
-const STORE_KEY_REQS     = "rcc_rbac_requests_v4";
-const STORE_KEY_ANALYSTS = "rcc_rbac_analysts_v1";
+// v6 key — adds role field to requests seed; v7 adds encrypted tokens
+const STORE_KEY_OPS      = "rcc_rbac_operators_v5";
+const STORE_KEY_REQS     = "rcc_rbac_requests_v6";
+const STORE_KEY_ANALYSTS = "rcc_rbac_analysts_v2";
+const STORE_KEY_TOKENS   = "rcc_enc_tokens_v1";   // encrypted-token → accountId map
 
 // ── Seed analysts (mirrors ANALYTICS_CREDENTIALS with full RBAC fields) ───────
 const SEED_ANALYSTS = [
   {
-    id:"ANL-NR",  name:"Priya Sharma",    email:"analyst.nr@railways.gov.in",
+    id:"ANL-NR",  name:"Priya Sharma",    email:"analyst.nr@railway.gov.in",
     passwordHash: hashPassword("NR@2025"),
     zone:"NR",  region:"North Railway",
     status:"Active", accountStatus:"active",
@@ -195,7 +199,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Today 09:00 AM", ip:"—" }],
   },
   {
-    id:"ANL-SR",  name:"Kiran Babu",      email:"analyst.sr@railways.gov.in",
+    id:"ANL-SR",  name:"Kiran Babu",      email:"analyst.sr@railway.gov.in",
     passwordHash: hashPassword("SR@2025"),
     zone:"SR",  region:"South Railway",
     status:"Active", accountStatus:"active",
@@ -206,7 +210,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Today 08:45 AM", ip:"—" }],
   },
   {
-    id:"ANL-ER",  name:"Debashish Roy",   email:"analyst.er@railways.gov.in",
+    id:"ANL-ER",  name:"Debashish Roy",   email:"analyst.er@railway.gov.in",
     passwordHash: hashPassword("ER@2025"),
     zone:"ER",  region:"East Railway",
     status:"Active", accountStatus:"active",
@@ -217,7 +221,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Yesterday 22:00 PM", ip:"—" }],
   },
   {
-    id:"ANL-WR",  name:"Sneha Joshi",     email:"analyst.wr@railways.gov.in",
+    id:"ANL-WR",  name:"Sneha Joshi",     email:"analyst.wr@railway.gov.in",
     passwordHash: hashPassword("WR@2025"),
     zone:"WR",  region:"West Railway",
     status:"Active", accountStatus:"active",
@@ -228,7 +232,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Yesterday 14:30 PM", ip:"—" }],
   },
   {
-    id:"ANL-NER", name:"Biren Kalita",    email:"analyst.ner@railways.gov.in",
+    id:"ANL-NER", name:"Biren Kalita",    email:"analyst.ner@railway.gov.in",
     passwordHash: hashPassword("NER@2025"),
     zone:"NER", region:"North East Railway",
     status:"Active", accountStatus:"active",
@@ -239,7 +243,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Today 09:30 AM", ip:"—" }],
   },
   {
-    id:"ANL-NWR", name:"Geeta Choudhary", email:"analyst.nwr@railways.gov.in",
+    id:"ANL-NWR", name:"Geeta Choudhary", email:"analyst.nwr@railway.gov.in",
     passwordHash: hashPassword("NWR@2025"),
     zone:"NWR", region:"North Western Railway",
     status:"Active", accountStatus:"active",
@@ -250,7 +254,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Today 10:00 AM", ip:"—" }],
   },
   {
-    id:"ANL-SER", name:"Tanmay Mohanty",  email:"analyst.ser@railways.gov.in",
+    id:"ANL-SER", name:"Tanmay Mohanty",  email:"analyst.ser@railway.gov.in",
     passwordHash: hashPassword("SER@2025"),
     zone:"SER", region:"South Eastern Railway",
     status:"Active", accountStatus:"active",
@@ -261,7 +265,7 @@ const SEED_ANALYSTS = [
     activityLog:[{ action:"Logged in", at:"Today 08:15 AM", ip:"—" }],
   },
   {
-    id:"ANL-SWR", name:"Lakshmi Venkat",  email:"analyst.swr@railways.gov.in",
+    id:"ANL-SWR", name:"Lakshmi Venkat",  email:"analyst.swr@railway.gov.in",
     passwordHash: hashPassword("SWR@2025"),
     zone:"SWR", region:"South Western Railway",
     status:"Active", accountStatus:"active",
@@ -283,16 +287,28 @@ function saveStore(key, data) {
   try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
 }
 
+// Encrypted token registry: tokenString → { accountId, role }
+function loadTokenRegistry() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY_TOKENS)) || {}; }
+  catch { return {}; }
+}
+function saveTokenRegistry(reg) {
+  try { localStorage.setItem(STORE_KEY_TOKENS, JSON.stringify(reg)); } catch {}
+}
+
 // Wipe all legacy keys so every browser gets a fresh seed on first load
 (function migrateStorage() {
   try {
     [
-      "rcc_rbac_operators",   "rcc_rbac_requests",
-      "rcc_rbac_operators_v2","rcc_rbac_requests_v2",
-      "rcc_rbac_operators_v3","rcc_rbac_requests_v3",
+      "rcc_rbac_operators",    "rcc_rbac_requests",
+      "rcc_rbac_operators_v2", "rcc_rbac_requests_v2",
+      "rcc_rbac_operators_v3", "rcc_rbac_requests_v3",
+      "rcc_rbac_operators_v4", "rcc_rbac_requests_v4",
+      "rcc_rbac_operators_v5", "rcc_rbac_requests_v5",
+      "rcc_rbac_analysts_v1",
     ].forEach(k => localStorage.removeItem(k));
 
-    // Also wipe v4 if any activated operator is missing passwordHash
+    // Also wipe v5 if any activated operator is missing passwordHash
     const raw = localStorage.getItem(STORE_KEY_OPS);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -334,6 +350,7 @@ export function AuthProvider({ children }) {
   const loginAnalyst = useCallback((email, password) => {
     const e = email.trim().toLowerCase();
     const p = password.trim();
+    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
 
     // Check dynamic analyst store (admin-managed accounts)
     const dynFound = analystUsers.find(a => a.email.toLowerCase() === e);
@@ -374,6 +391,7 @@ export function AuthProvider({ children }) {
   const login = (email, password) => {
     const e = email.trim().toLowerCase();
     const p = password.trim();
+    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
     const found = ADMIN_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
     if (found) {
       const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"admin" };
@@ -388,6 +406,7 @@ export function AuthProvider({ children }) {
   const loginOperator = useCallback((email, password) => {
     const e = email.trim().toLowerCase();
     const p = password.trim();
+    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
     const found = operators.find(o => o.email.toLowerCase() === e);
 
     if (!found) return { success:false, reason:"invalid_credentials" };
@@ -456,7 +475,69 @@ export function AuthProvider({ children }) {
     return live ? live.permissions.includes(moduleKey) : false;
   }, [operator, operators]);
 
+  // Expose token registry lookup for ActivatePage
+  const getAccountByEncryptedToken = useCallback((token) => {
+    const reg = loadTokenRegistry();
+    return reg[token] || null;
+  }, []);
+
+  // Unified activateAccount — handles both Operator and Analyst
+  // Single-use enforcement: token is deleted from the registry as the FIRST
+  // operation so a second concurrent request finds nothing even before the
+  // account record is written.
+  const activateEncryptedAccount = useCallback(async (encToken, password) => {
+    const { valid, payload, reason } = await verifyActivationToken(encToken);
+    if (!valid) return { success: false, reason: reason || "already_used" };
+
+    // ── Atomically consume the token FIRST ───────────────────────────────────
+    const reg = loadTokenRegistry();
+    const entry = reg[encToken];
+    if (!entry) return { success: false, reason: "already_used" };
+    delete reg[encToken];          // mark consumed before any further writes
+    saveTokenRegistry(reg);
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const now = new Date().toLocaleTimeString("en-IN");
+
+    if (payload.role === "Analyst") {
+      const a = analystUsers.find(x => x.id === entry.accountId);
+      if (!a || a.activated) {
+        // Token was consumed above — do not re-insert, account is already active
+        return { success: false, reason: "already_used" };
+      }
+      persistAnalysts(analystUsers.map(x => x.id === a.id ? {
+        ...x,
+        passwordHash:     hashPassword(password),
+        status:           "Active",
+        accountStatus:    "active",
+        activated:        true,
+        activationToken:  null,
+        activationExpiry: null,
+        activityLog: [{ action: "Account activated via secure link — link invalidated", at: now, ip: "—" }, ...(x.activityLog || []).slice(0, 19)],
+      } : x));
+      return { success: true, name: a.name, role: "Analyst" };
+    }
+
+    // Operator
+    const op = operators.find(o => o.id === entry.accountId);
+    if (!op || op.activated) {
+      return { success: false, reason: "already_used" };
+    }
+    persistOps(operators.map(o => o.id === op.id ? {
+      ...o,
+      passwordHash:     hashPassword(password),
+      status:           "Active",
+      accountStatus:    "active",
+      activated:        true,
+      activationToken:  null,
+      activationExpiry: null,
+      activityLog: [{ action: "Account activated via secure link — link invalidated", at: now, ip: "—" }, ...(o.activityLog || []).slice(0, 19)],
+    } : o));
+    return { success: true, name: op.name, role: "Operator" };
+  }, [analystUsers, operators]);
+
   const adminCreateOperator = useCallback((form) => {
+    if (!isValidRailwayEmail(form.email)) return { error: DOMAIN_ERROR };
     const id    = `OPR-${Date.now().toString(36).toUpperCase()}`;
     const token = genToken();
     const expiry= Date.now() + 72 * 60 * 60 * 1000;
@@ -482,19 +563,24 @@ export function AuthProvider({ children }) {
 
   const activateAccount = useCallback((token, password) => {
     const op = operators.find(o => o.activationToken === token);
-    if (!op) return { success:false, reason:"invalid_token" };
-    if (Date.now() > op.activationExpiry) return { success:false, reason:"token_expired" };
-    if (op.activated) return { success:false, reason:"already_activated" };
+    // Token not found OR already consumed (null) means already used
+    if (!op) return { success:false, reason:"already_used" };
+    if (Date.now() > op.activationExpiry) return { success:false, reason:"already_used" };
+    if (op.activated) return { success:false, reason:"already_used" };
     const now = new Date().toLocaleTimeString("en-IN");
+    // Null out the token FIRST in the same update batch to prevent reuse
     const updated = operators.map(o => o.id === op.id ? {
       ...o,
-      passwordHash:hashPassword(password),
-      status:"Active", accountStatus:"active", activated:true,
-      activationToken:null, activationExpiry:null,
-      activityLog:[{ action:"Account activated", at:now, ip:"—" }, ...(o.activityLog||[])],
+      passwordHash:     hashPassword(password),
+      status:           "Active",
+      accountStatus:    "active",
+      activated:        true,
+      activationToken:  null,   // immediately invalidated
+      activationExpiry: null,
+      activityLog:[{ action:"Account activated via secure link — link invalidated", at:now, ip:"—" }, ...(o.activityLog||[]).slice(0,19)],
     } : o);
     persistOps(updated);
-    return { success:true, name:op.name };
+    return { success:true, name:op.name, role:"Operator" };
   }, [operators]);
 
   const requestPasswordReset = useCallback((email) => {
@@ -573,36 +659,135 @@ export function AuthProvider({ children }) {
     persistOps(operators.filter(o => o.id !== id));
   }, [operators]);
 
-  const adminApproveRequest = useCallback((reqId, permissions = DEFAULT_PERMISSIONS) => {
+  // Returns a Promise — generates encrypted token then dispatches email
+  // Note: adminCreateAnalyst is used here by accessing analystUsers/persistAnalysts directly
+  // to avoid a forward-reference dependency cycle with useCallback.
+  const adminApproveRequest = useCallback(async (reqId, permissions = DEFAULT_PERMISSIONS, adminName = "Zone Admin") => {
     const req = requests.find(r => r.id === reqId);
-    if (!req) return { activationLink:"" };
-    const result = adminCreateOperator({ name:req.name, email:req.email, zone:req.zone, region:req.region, shift:req.shift, permissions, employeeId:req.employeeId||"", department:req.department||"", designation:req.designation||"" });
-    persistReqs(requests.map(r => r.id === reqId ? { ...r, status:"Approved" } : r));
-    return { activationLink:result.activationLink, name:req.name };
-  }, [requests, adminCreateOperator]);
+    if (!req) return { activationLink: "" };
 
-  const adminRejectRequest = useCallback((reqId) => {
-    persistReqs(requests.map(r => r.id === reqId ? { ...r, status:"Rejected" } : r));
+    const now = new Date().toLocaleTimeString("en-IN");
+
+    if (req.role === "Analyst") {
+      if (!isValidRailwayEmail(req.email)) return { activationLink: "" };
+      const id    = `ANL-${Date.now().toString(36).toUpperCase()}`;
+      const newA = {
+        id, name: req.name, email: req.email,
+        passwordHash: null,
+        zone: req.zone, region: req.region || `${req.zone} Railway`,
+        status: "Inactive", accountStatus: "pending_activation",
+        employeeId: req.employeeId || "", department: req.department || "Analytics", designation: req.designation || "",
+        createdAt: new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
+        lastLogin: "Never",
+        activationToken: null, activationExpiry: null, activated: false,
+        resetToken: null, resetExpiry: null,
+        activityLog: [{ action: "Analyst account created via access request approval", at: now, ip: "Admin" }],
+      };
+      const updatedAnalysts = [...analystUsers, newA];
+      persistAnalysts(updatedAnalysts);
+
+      const encToken = await generateActivationToken({ email: req.email, role: "Analyst", accountId: id });
+      const activationLink = `${window.location.origin}/activate/${encodeURIComponent(encToken)}`;
+
+      const reg = loadTokenRegistry();
+      reg[encToken] = { accountId: id, role: "Analyst" };
+      saveTokenRegistry(reg);
+
+      persistAnalysts(updatedAnalysts.map(a => a.id === id
+        ? { ...a, activationToken: encToken,
+            activityLog: [{ action: `Approved by ${adminName} — activation email dispatched`, at: now, ip: "Admin" }, ...a.activityLog.slice(0, 19)] }
+        : a
+      ));
+
+      persistReqs(requests.map(r => r.id === reqId
+        ? { ...r, status: "Approved", approvedBy: adminName, approvedAt: now,
+            auditLog: [{ action:`Approved by ${adminName} — activation email dispatched to ${req.email}`, at:now, by:adminName }, ...(r.auditLog||[])] }
+        : r
+      ));
+
+      sendActivationEmail({ to: req.email, name: req.name, role: "Analyst", zone: req.zone, activationLink, approvedBy: adminName });
+      return { activationLink, name: req.name };
+    }
+
+    // Operator path
+    const result = adminCreateOperator({
+      name: req.name, email: req.email, zone: req.zone, region: req.region,
+      shift: req.shift, permissions, employeeId: req.employeeId || "",
+      department: req.department || "", designation: req.designation || "",
+    });
+
+    const encToken = await generateActivationToken({ email: req.email, role: "Operator", accountId: result.id });
+    const activationLink = `${window.location.origin}/activate/${encodeURIComponent(encToken)}`;
+
+    const reg = loadTokenRegistry();
+    reg[encToken] = { accountId: result.id, role: "Operator" };
+    saveTokenRegistry(reg);
+
+    persistOps(operators.map(o => o.id === result.id
+      ? { ...o, activationToken: encToken,
+          activityLog: [{ action: `Approved by ${adminName} — activation email dispatched`, at: now, ip: "Admin" }, ...(o.activityLog || []).slice(0, 19)] }
+      : o
+    ));
+
+    persistReqs(requests.map(r => r.id === reqId
+      ? { ...r, status: "Approved", approvedBy: adminName, approvedAt: now,
+          auditLog: [{ action:`Approved by ${adminName} — activation email dispatched to ${req.email}`, at:now, by:adminName }, ...(r.auditLog||[])] }
+      : r
+    ));
+
+    sendActivationEmail({ to: req.email, name: req.name, role: "Operator", zone: req.zone, activationLink, approvedBy: adminName });
+    return { activationLink, name: req.name };
+  }, [requests, adminCreateOperator, operators, analystUsers]);
+
+  const adminRejectRequest = useCallback((reqId, adminName = "Zone Admin") => {
+    const now = new Date().toLocaleTimeString("en-IN");
+    persistReqs(requests.map(r => r.id === reqId ? {
+      ...r,
+      status:     "Rejected",
+      rejectedBy: adminName,
+      rejectedAt: now,
+      auditLog: [
+        { action:`Request rejected by ${adminName}`, at:now, by:adminName },
+        ...(r.auditLog || []),
+      ],
+    } : r));
   }, [requests]);
 
-  const adminResendActivation = useCallback((id) => {
+  const adminResendActivation = useCallback(async (id) => {
     const op = operators.find(o => o.id === id);
     if (!op) return { activationLink:"" };
-    const token  = genToken();
-    const expiry = Date.now() + 72 * 60 * 60 * 1000;
-    const now    = new Date().toLocaleTimeString("en-IN");
+    const now = new Date().toLocaleTimeString("en-IN");
+
+    // Purge any previous token for this account from the registry
+    const reg = loadTokenRegistry();
+    Object.keys(reg).forEach(k => { if (reg[k].accountId === id) delete reg[k]; });
+
+    const encToken = await generateActivationToken({ email: op.email, role: "Operator", accountId: id });
+    reg[encToken] = { accountId: id, role: "Operator" };
+    saveTokenRegistry(reg);
+
     const updated = operators.map(o => o.id === id ? {
-      ...o, activationToken:token, activationExpiry:expiry,
-      activityLog:[{ action:"Activation link resent by admin", at:now, ip:"Admin" }, ...(o.activityLog||[]).slice(0,19)],
+      ...o,
+      activationToken:  encToken,
+      activationExpiry: Date.now() + 72 * 60 * 60 * 1000,
+      activityLog:[{ action:"New activation link issued by admin — previous link invalidated", at:now, ip:"Admin" }, ...(o.activityLog||[]).slice(0,19)],
     } : o);
     persistOps(updated);
-    return { activationLink:`${window.location.origin}/activate/${token}` };
+    return { activationLink:`${window.location.origin}/activate/${encodeURIComponent(encToken)}` };
   }, [operators]);
 
   const submitAccessRequest = useCallback((data) => {
+    if (!isValidRailwayEmail(data.email)) return { success:false, reason:"invalid_domain" };
     const id  = `REQ-${Date.now().toString(36).toUpperCase()}`;
     const now = new Date().toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
-    persistReqs([...requests, { id, status:"Pending", requestedAt:now, ...data }]);
+    const entry = {
+      id, status:"Pending", requestedAt:now, ...data,
+      auditLog:[
+        { action:`Access request submitted for role: ${data.role || "Operator"}`, at:now, by:data.email },
+      ],
+    };
+    persistReqs([...requests, entry]);
+    return { success:true };
   }, [requests]);
 
   const logActivity = useCallback((action) => {
@@ -619,6 +804,9 @@ export function AuthProvider({ children }) {
 
   // ── Analyst management (admin-only, mirrors operator pattern) ────────────
   const adminCreateAnalyst = useCallback((form) => {
+    // When called directly (not via approval flow), still generates a plain token
+    // The approval flow replaces it with an encrypted one after this returns.
+    if (!isValidRailwayEmail(form.email)) return { error: DOMAIN_ERROR };
     const id    = `ANL-${Date.now().toString(36).toUpperCase()}`;
     const token = genToken();
     const expiry = Date.now() + 72 * 60 * 60 * 1000;
@@ -635,7 +823,7 @@ export function AuthProvider({ children }) {
       activityLog:[{ action:"Analyst account created by admin", at:new Date().toLocaleTimeString("en-IN"), ip:"Admin" }],
     };
     persistAnalysts([...analystUsers, newA]);
-    return { ...newA, activationLink:`${window.location.origin}/activate/${token}` };
+    return { ...newA, activationLink: `${window.location.origin}/activate/${encodeURIComponent(token)}` };
   }, [analystUsers]);
 
   const adminUpdateAnalyst = useCallback((id, changes) => {
@@ -669,17 +857,26 @@ export function AuthProvider({ children }) {
     return { resetLink:`${window.location.origin}/reset-password/${token}`, name:a.name };
   }, [analystUsers]);
 
-  const adminResendAnalystActivation = useCallback((id) => {
+  const adminResendAnalystActivation = useCallback(async (id) => {
     const a = analystUsers.find(x => x.id === id);
     if (!a) return { activationLink:"" };
-    const token  = genToken();
-    const expiry = Date.now() + 72 * 60 * 60 * 1000;
-    const now    = new Date().toLocaleTimeString("en-IN");
+    const now = new Date().toLocaleTimeString("en-IN");
+
+    // Purge any previous token for this analyst from the registry
+    const reg = loadTokenRegistry();
+    Object.keys(reg).forEach(k => { if (reg[k].accountId === id) delete reg[k]; });
+
+    const encToken = await generateActivationToken({ email: a.email, role: "Analyst", accountId: id });
+    reg[encToken] = { accountId: id, role: "Analyst" };
+    saveTokenRegistry(reg);
+
     persistAnalysts(analystUsers.map(x => x.id === id ? {
-      ...x, activationToken:token, activationExpiry:expiry,
-      activityLog:[{ action:"Activation link resent by admin", at:now, ip:"Admin" }, ...(x.activityLog||[]).slice(0,19)],
+      ...x,
+      activationToken:  encToken,
+      activationExpiry: Date.now() + 72 * 60 * 60 * 1000,
+      activityLog:[{ action:"New activation link issued by admin — previous link invalidated", at:now, ip:"Admin" }, ...(x.activityLog||[]).slice(0,19)],
     } : x));
-    return { activationLink:`${window.location.origin}/activate/${token}` };
+    return { activationLink:`${window.location.origin}/activate/${encodeURIComponent(encToken)}` };
   }, [analystUsers]);
 
   return (
@@ -699,6 +896,8 @@ export function AuthProvider({ children }) {
       adminRejectRequest, adminDeleteOperator,
       adminResendActivation,
       logActivity, submitAccessRequest,
+      // Encrypted activation
+      getAccountByEncryptedToken, activateEncryptedAccount,
       // Analyst management
       analystUsers,
       adminCreateAnalyst, adminUpdateAnalyst, adminDeleteAnalyst,
