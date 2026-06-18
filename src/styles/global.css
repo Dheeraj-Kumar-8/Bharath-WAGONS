@@ -155,10 +155,15 @@ a { text-decoration: none; }
 /* ── Layout ──────────────────────────────────────────────────────── */
 .page-wrapper {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
   background: var(--bg);
-  animation: fadeIn .3s ease;
+}
+.page-wrapper > .lp-row {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 .main-area {
   flex: 1;
@@ -171,7 +176,8 @@ a { text-decoration: none; }
   flex: 1;
   padding: var(--content-pad);
   overflow-y: auto;
-  animation: fadeInUp .35s ease both;
+  position: relative;
+  z-index: 1;
   background:
     radial-gradient(ellipse 80% 40% at 50% -10%, rgba(37,99,235,.04) 0%, transparent 70%),
     var(--bg);
@@ -198,9 +204,20 @@ a { text-decoration: none; }
   border-radius: inherit;
 }
 .card:hover {
-  box-shadow: var(--shadow-card), var(--shadow-glow);
-  border-color: var(--border-glow);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-card), 0 0 0 2px var(--accent), var(--shadow-glow);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ── Tile hover — applies to StatCard and any inline-styled tile ── */
+.tile-hover {
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition) !important;
+  cursor: default;
+}
+.tile-hover:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent), 0 8px 28px rgba(0,0,0,.35) !important;
+  transform: translateY(-2px) !important;
 }
 
 .glass {
@@ -211,6 +228,12 @@ a { text-decoration: none; }
   border-radius: var(--radius-card);
   padding: var(--card-pad);
   box-shadow: var(--shadow-card);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+.glass:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent), 0 8px 28px rgba(0,0,0,.35) !important;
+  transform: translateY(-2px);
 }
 
 /* ── Typography ──────────────────────────────────────────────────── */
@@ -598,13 +621,46 @@ tbody tr:last-child td { border-bottom: none; }
   border-radius: 8px;
 }
 
-/* ── Sidebar enhancements ────────────────────────────────────────── */
-/* Target the sidebar wrapper rendered in Sidebar.jsx */
+@keyframes borderPulse {
+  0%   { background-position: 50% 0; }
+  50%  { background-position: 50% 100%; }
+  100% { background-position: 50% 0; }
+}
+@keyframes borderPulseH {
+  0%   { background-position: 0 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ── Sidebar animated right border ──────────────────────────────── */
 .page-wrapper > div:first-child {
   background: var(--sidebar-bg) !important;
-  border-right: 1px solid rgba(20,45,80,.8) !important;
+  border-right: none !important;
   box-shadow: 4px 0 24px rgba(0,0,0,.4) !important;
-  animation: slideInLeft .3s ease both;
+  position: relative;
+  top: 0;
+}
+.page-wrapper > div:first-child::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 1.5px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(30,58,100,.4) 15%,
+    rgba(59,130,246,.9) 35%,
+    rgba(147,197,253,1) 50%,
+    rgba(59,130,246,.9) 65%,
+    rgba(30,58,100,.4) 85%,
+    transparent 100%
+  );
+  background-size: 100% 300%;
+  animation: borderPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+  filter: blur(0.4px);
 }
 
 /* Logo area */
@@ -613,19 +669,43 @@ tbody tr:last-child td { border-bottom: none; }
   border-bottom: 1px solid rgba(20,45,80,.8) !important;
 }
 
-/* Nav links — override inline styles for active state glow */
+/* Nav links active glow */
 nav a[style*="rgba(37,99,235"] {
   background: linear-gradient(90deg, rgba(37,99,235,.2), rgba(37,99,235,.06)) !important;
   box-shadow: inset 3px 0 0 var(--accent), 0 2px 12px rgba(37,99,235,.1) !important;
   border-left-color: var(--accent) !important;
 }
 
-/* ── Navbar enhancements ─────────────────────────────────────────── */
+/* ── Navbar animated bottom border ──────────────────────────────── */
 .main-area > div:first-child {
   background: var(--navbar-bg) !important;
-  border-bottom: 1px solid var(--navbar-border) !important;
+  border-bottom: none !important;
   box-shadow: 0 4px 24px rgba(0,0,0,.3) !important;
+  position: relative;
 }
+.main-area > div:first-child::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(30,58,100,.4) 15%,
+    rgba(59,130,246,.9) 35%,
+    rgba(147,197,253,1) 50%,
+    rgba(59,130,246,.9) 65%,
+    rgba(30,58,100,.4) 85%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  animation: borderPulseH 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+  filter: blur(0.4px);
+}
+
 
 /* ── StatCard enhancements ───────────────────────────────────────── */
 /* Target statcard containers via their inline style pattern */
@@ -734,13 +814,163 @@ tbody tr:nth-child(8)  { animation-delay: .24s; }
 [data-scheme="light"] .btn-outline    { border-color: rgba(37,99,235,.3); }
 [data-scheme="light"] .page-wrapper > div:first-child {
   background: #ffffff !important;
-  border-right-color: rgba(148,163,184,.2) !important;
   box-shadow: 4px 0 20px rgba(0,0,0,.06) !important;
+}
+[data-scheme="light"] .page-wrapper > div:first-child::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(148,163,184,.3) 15%,
+    rgba(99,102,241,.7) 35%,
+    rgba(167,139,250,.9) 50%,
+    rgba(99,102,241,.7) 65%,
+    rgba(148,163,184,.3) 85%,
+    transparent 100%
+  ) !important;
 }
 [data-scheme="light"] .main-area > div:first-child {
   background: #ffffff !important;
-  border-bottom-color: rgba(148,163,184,.2) !important;
   box-shadow: 0 2px 12px rgba(0,0,0,.05) !important;
+}
+[data-scheme="light"] .main-area > div:first-child::after {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(148,163,184,.3) 15%,
+    rgba(99,102,241,.7) 35%,
+    rgba(167,139,250,.9) 50%,
+    rgba(99,102,241,.7) 65%,
+    rgba(148,163,184,.3) 85%,
+    transparent 100%
+  ) !important;
+}
+
+/* ── Light theme: fix hardcoded dark colors in inline styles ─────── */
+
+/* All text that uses dark-only hardcoded colors */
+[data-scheme="light"] .content-area,
+[data-scheme="light"] .content-area * {
+  --forced-text:        #1e293b;
+  --forced-text-muted:  #64748b;
+  --forced-text-strong: #0f172a;
+  --forced-surface:     #ffffff;
+  --forced-border:      rgba(148,163,184,.3);
+}
+
+/* Cards and surface containers */
+[data-scheme="light"] .card,
+[data-scheme="light"] .glass {
+  background: #ffffff !important;
+  border-color: rgba(148,163,184,.25) !important;
+  color: #334155 !important;
+}
+
+/* page-title and page-sub */
+[data-scheme="light"] .page-title { color: #0f172a !important; }
+[data-scheme="light"] .page-sub   { color: #64748b !important; }
+[data-scheme="light"] .section-title { color: #0f172a !important; }
+
+/* Inline-styled containers that use dark bg colors */
+[data-scheme="light"] .content-area div[style*="background"][style*="#0a"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#06"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#04"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#08"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#03"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#02"],
+[data-scheme="light"] .content-area div[style*="background"][style*="#07"] {
+  background: #ffffff !important;
+  border-color: rgba(148,163,184,.25) !important;
+}
+
+/* Inline text colors — dark-only hardcoded values */
+[data-scheme="light"] [style*="color: \"#f1f5f9\""],
+[data-scheme="light"] [style*="color: '#f1f5f9'"],
+[data-scheme="light"] [style*='color: "#f1f5f9"'],
+[data-scheme="light"] [style*='color:"#f1f5f9"'],
+[data-scheme="light"] [style*='color: #f1f5f9'] { color: #0f172a !important; }
+
+[data-scheme="light"] [style*="color: \"#cbd5e1\""],
+[data-scheme="light"] [style*='color: "#cbd5e1"'],
+[data-scheme="light"] [style*='color: #cbd5e1'] { color: #334155 !important; }
+
+[data-scheme="light"] [style*="color: \"#94a3b8\""],
+[data-scheme="light"] [style*='color: "#94a3b8"'],
+[data-scheme="light"] [style*='color: #94a3b8'] { color: #475569 !important; }
+
+[data-scheme="light"] [style*="color: \"#64748b\""],
+[data-scheme="light"] [style*='color: "#64748b"'],
+[data-scheme="light"] [style*='color: #64748b'] { color: #475569 !important; }
+
+[data-scheme="light"] [style*="color: \"#4a6fa5\""],
+[data-scheme="light"] [style*='color: "#4a6fa5"'],
+[data-scheme="light"] [style*='color: #4a6fa5'] { color: #64748b !important; }
+
+[data-scheme="light"] [style*="color: \"#e2e8f0\""],
+[data-scheme="light"] [style*='color: "#e2e8f0"'],
+[data-scheme="light"] [style*='color: #e2e8f0'] { color: #334155 !important; }
+
+[data-scheme="light"] [style*="color: \"#1e293b\""],
+[data-scheme="light"] [style*='color: "#1e293b"'],
+[data-scheme="light"] [style*='color: #1e293b'] { color: #0f172a !important; }
+
+/* Table headers in light mode */
+[data-scheme="light"] th { color: #475569 !important; }
+[data-scheme="light"] td { color: #334155 !important; }
+
+/* Sidebar nav items */
+[data-scheme="light"] .page-wrapper > div:first-child * {
+  color: var(--nav-item);
+}
+[data-scheme="light"] .page-wrapper > div:first-child a {
+  color: var(--nav-item) !important;
+}
+[data-scheme="light"] .page-wrapper > div:first-child a[style*="#"] {
+  color: var(--nav-item) !important;
+}
+
+/* Dropdown menus */
+[data-scheme="light"] div[style*="marginTop"][style*="borderRadius"] {
+  background: #ffffff !important;
+  border-color: rgba(148,163,184,.25) !important;
+}
+[data-scheme="light"] div[style*="marginTop"][style*="borderRadius"] * {
+  color: #334155;
+}
+
+/* Modal boxes */
+[data-scheme="light"] .modal-box {
+  background: #ffffff !important;
+  color: #334155 !important;
+}
+[data-scheme="light"] .modal-title { color: #0f172a !important; }
+[data-scheme="light"] .modal-box p { color: #64748b !important; }
+
+/* form labels */
+[data-scheme="light"] .form-label { color: #64748b !important; }
+[data-scheme="light"] .form-input,
+[data-scheme="light"] .form-select {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: rgba(148,163,184,.35) !important;
+}
+
+/* Search box */
+[data-scheme="light"] .search-box input { color: #0f172a !important; }
+[data-scheme="light"] .search-box input::placeholder { color: #94a3b8 !important; }
+
+/* Content area background */
+[data-scheme="light"] .content-area {
+  background: #f1f5f9 !important;
+}
+
+/* Skeleton */
+[data-scheme="light"] .skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%) !important;
+}
+
+/* Scrollbar */
+[data-scheme="light"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1, #94a3b8) !important;
 }
 
 /* ── Responsive ──────────────────────────────────────────────────── */

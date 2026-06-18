@@ -11,6 +11,71 @@ import { AnalyticsSearchProvider, useAnalyticsSearch } from "../context/Analytic
 import AnalyticsSearchModal from "./AnalyticsSearchModal";
 import "../styles/global.css";
 
+const SpiderWebBg = () => {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let W = canvas.width  = canvas.offsetWidth;
+    let H = canvas.height = canvas.offsetHeight;
+    const smokes = Array.from({ length: 18 }, () => ({
+      x: Math.random() * W, y: H + Math.random() * 120,
+      r: 60 + Math.random() * 100, vx: (Math.random() - 0.5) * 0.3,
+      vy: -(0.15 + Math.random() * 0.25), alpha: 0.03 + Math.random() * 0.055,
+    }));
+    const nodes = Array.from({ length: 55 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.45, vy: (Math.random() - 0.5) * 0.45,
+      r: 1.2 + Math.random() * 1.6,
+    }));
+    let raf;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      smokes.forEach(s => {
+        const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+        g.addColorStop(0,   `rgba(120,140,180,${s.alpha})`);
+        g.addColorStop(0.5, `rgba(80,100,140,${s.alpha * 0.5})`);
+        g.addColorStop(1,   "rgba(0,0,0,0)");
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = g; ctx.fill();
+        s.x += s.vx; s.y += s.vy; s.r += 0.12; s.alpha -= 0.00018;
+        if (s.y + s.r < 0 || s.alpha <= 0) {
+          s.x = Math.random() * W; s.y = H + Math.random() * 60;
+          s.r = 60 + Math.random() * 100; s.alpha = 0.03 + Math.random() * 0.055;
+          s.vx = (Math.random() - 0.5) * 0.3; s.vy = -(0.15 + Math.random() * 0.25);
+        }
+      });
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 160) {
+            ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(148,180,255,${(1 - dist/160)*0.35})`;
+            ctx.lineWidth = 0.6; ctx.stroke();
+          }
+        }
+      }
+      nodes.forEach(n => {
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(180,210,255,0.75)";
+        ctx.shadowColor = "rgba(100,160,255,0.8)"; ctx.shadowBlur = 6;
+        ctx.fill(); ctx.shadowBlur = 0;
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > W) n.vx *= -1;
+        if (n.y < 0 || n.y > H) n.vy *= -1;
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const onResize = () => { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; };
+    window.addEventListener("resize", onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+  return <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", zIndex:0, opacity:0.72 }} />;
+};
+
 const NAV = [
   { icon: FiGrid,          label: "Dashboard",            to: "/analytics-dashboard" },
   { icon: FiTrendingUp,    label: "Performance Analytics", to: "/analytics-dashboard/performance" },
@@ -77,7 +142,8 @@ const AnalyticsLayoutInner = ({ children, title, sub }) => {
   const zone = analyst?.zone || "—";
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper" style={{ flexDirection: "column" }}>
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
       {/* ── Sidebar — identical structure to Admin/Operator ── */}
       <div style={{
@@ -289,16 +355,21 @@ const AnalyticsLayoutInner = ({ children, title, sub }) => {
         </div>
 
         {/* Content */}
-        <div className="content-area">
-          {(title || sub) && (
-            <div className="mb-20">
-              {title && <div className="page-title">{title}</div>}
-              {sub   && <div className="page-sub">{sub}</div>}
-            </div>
-          )}
-          {children}
+        <div className="content-area" style={{ position: "relative" }}>
+          <SpiderWebBg />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            {(title || sub) && (
+              <div className="mb-20">
+                {title && <div className="page-title">{title}</div>}
+                {sub   && <div className="page-sub">{sub}</div>}
+              </div>
+            )}
+            {children}
+          </div>
         </div>
-      </div>
+      </div>{/* end main-area */}
+
+      </div>{/* end flex row */}
 
       <AnalystChatBot />
       <AnalyticsSearchModal />

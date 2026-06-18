@@ -16,6 +16,7 @@ import {
   ZONE_BAR_DATA, ZONE_ALERTS, ZONE_LOGS, ZONE_PREDICTIONS, ZONE_HEALTH,
 } from "../data/zoneData";
 
+
 const PIE_COLORS = ["#ef4444","#f59e0b","#3b82f6","#22c55e"];
 
 const statusBadge = s => {

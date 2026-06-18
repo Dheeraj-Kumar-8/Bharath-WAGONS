@@ -209,6 +209,33 @@ const S = {
   }),
 };
 
+/* ── Card — defined outside LoginPage to prevent remount on state change ── */
+const Card = ({ children, width = 440, mounted }) => (
+  <div style={{
+    position: "relative", zIndex: 10,
+    width: "min(94vw," + width + "px)",
+    padding: "clamp(22px,4vw,36px)",
+    borderRadius: 26,
+    background: "rgba(5,14,30,0.82)",
+    border: "1px solid rgba(59,130,246,.18)",
+    backdropFilter: "blur(28px) saturate(1.5)",
+    WebkitBackdropFilter: "blur(28px) saturate(1.5)",
+    boxShadow: "0 32px 80px rgba(0,0,0,.65), 0 0 60px rgba(37,99,235,.08), inset 0 1px 0 rgba(255,255,255,.04)",
+    color: "white",
+    fontFamily: "'Inter','Manrope',system-ui,sans-serif",
+    opacity:    mounted ? 1 : 0,
+    transform:  mounted ? "translateY(0)" : "translateY(28px)",
+    transition: "opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1)",
+  }}>
+    <div style={{
+      position: "absolute", top: 0, left: "10%", right: "10%", height: 1,
+      background: "linear-gradient(90deg,transparent,rgba(99,163,255,.5),transparent)",
+      borderRadius: "0 0 4px 4px",
+    }}/>
+    {children}
+  </div>
+);
+
 /* ── Main Login Page ─────────────────────────────────────────────── */
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -270,38 +297,10 @@ const LoginPage = () => {
   const isOp  = tab === "operator";
   const isAnl = tab === "analytics";
 
-  /* ── Shared card wrapper ── */
-  const Card = ({ children, width = 440 }) => (
-    <div style={{
-      position: "relative", zIndex: 10,
-      width: "min(94vw," + width + "px)",
-      padding: "clamp(22px,4vw,36px)",
-      borderRadius: 26,
-      background: "rgba(5,14,30,0.82)",
-      border: "1px solid rgba(59,130,246,.18)",
-      backdropFilter: "blur(28px) saturate(1.5)",
-      WebkitBackdropFilter: "blur(28px) saturate(1.5)",
-      boxShadow: "0 32px 80px rgba(0,0,0,.65), 0 0 60px rgba(37,99,235,.08), inset 0 1px 0 rgba(255,255,255,.04)",
-      color: "white",
-      fontFamily: "'Inter','Manrope',system-ui,sans-serif",
-      opacity:    mounted ? 1 : 0,
-      transform:  mounted ? "translateY(0)" : "translateY(28px)",
-      transition: "opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1)",
-    }}>
-      {/* top shimmer line */}
-      <div style={{
-        position: "absolute", top: 0, left: "10%", right: "10%", height: 1,
-        background: "linear-gradient(90deg,transparent,rgba(99,163,255,.5),transparent)",
-        borderRadius: "0 0 4px 4px",
-      }}/>
-      {children}
-    </div>
-  );
-
   /* ── Forgot password screen ── */
   if (showForgot) return (
     <PageShell>
-      <Card width={420}>
+      <Card width={420} mounted={mounted}>
         <ForgotPasswordForm onBack={() => setShowForgot(false)} />
       </Card>
     </PageShell>
@@ -361,7 +360,7 @@ const LoginPage = () => {
       </div>
 
       {/* Right panel — login card */}
-      <Card width={450}>
+      <Card width={450} mounted={mounted}>
         <div onClick={() => navigate("/")} style={{
           marginBottom: 18, color: "#4a6fa5", cursor: "pointer",
           fontSize: 13, display: "flex", alignItems: "center", gap: 6,

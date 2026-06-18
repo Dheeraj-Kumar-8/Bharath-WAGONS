@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 
 /* ── Intersection observer hook ─────────────────────────────────── */
@@ -74,142 +74,6 @@ function Particles({ n = 50, col = "59,130,246" }) {
     draw(); return () => { cancelAnimationFrame(id); ro.disconnect(); };
   }, [n, col]);
   return <canvas ref={ref} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />;
-}
-
-/* ── LIVE DASHBOARD CARD — fully dynamic ────────────────────────── */
-function LiveCard() {
-  const [bars,    setBars]    = useState([42, 67, 48, 82, 57, 91, 72, 86, 63, 77, 53, 96]);
-  const [activeBar, setActiveBar] = useState(11);
-  const [wagons,  setWagons]  = useState(1842);
-  const [alerts,  setAlerts]  = useState(12);
-  const [gps,     setGps]     = useState(98.7);
-  const [latency, setLatency] = useState(1.4);
-  const [tick,    setTick]    = useState(0);
-
-  const FEED_POOL = useMemo(() => [
-    { msg: "WGN-N104 — Route deviation",     c: "#ef4444", ic: "⚠",  z: "NR" },
-    { msg: "WGN-S231 — GPS restored",        c: "#22c55e", ic: "📍", z: "SR" },
-    { msg: "WGN-E055 — Cargo anomaly",       c: "#f59e0b", ic: "📦", z: "ER" },
-    { msg: "WGN-W318 — Maintenance due",     c: "#f97316", ic: "🔧", z: "WR" },
-    { msg: "WGN-NR42 — On-time arrival",     c: "#34d399", ic: "✓",  z: "NR" },
-    { msg: "WGN-SR19 — Speed exceeded",      c: "#ef4444", ic: "⚡", z: "SR" },
-    { msg: "WGN-ER88 — Brake pressure low",  c: "#f59e0b", ic: "🛑", z: "ER" },
-    { msg: "WGN-WR07 — Temp normal",         c: "#22c55e", ic: "🌡", z: "WR" },
-    { msg: "WGN-NER3 — Signal lost",         c: "#ef4444", ic: "📡", z: "NER" },
-    { msg: "WGN-SER6 — Cargo cleared",       c: "#34d399", ic: "✓",  z: "SER" },
-  ], []);
-  const [feed, setFeed] = useState(() => FEED_POOL.slice(0, 3));
-  const [activeZone, setActiveZone] = useState("NR");
-
-  /* master tick every 1.6s — updates everything */
-  useEffect(() => {
-    const t = setInterval(() => {
-      setBars(b => b.map(v => Math.max(18, Math.min(100, v + (Math.random() - .46) * 24))));
-      setActiveBar(Math.floor(Math.random() * 12));
-      setWagons(v => Math.max(1800, Math.min(1920, v + Math.round((Math.random() - .5) * 6))));
-      setAlerts(v => Math.max(5,  Math.min(28, v + Math.round((Math.random() - .46) * 2))));
-      setGps(v    => +(Math.max(96.2, Math.min(99.9, v + (Math.random() - .5) * .5)).toFixed(1)));
-      setLatency(v=> +(Math.max(.7,  Math.min(2.8, v + (Math.random() - .5) * .25)).toFixed(1)));
-      setTick(n   => n + 1);
-    }, 1600);
-    return () => clearInterval(t);
-  }, []);
-
-  /* alert feed every 2.8s */
-  useEffect(() => {
-    const t = setInterval(() => {
-      const next = FEED_POOL[Math.floor(Math.random() * FEED_POOL.length)];
-      setFeed(f => [next, ...f.slice(0, 2)]);
-      setActiveZone(next.z);
-    }, 2800);
-    return () => clearInterval(t);
-  }, [FEED_POOL]);
-
-  const ZONE_COLORS = { NR: "#3b82f6", SR: "#22c55e", ER: "#f59e0b", WR: "#a855f7", NER: "#38bdf8", NWR: "#f97316", SER: "#ef4444", SWR: "#34d399" };
-
-  return (
-    <div style={{ background: "rgba(3,10,24,.95)", border: "1px solid rgba(59,130,246,.3)", borderRadius: 22, padding: 22, backdropFilter: "blur(28px)", boxShadow: "0 32px 80px rgba(0,0,0,.65), 0 0 60px rgba(37,99,235,.12)", animation: "lp-float 5s ease-in-out infinite", width: 330 }}>
-
-      {/* header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div>
-          <div style={{ color: "#f1f5f9", fontSize: 13, fontWeight: 800, fontFamily: "'Manrope',sans-serif", letterSpacing: "-.2px" }}>Railway Command Center</div>
-          <div style={{ color: "#3a5a7c", fontSize: 9, fontWeight: 600, letterSpacing: 1, marginTop: 1 }}>LIVE OPERATIONS DASHBOARD</div>
-        </div>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: 10, fontWeight: 700, background: "rgba(34,197,94,.1)", border: "1px solid rgba(34,197,94,.25)", borderRadius: 20, padding: "3px 9px" }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "lp-pulse 1.2s infinite", display: "block", flexShrink: 0 }} /> LIVE
-        </span>
-      </div>
-
-      {/* animated bar chart with active highlight */}
-      <div style={{ background: "rgba(6,14,30,.8)", borderRadius: 10, padding: "10px 10px 6px", marginBottom: 14 }}>
-        <div style={{ color: "#1e3a5f", fontSize: 9, fontWeight: 700, letterSpacing: 1.2, marginBottom: 8 }}>WAGON ACTIVITY — LAST 12 INTERVALS</div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 56 }}>
-          {bars.map((h, i) => (
-            <div key={i} style={{
-              flex: 1, borderRadius: 3,
-              background: i === activeBar
-                ? "linear-gradient(0deg,#f59e0b,#fbbf24)"
-                : `linear-gradient(0deg,#1d4ed8,#60a5fa)`,
-              height: `${h}%`,
-              transition: "height .8s cubic-bezier(.4,0,.2,1), background .3s",
-              opacity: i === activeBar ? 1 : .55 + (i / bars.length) * .35,
-              boxShadow: i === activeBar ? "0 0 8px rgba(251,191,36,.6)" : "none",
-            }} />
-          ))}
-        </div>
-      </div>
-
-      {/* live stats — flash on change */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginBottom: 12 }}>
-        {[
-          ["🚆", "Active Wagons", wagons.toLocaleString(), "#22c55e"],
-          ["⚠️", "AI Alerts",     String(alerts),          alerts > 20 ? "#ef4444" : alerts > 14 ? "#f97316" : "#f59e0b"],
-          ["📍", "GPS Active",    `${gps}%`,               gps > 98 ? "#22c55e" : "#60a5fa"],
-          ["⚡", "Avg Latency",   `${latency}s`,           latency < 1.5 ? "#34d399" : "#f59e0b"],
-        ].map(([ic, lbl, val, c]) => (
-          <div key={lbl} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 6px", borderBottom: "1px solid rgba(20,40,80,.6)", borderRadius: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13 }}>{ic}</span>
-              <span style={{ color: "#4a6fa5", fontSize: 11.5 }}>{lbl}</span>
-            </div>
-            <span key={`${lbl}-${tick}`} style={{ color: c, fontSize: 13, fontWeight: 800, fontFamily: "'Manrope',sans-serif", animation: "lp-slideDown .3s ease" }}>{val}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* zone pills — active zone highlighted */}
-      <div style={{ background: "rgba(6,14,30,.8)", borderRadius: 10, padding: "9px 10px", marginBottom: 12 }}>
-        <div style={{ color: "#1e3a5f", fontSize: 9, fontWeight: 700, letterSpacing: 1.5, marginBottom: 7 }}>ZONE COVERAGE</div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {Object.entries(ZONE_COLORS).map(([z, c]) => (
-            <span key={z} style={{
-              background: z === activeZone ? `${c}25` : `${c}10`,
-              border: `1px solid ${z === activeZone ? c : c + "30"}`,
-              borderRadius: 6, padding: "2px 7px", fontSize: 10, color: c, fontWeight: 700,
-              transition: "all .4s ease",
-              boxShadow: z === activeZone ? `0 0 8px ${c}50` : "none",
-              transform: z === activeZone ? "scale(1.08)" : "scale(1)",
-            }}>{z}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* live alert feed */}
-      <div style={{ background: "rgba(6,14,30,.8)", borderRadius: 10, padding: "9px 10px" }}>
-        <div style={{ color: "#1e3a5f", fontSize: 9, fontWeight: 700, letterSpacing: 1.5, marginBottom: 7 }}>LIVE ALERTS</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {feed.map((f, i) => (
-            <div key={`${f.msg}-${i}`} style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 7px", background: `${f.c}0e`, borderRadius: 6, borderLeft: `2px solid ${f.c}`, opacity: 1 - i * .28, animation: i === 0 ? "lp-slideDown .35s ease" : "none" }}>
-              <span style={{ fontSize: 10, flexShrink: 0 }}>{f.ic}</span>
-              <span style={{ color: f.c, fontSize: 10, fontWeight: 600, lineHeight: 1.3 }}>{f.msg}</span>
-              <span style={{ marginLeft: "auto", color: ZONE_COLORS[f.z] || "#60a5fa", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{f.z}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /* ── Typing headline ────────────────────────────────────────────── */
@@ -372,6 +236,246 @@ function PlatformVideoSection({ FM, FI }) {
       </div>
     </section>
   );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HERO TRAIN ANIMATION
+════════════════════════════════════════════════════════════════ */
+function HeroTrainAnimation() {
+  return (
+    <div style={{ position: "relative", width: 380, height: 260 }}>
+      <style>{`
+        @keyframes ht-wheel   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes ht-shake   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+        @keyframes ht-smoke1  { 0%{transform:translate(0,0) scale(.5);opacity:.85} 100%{transform:translate(-20px,-70px) scale(2.2);opacity:0} }
+        @keyframes ht-smoke2  { 0%{transform:translate(0,0) scale(.4);opacity:.7}  100%{transform:translate(-6px,-88px)  scale(2.6);opacity:0} }
+        @keyframes ht-smoke3  { 0%{transform:translate(0,0) scale(.35);opacity:.6} 100%{transform:translate(14px,-78px)  scale(2.4);opacity:0} }
+        @keyframes ht-smoke4  { 0%{transform:translate(0,0) scale(.3);opacity:.5}  100%{transform:translate(-28px,-60px) scale(2.0);opacity:0} }
+        @keyframes ht-track   { from{background-position:0 0} to{background-position:-56px 0} }
+        @keyframes ht-steam   { 0%{opacity:.6;transform:scaleX(1)}  100%{opacity:0;transform:scaleX(2.5) translateX(30px)} }
+        @keyframes ht-glow    { 0%,100%{opacity:.6} 50%{opacity:1} }
+        .ht-w1{animation:ht-wheel .5s linear infinite; transform-box:fill-box; transform-origin:center;}
+        .ht-w2{animation:ht-wheel .5s linear infinite; transform-box:fill-box; transform-origin:center;}
+        .ht-w3{animation:ht-wheel .5s linear infinite; transform-box:fill-box; transform-origin:center;}
+        .ht-w4{animation:ht-wheel .5s linear infinite; transform-box:fill-box; transform-origin:center;}
+        .ht-body{animation:ht-shake .3s ease-in-out infinite;}
+        .ht-s1{animation:ht-smoke1 2.4s ease-out infinite;}
+        .ht-s2{animation:ht-smoke2 2.4s ease-out .6s infinite;}
+        .ht-s3{animation:ht-smoke3 2.4s ease-out 1.2s infinite;}
+        .ht-s4{animation:ht-smoke4 2.4s ease-out 1.8s infinite;}
+        .ht-steam{animation:ht-steam 1.6s ease-out infinite;}
+        .ht-glow{animation:ht-glow 1.8s ease-in-out infinite;}
+      `}</style>
+
+      {/* Glow under train */}
+      <div style={{ position:"absolute", bottom:28, left:"50%", transform:"translateX(-50%)", width:320, height:18, background:"radial-gradient(ellipse,rgba(59,130,246,.35),transparent 70%)", borderRadius:"50%", filter:"blur(6px)" }} />
+
+      {/* Track */}
+      <div style={{ position:"absolute", bottom:24, left:0, right:0, height:10, borderRadius:5, background:"rgba(30,58,100,.4)" }}>
+        {/* Ties */}
+        <div style={{ position:"absolute", inset:0, borderRadius:5, backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 42px,rgba(59,130,246,.35) 42px,rgba(59,130,246,.35) 50px)", animation:"ht-track .5s linear infinite" }}/>
+        {/* Rails */}
+        <div style={{ position:"absolute", top:1, left:0, right:0, height:3, background:"rgba(96,165,250,.5)", borderRadius:2 }}/>
+        <div style={{ position:"absolute", bottom:1, left:0, right:0, height:3, background:"rgba(96,165,250,.5)", borderRadius:2 }}/>
+      </div>
+
+      {/* Speed lines */}
+      {[40,65,88,108].map((top, i) => (
+        <div key={i} style={{ position:"absolute", left:0, top, height:1.5, width:30+i*8, background:`linear-gradient(90deg,transparent,rgba(59,130,246,${0.12+i*0.04}))`, borderRadius:2, animation:`ht-steam ${1.2+i*0.2}s ease-out ${i*0.15}s infinite` }}/>
+      ))}
+
+      {/* Train SVG */}
+      <svg className="ht-body" xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 280 120" width="370" height="120"
+        style={{ position:"absolute", bottom:22, left:-10 }}
+      >
+        {/* ── Smoke puffs ── */}
+        <circle className="ht-s1" cx="52" cy="18" r="9"  fill="rgba(148,163,184,.75)"/>
+        <circle className="ht-s2" cx="58" cy="14" r="8"  fill="rgba(148,163,184,.65)"/>
+        <circle className="ht-s3" cx="46" cy="20" r="7"  fill="rgba(148,163,184,.55)"/>
+        <circle className="ht-s4" cx="54" cy="10" r="6"  fill="rgba(100,116,139,.6)"/>
+
+        {/* ── Chimney ── */}
+        <rect x="44" y="20" width="16" height="18" rx="2" fill="#1e3a5f"/>
+        <rect x="40" y="17" width="24" height="6"  rx="3" fill="#1d4ed8"/>
+
+        {/* ── Boiler ── */}
+        <rect x="22" y="36" width="130" height="44" rx="14" fill="#172a45"/>
+        {/* Boiler highlight stripe */}
+        <rect x="25" y="38" width="124" height="10" rx="7" fill="rgba(59,130,246,.15)"/>
+        {/* Band rings */}
+        <rect x="72"  y="36" width="4" height="44" rx="2" fill="rgba(59,130,246,.22)"/>
+        <rect x="100" y="36" width="4" height="44" rx="2" fill="rgba(59,130,246,.22)"/>
+        <rect x="128" y="36" width="4" height="44" rx="2" fill="rgba(59,130,246,.22)"/>
+
+        {/* ── Cab ── */}
+        <rect x="150" y="22" width="72" height="58" rx="7" fill="#112036"/>
+        {/* Cab roof */}
+        <rect x="146" y="16" width="80" height="10" rx="5" fill="#1d4ed8"/>
+        {/* Cab windows */}
+        <rect x="158" y="29" width="24" height="17" rx="4" fill="rgba(96,165,250,.22)" stroke="rgba(59,130,246,.55)" strokeWidth="1.2"/>
+        <rect x="190" y="29" width="20" height="17" rx="4" fill="rgba(96,165,250,.18)" stroke="rgba(59,130,246,.45)" strokeWidth="1.2"/>
+        {/* Cab door */}
+        <rect x="164" y="56" width="28" height="24" rx="3" fill="rgba(59,130,246,.1)" stroke="rgba(59,130,246,.25)" strokeWidth="1"/>
+
+        {/* ── Tender (coal car) ── */}
+        <rect x="220" y="46" width="55" height="34" rx="6" fill="#0f1e33"/>
+        <rect x="222" y="48" width="51" height="8"  rx="3" fill="rgba(30,58,100,.6)"/>
+        {/* Coal lumps */}
+        <ellipse cx="234" cy="50" rx="7"  ry="4" fill="rgba(30,41,59,.9)"/>
+        <ellipse cx="247" cy="49" rx="6"  ry="3.5" fill="rgba(30,41,59,.8)"/>
+        <ellipse cx="259" cy="51" rx="5.5" ry="3" fill="rgba(30,41,59,.85)"/>
+
+        {/* ── Cow-catcher ── */}
+        <polygon points="22,80 4,88 22,88" fill="#1d4ed8"/>
+
+        {/* ── Running board ── */}
+        <rect x="4" y="78" width="218" height="8" rx="4" fill="#1a3050"/>
+
+        {/* ── Headlight ── */}
+        <circle className="ht-glow" cx="10" cy="58" r="8" fill="rgba(251,191,36,.2)" stroke="rgba(251,191,36,.7)" strokeWidth="1.8"/>
+        <circle cx="10" cy="58" r="4" fill="rgba(251,191,36,.8)"/>
+        {/* Headlight beam */}
+        <polygon points="2,54 2,62 -18,60 -18,56" fill="rgba(251,191,36,.07)"/>
+
+        {/* Steam pipe */}
+        <rect x="100" y="30" width="6" height="10" rx="2" fill="#1e3a5f"/>
+        <rect x="97"  y="28" width="12" height="4" rx="2" fill="#1d4ed8"/>
+
+        {/* ── WHEELS ── */}
+        {/* Big drive wheel L */}
+        <g className="ht-w1">
+          <circle cx="62"  cy="90" r="20" fill="none" stroke="#3b82f6" strokeWidth="3.5"/>
+          <circle cx="62"  cy="90" r="11" fill="none" stroke="#3b82f6" strokeWidth="2"/>
+          <circle cx="62"  cy="90" r="4"  fill="#60a5fa"/>
+          <line x1="62" y1="70" x2="62" y2="110" stroke="#3b82f6" strokeWidth="2"/>
+          <line x1="42" y1="90" x2="82" y2="90"  stroke="#3b82f6" strokeWidth="2"/>
+          <line x1="48" y1="76" x2="76" y2="104" stroke="#3b82f6" strokeWidth="1.5"/>
+          <line x1="76" y1="76" x2="48" y2="104" stroke="#3b82f6" strokeWidth="1.5"/>
+        </g>
+        {/* Big drive wheel R */}
+        <g className="ht-w2">
+          <circle cx="112" cy="90" r="20" fill="none" stroke="#3b82f6" strokeWidth="3.5"/>
+          <circle cx="112" cy="90" r="11" fill="none" stroke="#3b82f6" strokeWidth="2"/>
+          <circle cx="112" cy="90" r="4"  fill="#60a5fa"/>
+          <line x1="112" y1="70" x2="112" y2="110" stroke="#3b82f6" strokeWidth="2"/>
+          <line x1="92"  y1="90" x2="132" y2="90"  stroke="#3b82f6" strokeWidth="2"/>
+          <line x1="98"  y1="76" x2="126" y2="104" stroke="#3b82f6" strokeWidth="1.5"/>
+          <line x1="126" y1="76" x2="98"  y2="104" stroke="#3b82f6" strokeWidth="1.5"/>
+        </g>
+        {/* Connecting rod */}
+        <rect x="62" y="87" width="50" height="6" rx="3" fill="rgba(59,130,246,.55)"/>
+        {/* Piston rod */}
+        <rect x="20" y="87" width="44" height="4" rx="2" fill="rgba(59,130,246,.4)"/>
+
+        {/* Small front wheel */}
+        <g className="ht-w3">
+          <circle cx="28" cy="94" r="11" fill="none" stroke="#3b82f6" strokeWidth="2.5"/>
+          <circle cx="28" cy="94" r="3"  fill="#60a5fa"/>
+          <line x1="28" y1="83" x2="28" y2="105" stroke="#3b82f6" strokeWidth="1.5"/>
+          <line x1="17" y1="94" x2="39" y2="94"  stroke="#3b82f6" strokeWidth="1.5"/>
+        </g>
+        {/* Cab wheel */}
+        <g className="ht-w4">
+          <circle cx="178" cy="94" r="11" fill="none" stroke="#3b82f6" strokeWidth="2.5"/>
+          <circle cx="178" cy="94" r="3"  fill="#60a5fa"/>
+          <line x1="178" y1="83" x2="178" y2="105" stroke="#3b82f6" strokeWidth="1.5"/>
+          <line x1="167" y1="94" x2="189" y2="94"  stroke="#3b82f6" strokeWidth="1.5"/>
+        </g>
+        {/* Tender wheels */}
+        <g className="ht-w1">
+          <circle cx="234" cy="94" r="10" fill="none" stroke="rgba(59,130,246,.6)" strokeWidth="2"/>
+          <circle cx="234" cy="94" r="3"  fill="rgba(96,165,250,.7)"/>
+          <line x1="234" y1="84" x2="234" y2="104" stroke="rgba(59,130,246,.6)" strokeWidth="1.5"/>
+          <line x1="224" y1="94" x2="244" y2="94"  stroke="rgba(59,130,246,.6)" strokeWidth="1.5"/>
+        </g>
+        <g className="ht-w2">
+          <circle cx="262" cy="94" r="10" fill="none" stroke="rgba(59,130,246,.6)" strokeWidth="2"/>
+          <circle cx="262" cy="94" r="3"  fill="rgba(96,165,250,.7)"/>
+          <line x1="262" y1="84" x2="262" y2="104" stroke="rgba(59,130,246,.6)" strokeWidth="1.5"/>
+          <line x1="252" y1="94" x2="272" y2="94"  stroke="rgba(59,130,246,.6)" strokeWidth="1.5"/>
+        </g>
+      </svg>
+
+      {/* Label */}
+      <div style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", color:"rgba(59,130,246,.45)", fontSize:10, fontWeight:700, letterSpacing:2, whiteSpace:"nowrap" }}>BHARATH WAGONS · LIVE</div>
+    </div>
+  );
+}
+
+/* ── Honeycomb Web Canvas for Roles Section ─────────────────────── */
+function RolesSmokeCanvas() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let raf, t = 0;
+
+    const sz = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+    sz();
+    const ro = new ResizeObserver(sz);
+    ro.observe(canvas);
+
+    // hexagon helper — draws one hex centered at (cx, cy) with given size
+    const hex = (cx, cy, size) => {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = cx + size * Math.cos(angle);
+        const py = cy + size * Math.sin(angle);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+    };
+
+    const draw = () => {
+      t += 0.008;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const SIZE  = 36;           // hex cell radius
+      const COLS  = Math.ceil(canvas.width  / (SIZE * 1.75)) + 2;
+      const ROWS  = Math.ceil(canvas.height / (SIZE * 1.52)) + 2;
+
+      for (let row = -1; row < ROWS; row++) {
+        for (let col = -1; col < COLS; col++) {
+          const cx = col * SIZE * 1.732 + (row % 2 === 0 ? 0 : SIZE * 0.866);
+          const cy = row * SIZE * 1.5;
+
+          // wave pulse — each cell breathes at a slightly different phase
+          const phase  = (col * 0.4 + row * 0.6 + t) % (Math.PI * 2);
+          const pulse  = 0.5 + 0.5 * Math.sin(phase);          // 0 → 1
+          const alpha  = 0.06 + pulse * 0.13;                   // 0.06 → 0.19
+          const stroke = 0.4 + pulse * 0.6;                     // stroke width
+
+          // ash / light grey palette — slightly warm
+          const g = Math.round(180 + pulse * 40);               // 180 → 220
+          const strokeColor = `rgba(${g},${g},${g - 10},${alpha})`;
+          const fillColor   = `rgba(${g},${g},${g - 10},${alpha * 0.18})`;
+
+          hex(cx, cy, SIZE - 2);
+          ctx.fillStyle   = fillColor;
+          ctx.fill();
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth   = stroke;
+          ctx.stroke();
+
+          // bright centre dot on peak cells
+          if (pulse > 0.85) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(220,220,215,${(pulse - 0.85) * 1.8})`;
+            ctx.fill();
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, []);
+  return <canvas ref={ref} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -576,7 +680,7 @@ const LandingPage = () => {
           <div className="hero-row" style={{ position: "relative", zIndex: 10, width: "100%", padding: "90px clamp(20px,6vw,76px) 110px", display: "flex", alignItems: "center", gap: 56 }}>
 
             {/* LEFT */}
-            <div style={{ flex: 1, maxWidth: 660 }}>
+            <div style={{ flex: 1, maxWidth: 580 }}>
               <div style={{ opacity: ready ? 1 : 0, transform: ready ? "none" : "translateX(-24px)", transition: "all .6s ease", marginBottom: 18 }}>
                 <span className="gtag">
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "lp-pulse 1.5s infinite", flexShrink: 0 }} />
@@ -613,10 +717,12 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* RIGHT — live card */}
-            <div className="hide-m" style={{ flexShrink: 0, opacity: ready ? 1 : 0, transform: ready ? "none" : "translateX(28px)", transition: "all .8s .3s ease" }}>
-              <LiveCard />
+
+            {/* RIGHT — Train Animation */}
+            <div className="hide-m" style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", opacity: ready ? 1 : 0, transform: ready ? "translate(60px, -60px)" : "translateX(32px)", transition: "all .8s .4s ease" }}>
+              <HeroTrainAnimation />
             </div>
+
           </div>
 
           {/* scroll cue */}
@@ -651,43 +757,36 @@ const LandingPage = () => {
         {/* ═══════════════════════════════════════════════════
             ROLES
         ═══════════════════════════════════════════════════ */}
-        <section style={{ padding: "88px clamp(20px,6vw,76px)" }} id="roles">
-          <Fade><div style={{ textAlign: "center", marginBottom: 56 }}>
-            <span className="gtag" style={{ marginBottom: 14 }}>PORTAL ACCESS</span>
-            <h2 style={{ fontFamily: FM, fontSize: "clamp(26px,3.5vw,42px)", fontWeight: 900, color: "#f1f5f9", letterSpacing: "-1px", marginTop: 14 }}>
-              Choose Your <span className="gtext">Command Role</span>
-            </h2>
-          </div></Fade>
-
-          <div className="roles-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }}>
+        <section style={{ padding: "64px clamp(20px,6vw,76px)", position: "relative", overflow: "hidden" }} id="roles">
+          <RolesSmokeCanvas />
+          <div className="roles-g" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22, maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 1 }}>
             {[
-              { ic: "🏛", role: "Admin", tag: "ZONE ADMIN", title: "Command Center", c: "#3b82f6", bg: "linear-gradient(145deg,rgba(6,16,36,.96),rgba(4,12,28,.92))", border: "rgba(59,130,246,.2)", btnBg: "linear-gradient(135deg,#1d4ed8,#3b82f6)", btnShadow: "rgba(37,99,235,.4)", path: "/login", feats: ["User & Role Management", "Access Approval Queue", "Zone Operations View", "Audit Logs", "Alert Management"] },
-              { ic: "📊", role: "Analyst", tag: "DATA ANALYST", title: "Intelligence Hub", c: "#a855f7", bg: "linear-gradient(145deg,rgba(10,6,36,.96),rgba(8,4,26,.92))", border: "rgba(139,92,246,.2)", btnBg: "linear-gradient(135deg,#7c3aed,#a855f7)", btnShadow: "rgba(124,58,237,.4)", path: "/login", feats: ["Live Dashboards", "Zone Analytics", "Predictive AI", "Report Export", "Pattern Analysis"] },
-              { ic: "🚆", role: "Operator", tag: "FIELD OPERATOR", title: "Operations Portal", c: "#22c55e", bg: "linear-gradient(145deg,rgba(3,16,10,.96),rgba(2,12,8,.92))", border: "rgba(34,197,94,.2)", btnBg: "linear-gradient(135deg,#15803d,#22c55e)", btnShadow: "rgba(34,197,94,.35)", path: "/login", feats: ["Wagon Monitoring", "GPS Tracking", "Maintenance", "Cargo Dashboard", "AI Field Alerts"] },
+              { ic: "🏛", role: "Admin",    c: "#3b82f6", bg: "linear-gradient(145deg,rgba(6,16,36,.96),rgba(4,12,28,.92))", border: "rgba(59,130,246,.2)", btnBg: "linear-gradient(135deg,#1d4ed8,#3b82f6)", btnShadow: "rgba(37,99,235,.4)" },
+              { ic: "📊", role: "Analyst",  c: "#a855f7", bg: "linear-gradient(145deg,rgba(10,6,36,.96),rgba(8,4,26,.92))",  border: "rgba(139,92,246,.2)",  btnBg: "linear-gradient(135deg,#7c3aed,#a855f7)", btnShadow: "rgba(124,58,237,.4)" },
+              { ic: "🚆", role: "Operator", c: "#22c55e", bg: "linear-gradient(145deg,rgba(3,16,10,.96),rgba(2,12,8,.92))",   border: "rgba(34,197,94,.2)",   btnBg: "linear-gradient(135deg,#15803d,#22c55e)", btnShadow: "rgba(34,197,94,.35)" },
             ].map((r, i) => (
               <Fade key={r.role} delay={i * .12}>
-                <div className="role-card" style={{ background: r.bg, border: `1px solid ${r.border}` }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 32px 80px rgba(0,0,0,.55), 0 0 48px ${r.c}18`; e.currentTarget.style.borderColor = `${r.c}45`; }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = r.border; }}>
+                <div style={{
+                  background: r.bg, border: `1px solid ${r.border}`, borderRadius: 22,
+                  padding: "32px 24px", display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: 20, position: "relative", overflow: "hidden",
+                  transition: "transform .3s cubic-bezier(.34,1.2,.64,1), box-shadow .3s",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-8px) scale(1.02)"; e.currentTarget.style.boxShadow = `0 24px 60px rgba(0,0,0,.55), 0 0 40px ${r.c}18`; e.currentTarget.style.borderColor = `${r.c}45`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = r.border; }}
+                >
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${r.c},transparent)` }} />
-                  <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: `radial-gradient(circle,${r.c}0d,transparent 70%)`, pointerEvents: "none" }} />
-                  <div style={{ width: 50, height: 50, borderRadius: 15, background: r.btnBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, marginBottom: 20, boxShadow: `0 8px 22px ${r.btnShadow}`, transition: "transform .3s cubic-bezier(.34,1.4,.64,1)" }}>{r.ic}</div>
-                  <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 11px", background: `${r.c}12`, border: `1px solid ${r.c}28`, borderRadius: 20, fontSize: 9, color: r.c, fontWeight: 700, letterSpacing: 1, marginBottom: 12 }}>{r.tag}</span>
-                  <h3 style={{ fontFamily: FM, fontSize: 20, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, letterSpacing: "-.3px" }}>{r.title}</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-                    {r.feats.map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                        <div style={{ width: 16, height: 16, borderRadius: 4, background: `${r.c}14`, border: `1px solid ${r.c}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <span style={{ color: r.c, fontSize: 9 }}>✓</span>
-                        </div>
-                        <span style={{ color: "#4a6fa5", fontSize: 12 }}>{f}</span>
-                      </div>
-                    ))}
+                  <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: `radial-gradient(circle,${r.c}0d,transparent 70%)`, pointerEvents: "none" }} />
+                  {/* Icon */}
+                  <div style={{ width: 64, height: 64, borderRadius: 20, background: r.btnBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, boxShadow: `0 8px 28px ${r.btnShadow}` }}>
+                    {r.ic}
                   </div>
-                  <button style={{ width: "100%", padding: "12px", border: "none", borderRadius: 12, background: r.btnBg, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: `0 5px 22px ${r.btnShadow}`, fontFamily: FI, transition: "transform .2s, box-shadow .2s" }}
-                    onClick={() => navigate(r.path)}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 10px 30px ${r.btnShadow.replace(".35", ".6").replace(".4", ".6")}`; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `0 5px 22px ${r.btnShadow}`; }}>
+                  {/* Login button */}
+                  <button style={{ width: "100%", padding: "13px", border: "none", borderRadius: 12, background: r.btnBg, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: `0 5px 22px ${r.btnShadow}`, fontFamily: FI, transition: "transform .2s, box-shadow .2s" }}
+                    onClick={() => navigate("/login")}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = ""; }}
+                  >
                     {r.role} Login →
                   </button>
                 </div>
