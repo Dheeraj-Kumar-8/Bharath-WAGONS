@@ -139,6 +139,8 @@ const speedColor  = s => s > 80 ? "#ef4444" : s > 50 ? "#f59e0b" : s > 0 ? "#22c
 const healthColor = h => h >= 75 ? "#22c55e" : h >= 50 ? "#f59e0b" : "#ef4444";
 
 function parseRouteStations(route) { return route.split("→").map(s => s.trim()); }
+
+
 function getStationCoords(name) {
   const exact = ALL_STATIONS[name];
   if (exact) return geo2svg(exact.lat, exact.lng);
@@ -163,6 +165,7 @@ const INDIA_POINTS = [
 ].map(([lat, lng]) => geo2svg(lat, lng));
 const indiaPath = "M " + INDIA_POINTS.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L ") + " Z";
 
+// ── Railway Map (identical logic to OperatorTracking) ─────────────────────────
 // ── Railway Map (identical logic to OperatorTracking) ─────────────────────────
 function RailwayMap({ wagons, selected, onSelectWagon, searchStation }) {
   const svgRef = useRef(null);

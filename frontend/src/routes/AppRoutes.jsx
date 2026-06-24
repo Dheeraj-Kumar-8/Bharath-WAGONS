@@ -48,10 +48,8 @@ const AnalyticsGuard = ({ children }) => {
 };
 
 const OperatorGuard = ({ children }) => {
-  const { operator, operators } = useAuth();
+  const { operator } = useAuth();
   if (!operator) return <Navigate to="/login" replace />;
-  const live = operators.find(o => o.id === operator.id);
-  if (live && live.status !== "Active") return <Navigate to="/login" replace />;
   return children;
 };
 

@@ -12,6 +12,8 @@ const LOCK_REASON_MSG = {
   account_deactivated: "Your account has been deactivated. Contact your Zone Admin.",
   not_activated:       "Account not yet activated. Check your email for the activation link.",
   account_inactive:    "Your account is inactive. Contact your Zone Admin.",
+  role_mismatch:       "",  // message field used directly
+  network_error:       "Unable to reach the server. Please try again.",
 };
 
 /* ── Floating particle canvas ────────────────────────────────────── */
@@ -250,39 +252,75 @@ const LoginPage = () => {
   const [lockMins,   setLockMins]   = useState(null);
   const [showForgot, setShowForgot] = useState(false);
   const [mounted,    setMounted]    = useState(false);
+  // pendingNav holds the route to navigate to once auth state has committed
+  const [pendingNav, setPendingNav] = useState(null);
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
+  // Navigate only after admin/operator/analyst state has been committed to context
+  useEffect(() => {
+    if (!pendingNav) return;
+    console.log("[LoginPage] pendingNav effect fired — navigating to:", pendingNav);
+    navigate(pendingNav);
+    setPendingNav(null);
+  }, [pendingNav, navigate]);
+
   const switchTab = t => { setTab(t); setEmail(""); setPassword(""); setError(""); setLockMins(null); };
 
-  /* ── Auth logic — identical to original ── */
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    console.log("[LoginPage] Login button clicked — tab:", tab, "email:", email);
     setError(""); setLockMins(null);
     const trimmedEmail    = email.trim();
     const trimmedPassword = password.trim();
-    if (!trimmedEmail || !trimmedPassword) { setError("Please enter both email and password."); return; }
+    if (!trimmedEmail || !trimmedPassword) {
+      console.log("[LoginPage] handleLogin() — empty fields, aborting");
+      setError("Please enter both email and password."); return;
+    }
+    if (tab !== "admin" && !isValidRailwayEmail(trimmedEmail)) {
+      // Admin login skips client-side domain check — backend validates
+      console.log("[LoginPage] handleLogin() — invalid railway email for non-admin tab");
+      setError(DOMAIN_ERROR); return;
+    }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (!isValidRailwayEmail(trimmedEmail)) { setError(DOMAIN_ERROR); return; }
+    try {
+      console.log("[LoginPage] handleLogin() — tab:", tab, "| email:", trimmedEmail);
       if (tab === "admin") {
-        const result = login(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/admin"); }
-        else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid credentials. Please try again."); }
+        console.log("[LoginPage] handleLogin() — awaiting login() from AuthContext");
+        const result = await login(trimmedEmail, trimmedPassword);
+        console.log("[LoginPage] handleLogin() — login() result:", JSON.stringify(result));
+        if (result.success) {
+          console.log("[LoginPage] handleLogin() — success! scheduling navigate to /admin");
+          setPendingNav("/admin");
+        } else {
+          const backendMsg = result.message && result.message.trim();
+          const useBackend = backendMsg && (result.reason === "role_mismatch" || /suspended|inactive|blocked/i.test(backendMsg));
+          setError(useBackend ? backendMsg : (LOCK_REASON_MSG[result.reason] || "Invalid credentials. Please try again."));
+        }
       } else if (tab === "analytics") {
-        const result = loginAnalyst(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/analytics-dashboard"); }
-        else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid analytics credentials. Please try again."); }
+        console.log("[LoginPage] handleLogin() — calling loginAnalyst() from AuthContext");
+        const result = await loginAnalyst(trimmedEmail, trimmedPassword);
+        console.log("[LoginPage] handleLogin() — loginAnalyst() result:", JSON.stringify(result));
+        if (result.success) { setPendingNav("/analytics-dashboard"); }
+        else if (result.reason === "invalid_domain") { setError(DOMAIN_ERROR); }
+        else {
+          const backendMsg = result.message && result.message.trim();
+          const useBackend = backendMsg && (result.reason === "role_mismatch" || /suspended|inactive|blocked/i.test(backendMsg));
+          setError(useBackend ? backendMsg : (LOCK_REASON_MSG[result.reason] || "Invalid analytics credentials. Please try again."));
+        }
       } else {
-        const result = loginOperator(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/operator"); }
+        console.log("[LoginPage] handleLogin() — calling loginOperator() from AuthContext");
+        const result = await loginOperator(trimmedEmail, trimmedPassword);
+        console.log("[LoginPage] handleLogin() — loginOperator() result:", JSON.stringify(result));
+        if (result.success) { setPendingNav("/operator"); }
         else if (result.reason === "invalid_domain") { setError(DOMAIN_ERROR); }
         else {
           if (result.reason === "account_locked") {
             setLockMins(result.lockMins || 15);
             setError(LOCK_REASON_MSG.account_locked);
           } else {
-            const base  = LOCK_REASON_MSG[result.reason] || "Login failed.";
+            const backendMsg = result.message && result.message.trim();
+            const useBackend = backendMsg && (result.reason === "role_mismatch" || /suspended|inactive|blocked/i.test(backendMsg));
+            const base = useBackend ? backendMsg : (LOCK_REASON_MSG[result.reason] || "Login failed.");
             const extra = result.attemptsLeft != null
               ? ` ${result.attemptsLeft} attempt${result.attemptsLeft !== 1 ? "s" : ""} remaining before lock.`
               : "";
@@ -290,7 +328,9 @@ const LoginPage = () => {
           }
         }
       }
-    }, 400);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKey = e => { if (e.key === "Enter") handleLogin(); };

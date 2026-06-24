@@ -9,7 +9,6 @@ import { useAuth } from "../context/AuthContext";
 import {
   ALL_WAGONS, ZONE_ALERTS, ZONE_STATS, ZONE_CITIES,
 } from "../data/zoneData";
-import { ANALYTICS_CREDENTIALS } from "../context/AuthContext";
 
 // ── Type config ───────────────────────────────────────────────────────────────
 const TYPE_CFG = {
@@ -51,7 +50,7 @@ function saveHistory(h) {
 }
 
 // ── Index builder ─────────────────────────────────────────────────────────────
-function buildAdminIndex(zone, operators) {
+function buildAdminIndex(zone, operators, analystUsers) {
   const items = [];
 
   // Wagons
@@ -120,7 +119,7 @@ function buildAdminIndex(zone, operators) {
   });
 
   // Analysts
-  ANALYTICS_CREDENTIALS.forEach(an => {
+  (analystUsers || []).forEach(an => {
     items.push({
       type: "Analyst", id: an.id, title: an.name,
       sub: `${an.id} · Zone ${an.zone} · ${an.region}`,
@@ -223,10 +222,10 @@ function DetailPane({ item, onNavigate }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 const SearchModal = ({ onClose }) => {
   const navigate      = useNavigate();
-  const { admin, operators } = useAuth();
+  const { admin, operators, analystUsers } = useAuth();
   const zone          = admin?.zone || "NR";
 
-  const index = useMemo(() => buildAdminIndex(zone, operators), [zone, operators]);
+  const index = useMemo(() => buildAdminIndex(zone, operators, analystUsers), [zone, operators, analystUsers]);
 
   const [query,       setQuery]       = useState("");
   const [filter,      setFilter]      = useState("All");

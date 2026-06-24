@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiX, FiFilter } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import { FiTruck, FiActivity, FiAlertTriangle, FiTool } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { ALL_WAGONS } from "../data/zoneData";
+import { api } from "../utils/api";
 
 const TYPES    = ["All","Freight","Tank","Flatbed"];
 const STATUSES = ["All","On Time","Delayed","Maintenance"];
@@ -78,14 +79,38 @@ const Wagons = () => {
   const { admin } = useAuth();
   const zone = admin?.zone || "NR";
   const ZONE_WAGONS = ALL_WAGONS.filter(w => w.zone === zone);
-  
-  const [data, setData]       = useState(ZONE_WAGONS);
-  const [query, setQuery]     = useState("");
-  const [typeFilter, setType] = useState("All");
-  const [statusFilter, setSt] = useState("All");
-  const [addModal, setAdd]    = useState(false);
-  const [editTarget, setEdit] = useState(null);
-  const [delTarget,  setDel]  = useState(null);
+
+  const [data, setData]         = useState(ZONE_WAGONS);
+  const [query, setQuery]       = useState("");
+  const [typeFilter, setType]   = useState("All");
+  const [statusFilter, setSt]   = useState("All");
+  const [addModal, setAdd]      = useState(false);
+  const [editTarget, setEdit]   = useState(null);
+  const [delTarget, setDel]     = useState(null);
+
+  // Load wagons from MongoDB on mount; merge DB wagons with static zone data
+  useEffect(() => {
+    api.getWagons()
+      .then(res => {
+        if (res.data?.length) {
+          const dbMapped = res.data.map(w => ({
+            id:       w.wagonId,
+            type:     w.wagonType,
+            location: w.currentLocation || "Unknown",
+            dest:     w.destination || "—",
+            speed:    w.speed || 0,
+            capacity: w.capacity || "—",
+            zone:     w.zone || zone,
+            status:   w.status === "Active" ? "On Time" : w.status === "Idle" ? "Delayed" : "Maintenance",
+          }));
+          // Merge: DB wagons take priority over static seed for same IDs
+          const dbIds = new Set(dbMapped.map(w => w.id));
+          const merged = [...dbMapped, ...ZONE_WAGONS.filter(w => !dbIds.has(w.id))];
+          setData(merged);
+        }
+      })
+      .catch(err => console.warn("[Wagons] API fetch failed (offline?):", err.message));
+  }, [zone]);
 
   const filtered = data.filter(w =>
     (typeFilter === "All" || w.type === typeFilter) &&
@@ -94,15 +119,68 @@ const Wagons = () => {
   );
 
   const counts = {
-    total: data.length,
-    active: data.filter(w => w.status === "On Time").length,
+    total:   data.length,
+    active:  data.filter(w => w.status === "On Time").length,
     delayed: data.filter(w => w.status === "Delayed").length,
-    maint: data.filter(w => w.status === "Maintenance").length,
+    maint:   data.filter(w => w.status === "Maintenance").length,
   };
 
-  const handleAdd    = form => { setData(p => [...p, form]); setAdd(false); };
-  const handleEdit   = form => { setData(p => p.map(w => w.id === form.id ? form : w)); setEdit(null); };
-  const handleDelete = ()   => { setData(p => p.filter(w => w.id !== delTarget.id)); setDel(null); };
+  const handleAdd = async (form) => {
+    setAdd(false);
+    try {
+      await api.createWagon({
+        wagonId:         form.id,
+        wagonType:       form.type,
+        currentLocation: form.location,
+        destination:     form.dest,
+        speed:           Number(form.speed) || 0,
+        capacity:        form.capacity,
+        zone:            form.zone || zone,
+        status:          form.status === "On Time" ? "Active" : form.status === "Delayed" ? "Idle" : "Maintenance",
+      });
+      setData(p => [...p, form]);
+      console.log("[Wagons] saved to MongoDB:", form.id);
+    } catch (err) {
+      console.error("[Wagons] MongoDB save failed:", err.message);
+      // Still update UI even if DB fails
+      setData(p => [...p, form]);
+    }
+  };
+
+  const handleEdit = async (form) => {
+    setData(p => p.map(w => w.id === form.id ? form : w));
+    setEdit(null);
+    try {
+      const res = await api.getWagons();
+      const dbWagon = res.data?.find(w => w.wagonId === form.id);
+      if (dbWagon) {
+        await api.updateWagon(dbWagon._id, {
+          wagonType:       form.type,
+          currentLocation: form.location,
+          destination:     form.dest,
+          speed:           Number(form.speed) || 0,
+          capacity:        form.capacity,
+          zone:            form.zone,
+          status:          form.status === "On Time" ? "Active" : form.status === "Delayed" ? "Idle" : "Maintenance",
+        });
+      }
+    } catch (err) {
+      console.error("[Wagons] MongoDB update failed:", err.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    const id = delTarget.id;
+    setData(p => p.filter(w => w.id !== id));
+    setDel(null);
+    try {
+      const res = await api.getWagons();
+      const dbWagon = res.data?.find(w => w.wagonId === id);
+      if (dbWagon) await api.deleteWagon(dbWagon._id);
+    } catch (err) {
+      console.error("[Wagons] MongoDB delete failed:", err.message);
+    }
+  };
 
   return (
     <DashboardLayout title={`Wagons — Zone ${zone}`} sub={`Manage and monitor all wagons in ${admin?.region}`}>

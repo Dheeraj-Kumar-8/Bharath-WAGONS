@@ -119,6 +119,8 @@ function getStationCoords(name) {
   return null;
 }
 
+// (keep getStationCoords above for SVG mapping)
+
 const STATUS_COLOR = { "On Time":"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" };
 const STATUS_BADGE = { "On Time":"badge-ontime", Delayed:"badge-delayed", Halted:"badge-high", Maintenance:"badge-maint" };
 const GPS_COLOR    = { Active:"#22c55e", Offline:"#ef4444", Weak:"#f59e0b" };

@@ -3,28 +3,6 @@ import { isValidRailwayEmail, DOMAIN_ERROR } from "../utils/emailValidator";
 import { generateActivationToken, verifyActivationToken } from "../utils/tokenService";
 import { sendActivationEmail } from "../utils/emailService";
 
-export const ANALYTICS_CREDENTIALS = [
-  { id:"ANL-NR",  name:"Priya Sharma",      email:"analyst.nr@railway.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
-  { id:"ANL-SR",  name:"Kiran Babu",        email:"analyst.sr@railway.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
-  { id:"ANL-ER",  name:"Debashish Roy",     email:"analyst.er@railway.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
-  { id:"ANL-WR",  name:"Sneha Joshi",       email:"analyst.wr@railway.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
-  { id:"ANL-NER", name:"Biren Kalita",      email:"analyst.ner@railway.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
-  { id:"ANL-NWR", name:"Geeta Choudhary",   email:"analyst.nwr@railway.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
-  { id:"ANL-SER", name:"Tanmay Mohanty",    email:"analyst.ser@railway.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
-  { id:"ANL-SWR", name:"Lakshmi Venkat",    email:"analyst.swr@railway.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
-];
-
-export const ADMIN_CREDENTIALS = [
-  { id:"ADM-NR",  name:"Rajesh Kumar",     email:"admin.nr@railway.gov.in",  password:"NR@2025",  zone:"NR",  region:"North Railway"         },
-  { id:"ADM-SR",  name:"Kavitha Reddy",    email:"admin.sr@railway.gov.in",  password:"SR@2025",  zone:"SR",  region:"South Railway"         },
-  { id:"ADM-ER",  name:"Subhash Ghosh",    email:"admin.er@railway.gov.in",  password:"ER@2025",  zone:"ER",  region:"East Railway"          },
-  { id:"ADM-WR",  name:"Rohit Patel",      email:"admin.wr@railway.gov.in",  password:"WR@2025",  zone:"WR",  region:"West Railway"          },
-  { id:"ADM-NER", name:"Biren Das",        email:"admin.ner@railway.gov.in", password:"NER@2025", zone:"NER", region:"North East Railway"    },
-  { id:"ADM-NWR", name:"Suresh Choudhary", email:"admin.nwr@railway.gov.in", password:"NWR@2025", zone:"NWR", region:"North Western Railway" },
-  { id:"ADM-SER", name:"Prasad Murthy",    email:"admin.ser@railway.gov.in", password:"SER@2025", zone:"SER", region:"South Eastern Railway" },
-  { id:"ADM-SWR", name:"Anitha Nair",      email:"admin.swr@railway.gov.in", password:"SWR@2025", zone:"SWR", region:"South Western Railway" },
-];
-
 export const ALL_PERMISSIONS = [
   { key:"wagons",      label:"Assigned Wagons",  path:"/operator/wagons"      },
   { key:"tracking",    label:"Live Tracking",    path:"/operator/tracking"    },
@@ -36,8 +14,8 @@ export const ALL_PERMISSIONS = [
 
 const DEFAULT_PERMISSIONS = ALL_PERMISSIONS.map(p => p.key);
 
+// hashPassword/checkPassword kept only for localStorage-based activation flow (ActivatePage)
 const hashPassword = (pw) => btoa(unescape(encodeURIComponent(pw + ":rcc-salt-v1")));
-const checkPassword = (pw, hash) => hashPassword(pw) === hash;
 
 const genToken = () => {
   const arr = new Uint8Array(32);
@@ -45,8 +23,13 @@ const genToken = () => {
   return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 
+// eslint-disable-next-line no-unused-vars
 const MAX_FAILED_ATTEMPTS = 5;
+// eslint-disable-next-line no-unused-vars
 const LOCK_DURATION_MS    = 15 * 60 * 1000;
+
+// SEED_OPERATORS: used only for admin UI management (UsersRoles, operator lists).
+// Authentication is handled exclusively by the backend API.
 
 const SEED_OPERATORS = [
   {
@@ -185,7 +168,7 @@ const STORE_KEY_REQS     = "rcc_rbac_requests_v6";
 const STORE_KEY_ANALYSTS = "rcc_rbac_analysts_v2";
 const STORE_KEY_TOKENS   = "rcc_enc_tokens_v1";   // encrypted-token → accountId map
 
-// ── Seed analysts (mirrors ANALYTICS_CREDENTIALS with full RBAC fields) ───────
+// ── Seed analysts ───────────────────────────────────────────────────────────────
 const SEED_ANALYSTS = [
   {
     id:"ANL-NR",  name:"Priya Sharma",    email:"analyst.nr@railway.gov.in",
@@ -346,133 +329,141 @@ export function AuthProvider({ children }) {
   const persistReqs     = (data) => { setRequests(data);     saveStore(STORE_KEY_REQS,     data); };
   const persistAnalysts = (data) => { setAnalystUsers(data); saveStore(STORE_KEY_ANALYSTS, data); };
 
-  // Analytics login — checks dynamic store first, then static fallback
-  const loginAnalyst = useCallback((email, password) => {
+  // Analytics login — calls backend API (same endpoint as admin/operator)
+  const loginAnalyst = async (email, password) => {
     const e = email.trim().toLowerCase();
-    const p = password.trim();
-    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
-
-    // Check dynamic analyst store (admin-managed accounts)
-    const dynFound = analystUsers.find(a => a.email.toLowerCase() === e);
-    if (dynFound) {
-      if (dynFound.accountStatus === "suspended")          return { success:false, reason:"account_suspended" };
-      if (dynFound.accountStatus === "deactivated")        return { success:false, reason:"account_deactivated" };
-      if (dynFound.accountStatus === "pending_activation") return { success:false, reason:"not_activated" };
-      if (dynFound.status !== "Active")                    return { success:false, reason:"account_inactive" };
-      if (!checkPassword(p, dynFound.passwordHash))        return { success:false, reason:"invalid_credentials" };
-      const now = new Date().toLocaleString("en-IN", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"short" });
-      persistAnalysts(analystUsers.map(a => a.id === dynFound.id ? {
-        ...a, lastLogin:"Just now",
-        activityLog:[{ action:"Logged in", at:now, ip:"—" }, ...(a.activityLog||[]).slice(0,19)],
-      } : a));
-      const session = { id:dynFound.id, name:dynFound.name, email:dynFound.email, zone:dynFound.zone, region:dynFound.region, role:"analyst" };
+    if (!isValidRailwayEmail(e)) return { success: false, reason: "invalid_domain" };
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: e, password: password.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        const msg = json.message || "";
+        if (/suspended/i.test(msg)) return { success: false, reason: "account_suspended",  message: msg };
+        if (/inactive/i.test(msg))  return { success: false, reason: "account_inactive",   message: msg };
+        if (/blocked/i.test(msg))   return { success: false, reason: "account_blocked",    message: msg };
+        return { success: false, reason: "invalid_credentials", message: msg };
+      }
+      if (json.role?.toLowerCase() !== "analyst") {
+        console.warn("[AuthContext] loginAnalyst() — role mismatch, got:", json.role);
+        return { success: false, reason: "role_mismatch", message: "Access denied. Analyst account required." };
+      }
+      const session = {
+        name: json.name, email: e, zone: json.zone, role: "analyst",
+      };
+      localStorage.setItem("token", json.token);
       sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
       setAnalyst(session);
-      return { success:true };
+      return { success: true };
+    } catch (err) {
+      console.error("[AuthContext] loginAnalyst() — fetch error:", err.message);
+      return { success: false, reason: "network_error" };
     }
-
-    // Fallback: static ANALYTICS_CREDENTIALS (backwards compat)
-    const found = ANALYTICS_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
-    if (found) {
-      const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"analyst" };
-      sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
-      setAnalyst(session);
-      return { success:true };
-    }
-    return { success:false, reason:"invalid_credentials" };
-  }, [analystUsers]);
+  };
 
   const logoutAnalyst = () => {
     sessionStorage.removeItem("rcc_analyst");
+    localStorage.removeItem("token");
     setAnalyst(null);
   };
 
-  // Admin login
-  const login = (email, password) => {
-    const e = email.trim().toLowerCase();
-    const p = password.trim();
-    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
-    const found = ADMIN_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
-    if (found) {
-      const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"admin" };
+  // Admin login — calls backend API, no hardcoded credentials
+  const login = async (email, password) => {
+    console.log("[AuthContext] login() ENTERED — email:", email, "| password length:", password?.length);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
+      console.log("[AuthContext] login() — response received | status:", res.status, "ok:", res.ok);
+      const json = await res.json();
+      console.log("[AuthContext] login() — response JSON:", JSON.stringify(json));
+
+      if (!res.ok || !json.success) {
+        const msg = json.message || "";
+        if (/suspended/i.test(msg)) return { success: false, reason: "account_suspended",  message: msg };
+        if (/inactive/i.test(msg))  return { success: false, reason: "account_inactive",   message: msg };
+        if (/blocked/i.test(msg))   return { success: false, reason: "account_blocked",    message: msg };
+        return { success: false, reason: "invalid_credentials", message: msg };
+      }
+
+      if (json.role?.toLowerCase() !== "admin") {
+        console.warn("[AuthContext] login() — role mismatch, got:", json.role);
+        return { success: false, reason: "role_mismatch", message: "Access denied. Admin account required." };
+      }
+
+      const session = { name: json.name, email: email.trim(), zone: json.zone, role: json.role };
+      localStorage.setItem("token", json.token);
+      localStorage.setItem("user", JSON.stringify(session));
       sessionStorage.setItem("rcc_admin", JSON.stringify(session));
       setAdmin(session);
-      return { success:true, admin:session };
+      console.log("[AuthContext] login() — session saved, setAdmin() called, role:", json.role);
+      return { success: true, role: json.role, zone: json.zone, name: json.name };
+    } catch (err) {
+      console.error("[AuthContext] login() — fetch threw an error:", err.message);
+      return { success: false, reason: "network_error" };
     }
-    return { success:false };
   };
 
-  // Operator login
-  const loginOperator = useCallback((email, password) => {
+  // Operator login — calls backend API (same endpoint as admin)
+  const loginOperator = async (email, password) => {
     const e = email.trim().toLowerCase();
-    const p = password.trim();
-    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
-    const found = operators.find(o => o.email.toLowerCase() === e);
-
-    if (!found) return { success:false, reason:"invalid_credentials" };
-
-    if (found.accountStatus === "suspended")         return { success:false, reason:"account_suspended" };
-    if (found.accountStatus === "deactivated")       return { success:false, reason:"account_deactivated" };
-    if (found.accountStatus === "pending_activation") return { success:false, reason:"not_activated" };
-
-    if (found.lockedUntil && Date.now() < found.lockedUntil) {
-      const mins = Math.ceil((found.lockedUntil - Date.now()) / 60000);
-      return { success:false, reason:"account_locked", lockMins: mins };
+    if (!isValidRailwayEmail(e)) return { success: false, reason: "invalid_domain" };
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: e, password: password.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        const msg = json.message || "";
+        if (/suspended/i.test(msg))  return { success: false, reason: "account_suspended",  message: msg };
+        if (/inactive/i.test(msg))   return { success: false, reason: "account_inactive",   message: msg };
+        if (/blocked/i.test(msg))    return { success: false, reason: "account_blocked",    message: msg };
+        return { success: false, reason: "invalid_credentials", message: msg };
+      }
+      if (json.role?.toLowerCase() !== "operator") {
+        console.warn("[AuthContext] loginOperator() — role mismatch, got:", json.role);
+        return { success: false, reason: "role_mismatch", message: "Access denied. Operator account required." };
+      }
+      const session = {
+        name: json.name, email: e, zone: json.zone, role: "operator",
+        permissions: json.permissions || DEFAULT_PERMISSIONS,
+      };
+      localStorage.setItem("token", json.token);
+      localStorage.setItem("rcc_operator", JSON.stringify(session));
+      setOperator(session);
+      return { success: true };
+    } catch (err) {
+      console.error("[AuthContext] loginOperator() — fetch error:", err.message);
+      return { success: false, reason: "network_error" };
     }
-
-    const validPassword = checkPassword(p, found.passwordHash);
-    const now = new Date().toLocaleString("en-IN", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"short" });
-
-    if (!validPassword) {
-      const attempts = (found.failedAttempts || 0) + 1;
-      const locked   = attempts >= MAX_FAILED_ATTEMPTS;
-      const updated  = operators.map(o => o.id === found.id ? {
-        ...o,
-        failedAttempts: locked ? 0 : attempts,
-        lockedUntil:    locked ? Date.now() + LOCK_DURATION_MS : null,
-        loginHistory: [{ at:now, ip:"—", success:false }, ...(o.loginHistory||[]).slice(0,19)],
-      } : o);
-      persistOps(updated);
-      if (locked) return { success:false, reason:"account_locked", lockMins: 15 };
-      return { success:false, reason:"invalid_credentials", attemptsLeft: MAX_FAILED_ATTEMPTS - attempts };
-    }
-
-    if (found.status !== "Active") return { success:false, reason:"account_inactive" };
-
-    const updated = operators.map(o => o.id === found.id ? {
-      ...o,
-      failedAttempts: 0, lockedUntil: null, lastLogin: "Just now",
-      loginHistory: [{ at:now, ip:"—", success:true }, ...(o.loginHistory||[]).slice(0,19)],
-      activityLog:  [{ action:"Logged in", at:now, ip:"—" }, ...(o.activityLog||[]).slice(0,19)],
-    } : o);
-    persistOps(updated);
-
-    const session = {
-      id:found.id, name:found.name, email:found.email,
-      zone:found.zone, region:found.region, shift:found.shift,
-      role:"operator", permissions:found.permissions,
-      employeeId:found.employeeId, department:found.department, designation:found.designation,
-    };
-    localStorage.setItem("rcc_operator", JSON.stringify(session));
-    setOperator(session);
-    return { success:true };
-  }, [operators]);
+  };
 
   const logout = () => {
     sessionStorage.removeItem("rcc_admin");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setAdmin(null);
-    // Also clear analyst session on admin logout for clean state
   };
 
   const logoutOperator = () => {
     localStorage.removeItem("rcc_operator");
+    localStorage.removeItem("token");
     setOperator(null);
   };
 
   const hasPermission = useCallback((moduleKey) => {
     if (!operator) return false;
+    // Backend-authenticated operators get DEFAULT_PERMISSIONS if no explicit list
+    if (operator.permissions) return operator.permissions.includes(moduleKey);
     const live = operators.find(o => o.id === operator.id);
-    return live ? live.permissions.includes(moduleKey) : false;
+    return live ? live.permissions.includes(moduleKey) : DEFAULT_PERMISSIONS.includes(moduleKey);
   }, [operator, operators]);
 
   // Expose token registry lookup for ActivatePage
@@ -558,6 +549,12 @@ export function AuthProvider({ children }) {
     };
     const updated = [...operators, newOp];
     persistOps(updated);
+    // Persist to MongoDB
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: form.name, email: form.email, password: `PENDING_${id}`, role: "Operator" }),
+    }).catch(err => console.warn("[AuthContext] operator MongoDB save failed:", err.message));
     return { ...newOp, activationLink:`${window.location.origin}/activate/${token}` };
   }, [operators]);
 
@@ -776,7 +773,7 @@ export function AuthProvider({ children }) {
     return { activationLink:`${window.location.origin}/activate/${encodeURIComponent(encToken)}` };
   }, [operators]);
 
-  const submitAccessRequest = useCallback((data) => {
+  const submitAccessRequest = useCallback(async (data) => {
     if (!isValidRailwayEmail(data.email)) return { success:false, reason:"invalid_domain" };
     const id  = `REQ-${Date.now().toString(36).toUpperCase()}`;
     const now = new Date().toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
@@ -787,6 +784,29 @@ export function AuthProvider({ children }) {
       ],
     };
     persistReqs([...requests, entry]);
+
+    // Persist to MongoDB Atlas
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:     data.name,
+          email:    data.email,
+          password: `PENDING_ACTIVATION_${id}`, // placeholder — replaced on activation
+          role:     data.role || "Operator",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        console.log("[AuthContext] access request saved to MongoDB, _id:", json.data._id);
+      } else {
+        console.warn("[AuthContext] MongoDB save returned error:", json.message);
+      }
+    } catch (err) {
+      console.warn("[AuthContext] MongoDB save failed (backend offline?):", err.message);
+    }
+
     return { success:true };
   }, [requests]);
 
@@ -823,6 +843,12 @@ export function AuthProvider({ children }) {
       activityLog:[{ action:"Analyst account created by admin", at:new Date().toLocaleTimeString("en-IN"), ip:"Admin" }],
     };
     persistAnalysts([...analystUsers, newA]);
+    // Persist to MongoDB
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: form.name, email: form.email, password: `PENDING_${id}`, role: "Analyst" }),
+    }).catch(err => console.warn("[AuthContext] analyst MongoDB save failed:", err.message));
     return { ...newA, activationLink: `${window.location.origin}/activate/${encodeURIComponent(token)}` };
   }, [analystUsers]);
 

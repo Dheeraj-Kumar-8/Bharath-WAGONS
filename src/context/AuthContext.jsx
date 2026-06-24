@@ -346,60 +346,77 @@ export function AuthProvider({ children }) {
   const persistReqs     = (data) => { setRequests(data);     saveStore(STORE_KEY_REQS,     data); };
   const persistAnalysts = (data) => { setAnalystUsers(data); saveStore(STORE_KEY_ANALYSTS, data); };
 
-  // Analytics login — checks dynamic store first, then static fallback
-  const loginAnalyst = useCallback((email, password) => {
+  // Analytics login — calls backend API
+  const loginAnalyst = useCallback(async (email, password) => {
     const e = email.trim().toLowerCase();
-    const p = password.trim();
-    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
-
-    // Check dynamic analyst store (admin-managed accounts)
-    const dynFound = analystUsers.find(a => a.email.toLowerCase() === e);
-    if (dynFound) {
-      if (dynFound.accountStatus === "suspended")          return { success:false, reason:"account_suspended" };
-      if (dynFound.accountStatus === "deactivated")        return { success:false, reason:"account_deactivated" };
-      if (dynFound.accountStatus === "pending_activation") return { success:false, reason:"not_activated" };
-      if (dynFound.status !== "Active")                    return { success:false, reason:"account_inactive" };
-      if (!checkPassword(p, dynFound.passwordHash))        return { success:false, reason:"invalid_credentials" };
-      const now = new Date().toLocaleString("en-IN", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"short" });
-      persistAnalysts(analystUsers.map(a => a.id === dynFound.id ? {
-        ...a, lastLogin:"Just now",
-        activityLog:[{ action:"Logged in", at:now, ip:"—" }, ...(a.activityLog||[]).slice(0,19)],
-      } : a));
-      const session = { id:dynFound.id, name:dynFound.name, email:dynFound.email, zone:dynFound.zone, region:dynFound.region, role:"analyst" };
+    console.log("[AuthContext] loginAnalyst called:", e);
+    try {
+      console.log("[AuthContext] Sending fetch to /api/auth/login (analyst)");
+      const res  = await fetch("http://localhost:5000/api/auth/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: e, password: password.trim() }),
+      });
+      const data = await res.json();
+      console.log("[AuthContext] loginAnalyst response:", res.status, data);
+      if (res.status === 404) return { success:false, reason:"invalid_credentials" };
+      if (res.status === 401) return { success:false, reason:"invalid_credentials" };
+      if (!data.success)     return { success:false, reason:"invalid_credentials" };
+      if (data.role?.toLowerCase() !== "analyst") {
+        console.warn("[AuthContext] Role mismatch — expected analyst, got:", data.role);
+        return { success:false, reason:"invalid_credentials" };
+      }
+      const session = { name:data.name, email:e, zone:data.zone, role:"analyst" };
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user",  JSON.stringify(session));
       sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
       setAnalyst(session);
+      console.log("[AuthContext] loginAnalyst success:", session);
       return { success:true };
+    } catch (err) {
+      console.error("[AuthContext] loginAnalyst fetch error:", err.message);
+      return { success:false, reason:"invalid_credentials" };
     }
-
-    // Fallback: static ANALYTICS_CREDENTIALS (backwards compat)
-    const found = ANALYTICS_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
-    if (found) {
-      const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"analyst" };
-      sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
-      setAnalyst(session);
-      return { success:true };
-    }
-    return { success:false, reason:"invalid_credentials" };
-  }, [analystUsers]);
+  }, []);
 
   const logoutAnalyst = () => {
     sessionStorage.removeItem("rcc_analyst");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setAnalyst(null);
   };
 
-  // Admin login
-  const login = (email, password) => {
+  // Admin login — calls backend API
+  const login = async (email, password) => {
     const e = email.trim().toLowerCase();
-    const p = password.trim();
-    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
-    const found = ADMIN_CREDENTIALS.find(a => a.email.toLowerCase() === e && a.password === p);
-    if (found) {
-      const session = { id:found.id, name:found.name, email:found.email, zone:found.zone, region:found.region, role:"admin" };
+    console.log("[AuthContext] login called:", e);
+    try {
+      console.log("[AuthContext] Sending fetch to /api/auth/login (admin)");
+      const res  = await fetch("http://localhost:5000/api/auth/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: e, password: password.trim() }),
+      });
+      const data = await res.json();
+      console.log("[AuthContext] login response:", res.status, data);
+      if (res.status === 404) return { success:false, reason:"invalid_domain" };
+      if (res.status === 401) return { success:false };
+      if (!data.success)     return { success:false };
+      if (data.role?.toLowerCase() !== "admin") {
+        console.warn("[AuthContext] Role mismatch — expected admin, got:", data.role);
+        return { success:false };
+      }
+      const session = { name:data.name, email:e, zone:data.zone, role:"admin" };
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user",  JSON.stringify(session));
       sessionStorage.setItem("rcc_admin", JSON.stringify(session));
       setAdmin(session);
+      console.log("[AuthContext] login success:", session);
       return { success:true, admin:session };
+    } catch (err) {
+      console.error("[AuthContext] login fetch error:", err.message);
+      return { success:false };
     }
-    return { success:false };
   };
 
   // Operator login
@@ -460,8 +477,9 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     sessionStorage.removeItem("rcc_admin");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setAdmin(null);
-    // Also clear analyst session on admin logout for clean state
   };
 
   const logoutOperator = () => {

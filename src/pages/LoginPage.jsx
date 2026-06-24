@@ -255,42 +255,45 @@ const LoginPage = () => {
 
   const switchTab = t => { setTab(t); setEmail(""); setPassword(""); setError(""); setLockMins(null); };
 
-  /* ── Auth logic — identical to original ── */
-  const handleLogin = () => {
+  /* ── Auth logic ── */
+  const handleLogin = async () => {
+    console.log("[LoginPage] handleLogin fired — tab:", tab, "email:", email.trim());
     setError(""); setLockMins(null);
     const trimmedEmail    = email.trim();
     const trimmedPassword = password.trim();
     if (!trimmedEmail || !trimmedPassword) { setError("Please enter both email and password."); return; }
     setLoading(true);
-    setTimeout(() => {
+    if (tab === "admin") {
+      const result = await login(trimmedEmail, trimmedPassword);
+      console.log("[LoginPage] admin login result:", result);
       setLoading(false);
-      if (!isValidRailwayEmail(trimmedEmail)) { setError(DOMAIN_ERROR); return; }
-      if (tab === "admin") {
-        const result = login(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/admin"); }
-        else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid credentials. Please try again."); }
-      } else if (tab === "analytics") {
-        const result = loginAnalyst(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/analytics-dashboard"); }
-        else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid analytics credentials. Please try again."); }
-      } else {
-        const result = loginOperator(trimmedEmail, trimmedPassword);
-        if (result.success) { navigate("/operator"); }
-        else if (result.reason === "invalid_domain") { setError(DOMAIN_ERROR); }
-        else {
-          if (result.reason === "account_locked") {
-            setLockMins(result.lockMins || 15);
-            setError(LOCK_REASON_MSG.account_locked);
-          } else {
-            const base  = LOCK_REASON_MSG[result.reason] || "Login failed.";
-            const extra = result.attemptsLeft != null
-              ? ` ${result.attemptsLeft} attempt${result.attemptsLeft !== 1 ? "s" : ""} remaining before lock.`
-              : "";
-            setError(base + extra);
-          }
+      if (result.success) { navigate("/admin"); }
+      else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid credentials. Please try again."); }
+    } else if (tab === "analytics") {
+      const result = await loginAnalyst(trimmedEmail, trimmedPassword);
+      console.log("[LoginPage] analyst login result:", result);
+      setLoading(false);
+      if (result.success) { navigate("/analytics"); }
+      else { setError(result.reason === "invalid_domain" ? DOMAIN_ERROR : "Invalid analytics credentials. Please try again."); }
+    } else {
+      const result = loginOperator(trimmedEmail, trimmedPassword);
+      console.log("[LoginPage] operator login result:", result);
+      setLoading(false);
+      if (result.success) { navigate("/operator"); }
+      else if (result.reason === "invalid_domain") { setError(DOMAIN_ERROR); }
+      else {
+        if (result.reason === "account_locked") {
+          setLockMins(result.lockMins || 15);
+          setError(LOCK_REASON_MSG.account_locked);
+        } else {
+          const base  = LOCK_REASON_MSG[result.reason] || "Login failed.";
+          const extra = result.attemptsLeft != null
+            ? ` ${result.attemptsLeft} attempt${result.attemptsLeft !== 1 ? "s" : ""} remaining before lock.`
+            : "";
+          setError(base + extra);
         }
       }
-    }, 400);
+    }
   };
 
   const handleKey = e => { if (e.key === "Enter") handleLogin(); };
