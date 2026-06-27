@@ -5,6 +5,7 @@ import {
   ALL_WAGONS, ZONE_STATS, ZONE_ALERTS, ZONE_HEALTH,
   ZONE_PREDICTIONS, ZONE_LOGS, ZONE_CITIES,
 } from "../data/zoneData";
+import { askGroq } from "../utils/groqService";
 
 const SEV_COLOR = { Critical:"#ef4444", High:"#f97316", Medium:"#f59e0b", Low:"#22c55e" };
 
@@ -251,6 +252,7 @@ function getAdminAIResponse(input, zone, wagons, stats, alerts, health, predicti
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
 const AdminChatBot = () => {
   const { admin } = useAuth();
   const zone = admin?.zone || "NR";
@@ -279,17 +281,33 @@ const AdminChatBot = () => {
     if (open && !min) endRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages, open, min]);
 
-  const send = (text) => {
+const groqHistory = useRef([]);
+
+  const send = async (text) => {
     const trimmed = (text || input).trim();
     if (!trimmed) return;
     setMessages(p => [...p, { role:"user", text:trimmed, cards:[], chips:[] }]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      const resp = getAdminAIResponse(trimmed, zone, wagons, stats, alerts, health, predictions, logs, cities);
-      setMessages(p => [...p, { role:"ai", ...resp }]);
+    const local = getAdminAIResponse(trimmed, zone, wagons, stats, alerts, health, predictions, logs, cities);
+    if (!local.text.includes("Didn't recognise")) {
+      await new Promise(r => setTimeout(r, 420));
+      groqHistory.current.push({ role:"user", content:trimmed });
+      groqHistory.current.push({ role:"assistant", content:local.text.replace(/[*][*](.*?)[*][*]/g,"$1") });
+      setMessages(p => [...p, { role:"ai", ...local }]);
       setTyping(false);
-    }, 450);
+    } else {
+      groqHistory.current.push({ role:"user", content:trimmed });
+      try {
+        const reply = await askGroq(groqHistory.current);
+        groqHistory.current.push({ role:"assistant", content:reply });
+        setMessages(p => [...p, { role:"ai", text:reply, cards:[], chips:["Zone summary","Active alerts","AI recommendations"] }]);
+      } catch {
+        setMessages(p => [...p, { role:"ai", text:"Unable to reach AI service. Please check your connection.", cards:[], chips:["Zone summary","Active alerts"] }]);
+      } finally {
+        setTyping(false);
+      }
+    }
   };
 
   const handleKey = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };

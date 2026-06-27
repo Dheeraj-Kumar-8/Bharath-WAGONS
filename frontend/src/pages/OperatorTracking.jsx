@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   FiMapPin, FiWifi, FiWifiOff, FiRefreshCw, FiNavigation,
   FiSearch, FiZoomIn, FiZoomOut, FiMaximize2, FiX,
@@ -6,6 +6,7 @@ import {
 } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
 import { useOperatorData } from "../context/OperatorDataContext";
+import MapTilerRailwayMap from "../components/GoogleRailwayMap";
 
 const MAP_LAT_MIN = 8,  MAP_LAT_MAX = 37;
 const MAP_LNG_MIN = 68, MAP_LNG_MAX = 97;
@@ -119,7 +120,15 @@ function getStationCoords(name) {
   return null;
 }
 
-// (keep getStationCoords above for SVG mapping)
+function getLatLng(name) {
+  if (!name) return null;
+  const exact = ALL_STATIONS[name];
+  if (exact) return { lat: exact.lat, lng: exact.lng };
+  const key = Object.keys(ALL_STATIONS).find(k =>
+    k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase())
+  );
+  return key ? { lat: ALL_STATIONS[key].lat, lng: ALL_STATIONS[key].lng } : null;
+}
 
 const STATUS_COLOR = { "On Time":"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" };
 const STATUS_BADGE = { "On Time":"badge-ontime", Delayed:"badge-delayed", Halted:"badge-high", Maintenance:"badge-maint" };
@@ -627,7 +636,15 @@ export default function OperatorTracking() {
             <span style={{ color:"#4a6fa5", fontSize:11 }}>· {gpsActive} active · scroll to zoom · drag to pan</span>
           </div>
           <div style={{ height:"calc(100% - 41px)" }}>
-            <RailwayMap wagons={filteredList} selected={selected} onSelectWagon={w => setSelected(wagons.find(x=>x.id===w.id)||w)} searchStation={searchStation}/>
+            <MapTilerRailwayMap
+              wagons={filteredList}
+              selected={selected}
+              onSelectWagon={w => setSelected(wagons.find(x => x.id === w.id) || w)}
+              searchStation={searchStation}
+              getStationCoords={getLatLng}
+              statusColors={{ "On Time":"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" }}
+              zoneColors={{}}
+            />
           </div>
         </div>
         <div className="card" style={{ padding:0, overflow:"hidden", display:"flex", flexDirection:"column" }}>

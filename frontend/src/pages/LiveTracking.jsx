@@ -5,6 +5,7 @@ import {
   FiClock, FiActivity, FiPackage, FiAlertTriangle, FiChevronRight,
 } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
+import GoogleRailwayMap from "../components/GoogleRailwayMap";
 
 // ── Map geometry ──────────────────────────────────────────────────────────────
 const MAP_LAT_MIN = 8,  MAP_LAT_MAX = 37;
@@ -149,6 +150,16 @@ function getStationCoords(name) {
   );
   if (key) return geo2svg(ALL_STATIONS[key].lat, ALL_STATIONS[key].lng);
   return null;
+}
+
+function getLatLng(name) {
+  if (!name) return null;
+  const exact = ALL_STATIONS[name];
+  if (exact) return { lat: exact.lat, lng: exact.lng };
+  const key = Object.keys(ALL_STATIONS).find(k =>
+    k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase())
+  );
+  return key ? { lat: ALL_STATIONS[key].lat, lng: ALL_STATIONS[key].lng } : null;
 }
 
 const INDIA_POINTS = [
@@ -551,84 +562,63 @@ const LiveTracking = () => {
     const matchSearch = w.id.toLowerCase().includes(searchWagon.toLowerCase()) ||
       w.location.toLowerCase().includes(searchWagon.toLowerCase()) ||
       w.route.toLowerCase().includes(searchWagon.toLowerCase());
-    const matchZone   = filterZone === "All" || w.zone === filterZone;
-    const matchStatus = filterStatus === "All"
-      || (filterStatus === "Active"  && w.gps === "Active")
-      || (filterStatus === "Offline" && w.gps === "Offline")
-      || (filterStatus === "Delayed" && w.status === "Delayed")
-      || (filterStatus === "On Time" && w.status === "On Time");
+    const matchZone   = filterZone   === "All" || w.zone   === filterZone;
+    const matchStatus = filterStatus === "All" || w.status === filterStatus;
     return matchSearch && matchZone && matchStatus;
   }), [searchWagon, filterZone, filterStatus]);
 
-  const gpsActive = ADMIN_WAGONS.filter(w => w.gps === "Active").length;
-  const avgSpeed  = Math.round(ADMIN_WAGONS.filter(w => w.gps === "Active").reduce((s,w) => s+w.speed, 0) / (gpsActive||1));
-
   return (
-    <DashboardLayout title="Live Tracking" sub="Real-time GPS tracking · Interactive Railway Map · All Zones">
-
-      {/* Stats bar */}
-      <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
-        {[
-          { label:"GPS Active", value:gpsActive,                                          color:"#22c55e", dot:true  },
-          { label:"On Time",    value:ADMIN_WAGONS.filter(w=>w.status==="On Time").length, color:"#22c55e"            },
-          { label:"Delayed",    value:ADMIN_WAGONS.filter(w=>w.status==="Delayed").length, color:"#f59e0b"            },
-          { label:"Maintenance",value:ADMIN_WAGONS.filter(w=>w.status==="Maintenance").length,color:"#f97316"         },
-          { label:"GPS Offline",value:ADMIN_WAGONS.filter(w=>w.gps==="Offline").length,   color:"#ef4444"            },
-          { label:"Avg Speed",  value:`${avgSpeed} km/h`,                                 color:"#3b82f6"            },
-        ].map(({ label, value, color, dot }) => (
-          <div key={label} style={{ display:"flex", alignItems:"center", gap:8, background:"#0d1f3c", border:`1px solid ${color}20`, borderRadius:10, padding:"8px 16px" }}>
-            {dot && <span className="dot dot-green"/>}
-            <span style={{ color:"#64748b", fontSize:12 }}>{label}</span>
-            <span style={{ color, fontWeight:800, fontSize:16 }}>{value}</span>
-          </div>
-        ))}
-        <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8 }}>
-          <span style={{ color:"#4a6fa5", fontSize:11 }}>Refreshed {lastRefresh.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
-          <button className="btn btn-ghost btn-sm" onClick={handleRefresh}>
-            <FiRefreshCw size={12} style={{ animation:refreshing?"spin 1s linear infinite":"none" }}/> Refresh
+    <DashboardLayout>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <div style={{ color:"#f1f5f9", fontWeight:800, fontSize:20 }}>Live Tracking</div>
+          <div style={{ color:"#4a6fa5", fontSize:12 }}>Real-time wagon positions across all zones</div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ color:"#4a6fa5", fontSize:11 }}>Updated: {lastRefresh.toLocaleTimeString()}</span>
+          <button onClick={handleRefresh} style={{ display:"flex", alignItems:"center", gap:6, background:"#071628", border:"1px solid #1a3356", borderRadius:8, color:"#60a5fa", padding:"6px 14px", cursor:"pointer", fontSize:12 }}>
+            <FiRefreshCw size={13} style={{ animation: refreshing ? "spin .7s linear infinite" : "none" }}/>
+            Refresh
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-        <div className="search-box" style={{ flex:1, minWidth:180 }}>
-          <FiSearch size={13} color="#4a6fa5"/>
-          <input placeholder="Search wagon ID, route…" value={searchWagon} onChange={e=>setSearchWagon(e.target.value)}/>
-          {searchWagon && <button onClick={()=>setSearchWagon("")} style={{ background:"none",border:"none",color:"#4a6fa5",cursor:"pointer",padding:0 }}><FiX size={12}/></button>}
+      <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+        <div style={{ position:"relative", flex:1, minWidth:160 }}>
+          <FiSearch size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#4a6fa5" }}/>
+          <input value={searchWagon} onChange={e=>setSearchWagon(e.target.value)} placeholder="Search wagon / location…"
+            style={{ width:"100%", paddingLeft:30, padding:"7px 10px 7px 30px", background:"#071628", border:"1px solid #1a3356", borderRadius:8, color:"#f1f5f9", fontSize:12, outline:"none", boxSizing:"border-box" }}/>
         </div>
-        <div className="search-box" style={{ flex:1, minWidth:160 }}>
-          <FiMapPin size={13} color="#4a6fa5"/>
-          <input placeholder="Highlight station…" value={searchStation} onChange={e=>setSearchStation(e.target.value)}/>
-          {searchStation && <button onClick={()=>setSearchStation("")} style={{ background:"none",border:"none",color:"#4a6fa5",cursor:"pointer",padding:0 }}><FiX size={12}/></button>}
+        <div style={{ position:"relative", flex:1, minWidth:140 }}>
+          <FiSearch size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#4a6fa5" }}/>
+          <input value={searchStation} onChange={e=>setSearchStation(e.target.value)} placeholder="Highlight station…"
+            style={{ width:"100%", paddingLeft:30, padding:"7px 10px 7px 30px", background:"#071628", border:"1px solid #1a3356", borderRadius:8, color:"#f1f5f9", fontSize:12, outline:"none", boxSizing:"border-box" }}/>
         </div>
-        <select className="form-select" style={{ width:"auto", padding:"8px 12px", fontSize:12 }} value={filterZone} onChange={e=>setFilterZone(e.target.value)}>
-          {["All","NR","SR","ER","WR","NER","NWR","SER","SWR"].map(z => <option key={z}>{z}</option>)}
-        </select>
-        <select className="form-select" style={{ width:"auto", padding:"8px 12px", fontSize:12 }} value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
-          {["All","Active","Offline","Delayed","On Time"].map(s => <option key={s}>{s}</option>)}
-        </select>
+        {[["filterZone",filterZone,setFilterZone,["All",...Object.keys(ZONE_COLORS)]],["filterStatus",filterStatus,setFilterStatus,["All","On Time","Delayed","Maintenance"]]].map(([key,val,setter,opts]) => (
+          <select key={key} value={val} onChange={e=>setter(e.target.value)}
+            style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:8, color:"#f1f5f9", padding:"7px 10px", fontSize:12, cursor:"pointer", outline:"none" }}>
+            {opts.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ))}
       </div>
 
-      {/* Map + Detail Panel */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 300px", gap:14, marginBottom:14, height:540 }}>
-        <div className="card" style={{ padding:0, overflow:"hidden" }}>
-          <div style={{ padding:"10px 14px", borderBottom:"1px solid #1a3356", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-            <span className="dot dot-green" style={{ animation:"pulse 2s infinite" }}/>
-            <span style={{ color:"#22c55e", fontSize:12, fontWeight:600 }}>NavIC Live</span>
-            <span style={{ color:"#4a6fa5", fontSize:11 }}>· {gpsActive} active · scroll to zoom · drag to pan</span>
-          </div>
-          <div style={{ height:"calc(100% - 41px)" }}>
-            <RailwayMap wagons={filteredList} selected={selected} onSelectWagon={w => setSelected(ADMIN_WAGONS.find(x=>x.id===w.id)||w)} searchStation={searchStation}/>
-          </div>
+      {/* Map + Detail panel */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 300px", gap:14, marginBottom:14, height:480 }}>
+        <div className="card" style={{ padding:0, overflow:"hidden", position:"relative" }}>
+          <GoogleRailwayMap
+            wagons={filteredList}
+            selected={selected}
+            onSelectWagon={setSelected}
+            searchStation={searchStation}
+            getStationCoords={getLatLng}
+            zoneColors={ZONE_COLORS}
+            statusColors={STATUS_COLOR}
+          />
         </div>
-        <div className="card" style={{ padding:0, overflow:"hidden", display:"flex", flexDirection:"column" }}>
-          <div style={{ padding:"10px 14px", borderBottom:"1px solid #1a3356", flexShrink:0 }}>
-            <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:13 }}>Wagon Detail</div>
-          </div>
-          <div style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
-            <DetailPanel wagon={selected} onClose={()=>setSelected(null)}/>
-          </div>
+        <div className="card" style={{ padding:0, overflow:"hidden" }}>
+          <DetailPanel wagon={selected} onClose={()=>setSelected(null)}/>
         </div>
       </div>
 
