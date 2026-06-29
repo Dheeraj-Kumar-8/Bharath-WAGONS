@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FiX, FiSend, FiCpu, FiMinus } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { askGroq } from "../utils/groqService";
 
 // ── Analytics data (mirrors AnalyticsDashboard & AnalyticsPerformance) ──────
 const KPI = {
@@ -284,17 +285,33 @@ const AnalystChatBot = () => {
     if (open && !min) endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open, min]);
 
-  const send = (text) => {
+const groqHistory = useRef([]);
+
+  const send = async (text) => {
     const trimmed = (text || input).trim();
     if (!trimmed) return;
-    setMessages(p => [...p, { role: "user", text: trimmed, cards: [], chips: [] }]);
+    setMessages(p => [...p, { role:"user", text:trimmed, cards:[], chips:[] }]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      const resp = getAnalystAIResponse(trimmed, zone);
-      setMessages(p => [...p, { role: "ai", ...resp }]);
+    const local = getAnalystAIResponse(trimmed, zone);
+    if (!local.text.includes("Didn't recognise") && !local.text.includes("didn't recognise")) {
+      await new Promise(r => setTimeout(r, 420));
+      groqHistory.current.push({ role:"user", content:trimmed });
+      groqHistory.current.push({ role:"assistant", content:local.text.replace(/[*][*](.*?)[*][*]/g,"$1") });
+      setMessages(p => [...p, { role:"ai", ...local }]);
       setTyping(false);
-    }, 450);
+    } else {
+      groqHistory.current.push({ role:"user", content:trimmed });
+      try {
+        const reply = await askGroq(groqHistory.current);
+        groqHistory.current.push({ role:"assistant", content:reply });
+        setMessages(p => [...p, { role:"ai", text:reply, cards:[], chips:["KPI summary","Zone performance","Alert summary"] }]);
+      } catch {
+        setMessages(p => [...p, { role:"ai", text:"Unable to reach AI service. Please check your connection.", cards:[], chips:["KPI summary","Alert summary"] }]);
+      } finally {
+        setTyping(false);
+      }
+    }
   };
 
   const handleKey = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };

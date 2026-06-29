@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { FiX, FiSend, FiCpu, FiMinus } from "react-icons/fi";
 import { useSearch } from "../context/SearchContext";
 import { useOperatorData } from "../context/OperatorDataContext";
+import { askGroq } from "../utils/groqService";
 
 const ROUTES = [
   { name:"New Delhi → Mumbai",    wagons:["WGN-1042"], dist:"1,384 km", status:"Active",  delay:"-"      },
@@ -431,11 +432,7 @@ function getAIResponse(input, WAGONS, CARGO, ALERTS, MAINTENANCE) {
     };
   }
 
-  return {
-    text: `🤔 I didn't recognise that query. Try:`,
-    cards: [],
-    chips: ["Show all wagons", "Active alerts", "Delayed wagons", "Maintenance due today", "Dashboard summary", "AI recommendations"],
-  };
+  return null;
 }
 
 // ─── Chat Component ───────────────────────────────────────────────────────────
@@ -465,11 +462,11 @@ const SidebarChatBot = () => {
     if (open && !min) endRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages, open, min]);
 
-  const send = (text) => {
+  const groqHistory = useRef([]);
+
+  const send = async (text) => {
     const trimmed = (text || input).trim();
     if (!trimmed) return;
-
-    // Search intent — open the global search modal
     const q = trimmed.toLowerCase();
     const isSearchIntent = q.startsWith("search ") || q.startsWith("find ") || q.startsWith("lookup ") || q.startsWith("look up ");
     if (isSearchIntent && openSearch) {
@@ -486,11 +483,25 @@ const SidebarChatBot = () => {
     setMessages(p => [...p, { role:"user", text:trimmed, cards:[], chips:[] }]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      const resp = getAIResponse(trimmed, WAGONS, CARGO, ALERTS, MAINTENANCE);
-      setMessages(p => [...p, { role:"ai", ...resp }]);
+    const local = getAIResponse(trimmed, WAGONS, CARGO, ALERTS, MAINTENANCE);
+    if (local) {
+      await new Promise(r => setTimeout(r, 500));
+      groqHistory.current.push({ role:"user", content:trimmed });
+      groqHistory.current.push({ role:"assistant", content:local.text });
+      setMessages(p => [...p, { role:"ai", ...local }]);
       setTyping(false);
-    }, 500);
+    } else {
+      groqHistory.current.push({ role:"user", content:trimmed });
+      try {
+        const reply = await askGroq(groqHistory.current);
+        groqHistory.current.push({ role:"assistant", content:reply });
+        setMessages(p => [...p, { role:"ai", text:reply, cards:[], chips:["Dashboard summary","Active alerts","AI recommendations"] }]);
+      } catch {
+        setMessages(p => [...p, { role:"ai", text:"⚠️ Unable to reach AI service. Please check your connection and try again.", cards:[], chips:["Dashboard summary","Active alerts"] }]);
+      } finally {
+        setTyping(false);
+      }
+    }
   };
 
   const handleKey = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
