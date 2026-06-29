@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiUsers, FiShield, FiPlus, FiEdit2, FiTrash2, FiX,
   FiSearch, FiLock, FiUnlock, FiCheck,
@@ -9,6 +9,7 @@ import {
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import { useAuth, ALL_PERMISSIONS } from "../context/AuthContext";
+import { api } from "../utils/api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const SHIFTS          = ["Shift A","Shift B","Shift C"];
@@ -416,6 +417,117 @@ function ApproveModal({ req, onApprove, onClose }) {
   );
 }
 
+// ── Change Role Modal ───────────────────────────────────────────────────────────────
+function ChangeRoleModal({ user, onSave, onClose }) {
+  const [role, setRole] = useState(user.role || "operator");
+  const userName = user.name || user.username || "this user";
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:360 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div className="modal-title" style={{ margin:0 }}>Change Role</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        <p style={{ color:"#94a3b8", fontSize:12, marginBottom:16 }}>
+          Changing role for <strong style={{ color:"#f1f5f9" }}>{userName}</strong>.
+        </p>
+        <div className="form-group" style={{ margin:0, marginBottom:20 }}>
+          <label className="form-label">Role</label>
+          <select className="form-select" value={role} onChange={e => setRole(e.target.value)}>
+            <option value="operator">Operator</option>
+            <option value="analyst">Analyst</option>
+          </select>
+        </div>
+        <div style={{ display:"flex", gap:10 }}>
+          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center" }} disabled={role === user.role} onClick={() => onSave(role)}>
+            <FiCheck size={13}/> Save Role
+          </button>
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Confirm Status Modal (Suspend / Reactivate) ─────────────────────────────
+function ConfirmStatusModal({ user, action, onConfirm, onClose }) {
+  const isSuspend = action === "suspend";
+  const userName  = user.name || user.username || "this user";
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:380 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <div className="modal-title" style={{ margin:0 }}>{isSuspend ? "Suspend User" : "Reactivate User"}</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        <p style={{ color:"#94a3b8", marginBottom:24, fontSize:13 }}>
+          {isSuspend
+            ? <>Are you sure you want to suspend <strong style={{ color:"#f1f5f9" }}>{userName}</strong>? They will lose access immediately.</>
+            : <>Are you sure you want to reactivate <strong style={{ color:"#f1f5f9" }}>{userName}</strong>? They will regain access immediately.</>
+          }
+        </p>
+        <div style={{ display:"flex", gap:10 }}>
+          <button
+            className="btn btn-sm"
+            style={{ flex:1, justifyContent:"center", background: isSuspend ? "rgba(245,158,11,.15)" : "rgba(34,197,94,.15)", color: isSuspend ? "#f59e0b" : "#22c55e", border:`1px solid ${isSuspend ? "rgba(245,158,11,.3)" : "rgba(34,197,94,.3)"}` }}
+            onClick={onConfirm}
+          >
+            {isSuspend ? <><FiUserX size={12}/> Suspend</> : <><FiUserCheck size={12}/> Reactivate</>}
+          </button>
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit User Modal (backend) ───────────────────────────────────────────────
+function EditUserModal({ user, onSave, onClose }) {
+  const displayName = user.name || user.username || "";
+  const [form, setForm] = useState({
+    name:   displayName,
+    zone:   user.zone   || "",
+    status: user.status || "active",
+  });
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const valid = form.name.trim();
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth:420 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div className="modal-title" style={{ margin:0 }}>Edit User</div>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Full Name *</label>
+            <input className="form-input" value={form.name} onChange={e => set("name", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Zone</label>
+            <input className="form-input" value={form.zone} onChange={e => set("zone", e.target.value)}/>
+          </div>
+          <div className="form-group" style={{ margin:0 }}>
+            <label className="form-label">Status</label>
+            <select className="form-select" value={form.status} onChange={e => set("status", e.target.value)}>
+              <option value="active">Active</option>
+              <option value="pending_activation">Pending Activation</option>
+              <option value="suspended">Suspended</option>
+              <option value="deactivated">Deactivated</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:10, marginTop:20 }}>
+          <button className="btn btn-primary" style={{ flex:1, justifyContent:"center" }} disabled={!valid} onClick={() => onSave(form)}>
+            <FiCheck size={13}/> Save Changes
+          </button>
+          <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Activity Log Modal ────────────────────────────────────────────────────────
 function LogModal({ op, onClose }) {
   const [view, setView] = useState("activity");
@@ -494,10 +606,30 @@ const UsersRoles = () => {
   } = useAuth();
 
   const myZone   = admin?.zone || "NR";
-  const zoneOps  = operators.filter(o => o.zone === myZone);
   const zoneReqs = requests.filter(r => r.zone === myZone);
   const pending  = zoneReqs.filter(r => r.status === "Pending");
-  const zoneAnalysts = (analystUsers || []).filter(a => a.zone === myZone);
+
+  // ── Backend API state ─────────────────────────────────────────────────────
+  const [dbUsers,   setDbUsers]   = useState([]);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [dbError,   setDbError]   = useState(null);
+
+  useEffect(() => {
+    setDbLoading(true);
+    api.getUsers()
+      .then(res => { setDbUsers(res.users || []); setDbError(null); })
+      .catch(err => setDbError(err.message))
+      .finally(() => setDbLoading(false));
+  }, []);
+
+  const dbOperators = dbUsers.filter(u => u.role === "operator");
+  const dbAnalysts  = dbUsers.filter(u => u.role === "analyst");
+
+  // Zone-filtered for table display — removed zone gate so all backend users render
+  // regardless of which zone the admin account is assigned to.
+  // The zone badge in each row still shows the user's zone clearly.
+  const zoneOps      = dbOperators;
+  const zoneAnalysts = dbAnalysts;
 
   const [tab,           setTab]         = useState("operators");
   const [query,         setQuery]        = useState("");
@@ -518,14 +650,72 @@ const UsersRoles = () => {
   const [anlLogTarget,  setAnlLog]       = useState(null);
   const [anlActivLink,  setAnlActivLink] = useState(null);
   const [anlResetLink,  setAnlResetLink] = useState(null);
+  const [dbEditTarget,  setDbEdit]       = useState(null);
+  const [statusTarget,  setStatusTarget] = useState(null); // { user, action: 'suspend'|'reactivate' }
+  const [dbDeleteTarget, setDbDelete]     = useState(null);
+  const [roleTarget,     setRoleTarget]   = useState(null);
+
+  const refreshUsers = () => {
+    api.getUsers()
+      .then(res => { setDbUsers(res.users || []); })
+      .catch(() => {});
+  };
+
+  const handleDbEdit = (form) => {
+    api.updateUser(dbEditTarget._id, { name: form.name, zone: form.zone, status: form.status })
+      .then(() => {
+        setDbEdit(null);
+        refreshUsers();
+        showToast(`✓ "${form.name}" updated successfully.`);
+      })
+      .catch(err => showToast(`Failed to update: ${err.message}`, false));
+  };
+
+  const handleStatusConfirm = () => {
+    const { user, action } = statusTarget;
+    const newStatus = action === "suspend" ? "suspended" : "active";
+    const userName  = user.name || user.username || "User";
+    api.patchUserStatus(user._id, newStatus)
+      .then(() => {
+        setStatusTarget(null);
+        refreshUsers();
+        showToast(action === "suspend" ? `${userName} suspended.` : `✓ ${userName} reactivated.`, action !== "suspend");
+      })
+      .catch(err => showToast(`Failed: ${err.message}`, false));
+  };
+
+  const handleDbDelete = () => {
+    const userName = dbDeleteTarget.name || dbDeleteTarget.username || "User";
+    api.deleteUser(dbDeleteTarget._id)
+      .then(() => {
+        setDbDelete(null);
+        refreshUsers();
+        showToast(`✓ "${userName}" deleted successfully.`);
+      })
+      .catch(err => {
+        setDbDelete(null);
+        showToast(err.message || "Failed to delete user.", false);
+      });
+  };
+
+  const handleRoleSave = (newRole) => {
+    const userName = roleTarget.name || roleTarget.username || "User";
+    api.patchUserRole(roleTarget._id, newRole)
+      .then(() => {
+        setRoleTarget(null);
+        refreshUsers();
+        showToast(`✓ "${userName}" role changed to ${newRole}.`);
+      })
+      .catch(err => showToast(err.message || "Failed to change role.", false));
+  };
 
   const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast({ msg:"", ok:true }), 3200); };
 
-  const filtered = zoneOps.filter(o =>
-    (statusF === "All" || o.status === statusF || o.accountStatus === statusF) &&
-    (`${o.name} ${o.email} ${o.id} ${o.employeeId||""}`.toLowerCase().includes(query.toLowerCase()))
-  );
-
+  const filtered = zoneOps.filter(o => {
+    const matchStatus = statusF === "All" || o.status === statusF.toLowerCase();
+    const matchQuery  = `${o.name} ${o.email} ${o._id || ""}`.toLowerCase().includes(query.toLowerCase());
+    return matchStatus && matchQuery;
+  });
   // Handlers
   const handleCreate = (form) => {
     const result = adminCreateOperator(form);
@@ -617,17 +807,15 @@ const UsersRoles = () => {
     showToast(`✓ New activation link for ${a.name}.`);
   };
 
-  const anlFiltered = zoneAnalysts.filter(a =>
-    (anlStatusF === "All" || a.status === anlStatusF || a.accountStatus === anlStatusF) &&
-    (`${a.name} ${a.email} ${a.id} ${a.employeeId||""}`.toLowerCase().includes(anlQuery.toLowerCase()))
-  );
+  const anlFiltered = zoneAnalysts.filter(a => {
+    const matchStatus = anlStatusF === "All" || a.status === anlStatusF.toLowerCase();
+    const matchQuery  = `${a.name} ${a.email} ${a._id || ""}`.toLowerCase().includes(anlQuery.toLowerCase());
+    return matchStatus && matchQuery;
+  });
 
   const TABS = [
-    { key:"operators",   label:"Operators",      count:zoneOps.length             },
-    { key:"analysts",    label:"Analysts",        count:zoneAnalysts.length        },
-    { key:"requests",    label:"Access Requests", count:pending.length, alert:pending.length > 0 },
-    { key:"permissions", label:"Permissions",     count:null                       },
-    { key:"logs",        label:"Audit Logs",      count:null                       },
+    { key:"operators", label:"Operators", count:zoneOps.length      },
+    { key:"analysts",  label:"Analysts",  count:zoneAnalysts.length },
   ];
 
   const isLocked = (op) => op.lockedUntil && Date.now() < op.lockedUntil;
@@ -649,13 +837,24 @@ const UsersRoles = () => {
         </div>
       </div>
 
+      {/* DB fetch status */}
+      {dbLoading && (
+        <div style={{ background:"rgba(59,130,246,.08)", border:"1px solid rgba(59,130,246,.2)", borderRadius:10, padding:"10px 16px", marginBottom:14, color:"#60a5fa", fontSize:12 }}>
+          Loading users from database…
+        </div>
+      )}
+      {dbError && (
+        <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:10, padding:"10px 16px", marginBottom:14, color:"#ef4444", fontSize:12 }}>
+          Failed to load users: {dbError}
+        </div>
+      )}
+
       {/* KPIs */}
       <div style={{ display:"flex", gap:14, marginBottom:20, flexWrap:"wrap" }}>
-        <StatCard title="Zone Operators"   value={zoneOps.length}                                                    color="#3b82f6" icon={FiUsers}        />
-        <StatCard title="Active Operators" value={zoneOps.filter(o=>o.accountStatus==="active").length}              color="#22c55e" icon={FiShield}       />
-        <StatCard title="Zone Analysts"   value={zoneAnalysts.length}                                                 color="#a855f7" icon={FiActivity}     />
-        <StatCard title="Active Analysts" value={zoneAnalysts.filter(a=>a.accountStatus==="active").length}           color="#22c55e" icon={FiShield}       />
-        <StatCard title="Pending Requests" value={pending.length}                                                    color="#f97316" icon={FiAlertTriangle} />
+        <StatCard title="Total Operators"  value={dbLoading ? "…" : dbOperators.length}                                    color="#3b82f6" icon={FiUsers}    />
+        <StatCard title="Active Operators" value={dbLoading ? "…" : dbOperators.filter(u => u.status === "active").length} color="#22c55e" icon={FiShield}   />
+        <StatCard title="Total Analysts"   value={dbLoading ? "…" : dbAnalysts.length}                                     color="#a855f7" icon={FiActivity} />
+        <StatCard title="Active Analysts"  value={dbLoading ? "…" : dbAnalysts.filter(u => u.status === "active").length}  color="#22c55e" icon={FiShield}   />
       </div>
 
       {/* Tab bar */}
@@ -699,57 +898,39 @@ const UsersRoles = () => {
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>Analyst</th><th>Email / Emp ID</th><th>Department</th><th>Zone</th><th>Account Status</th><th>Last Login</th><th>Actions</th></tr>
+                  <tr><th>Name</th><th>Email</th><th>Zone</th><th>Account Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
-                  {anlFiltered.map(a => (
-                    <tr key={a.id}>
+                  {anlFiltered.map(a => {
+                    const anlName = a.name || a.username || "—";
+                    return (
+                    <tr key={a._id || a.id}>
                       <td>
                         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                          <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:12, fontWeight:700, flexShrink:0 }}>{a.name[0]}</div>
-                          <div>
-                            <div style={{ color:"#f1f5f9", fontWeight:600, fontSize:13 }}>{a.name}</div>
-                            <div style={{ color:"#a855f7", fontSize:11 }}>{a.id}</div>
-                          </div>
+                          <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:12, fontWeight:700, flexShrink:0 }}>{anlName[0].toUpperCase()}</div>
+                          <div style={{ color:"#f1f5f9", fontWeight:600, fontSize:13 }}>{anlName}</div>
                         </div>
                       </td>
-                      <td>
-                        <div style={{ color:"#64748b", fontSize:12 }}>{a.email}</div>
-                        {a.employeeId && <div style={{ color:"#4a6fa5", fontSize:11 }}>{a.employeeId}</div>}
-                      </td>
-                      <td>
-                        <div style={{ color:"#94a3b8", fontSize:12 }}>{a.department||"Analytics"}</div>
-                        {a.designation && <div style={{ color:"#4a6fa5", fontSize:11 }}>{a.designation}</div>}
-                      </td>
+                      <td><div style={{ color:"#64748b", fontSize:12 }}>{a.email}</div></td>
                       <td><span className="badge badge-info" style={{ fontSize:10 }}>{a.zone}</span></td>
-                      <td>{accountStatusBadge(a.accountStatus||(a.status==="Active"?"active":"suspended"))}</td>
-                      <td style={{ color:"#4a6fa5", fontSize:12 }}>{a.lastLogin}</td>
+                      <td>{accountStatusBadge(a.status)}</td>
                       <td>
                         <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
-                          <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => setAnlEdit(a)}><FiEdit2 size={11}/></button>
-                          {a.accountStatus==="pending_activation" && (
-                            <button className="btn btn-ghost btn-sm" title="Resend Activation" style={{ color:"#a855f7" }} onClick={() => handleAnlResendActivation(a)}><FiLink size={11}/></button>
-                          )}
-                          {a.accountStatus==="active" && (
-                            <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => handleAnlResetPassword(a)}><FiKey size={11}/></button>
-                          )}
-                          {a.accountStatus==="active" && (
-                            <button className="btn btn-ghost btn-sm" title="Suspend" style={{ color:"#f59e0b" }} onClick={() => handleAnlSuspend(a)}><FiUserX size={11}/></button>
-                          )}
-                          {(a.accountStatus==="suspended"||a.accountStatus==="deactivated") && (
-                            <button className="btn btn-ghost btn-sm" title="Reactivate" style={{ color:"#22c55e" }} onClick={() => handleAnlReactivate(a)}><FiUserCheck size={11}/></button>
-                          )}
-                          {a.accountStatus==="active" && (
-                            <button className="btn btn-ghost btn-sm" title="Deactivate" style={{ color:"#ef4444" }} onClick={() => handleAnlDeactivate(a)}><FiSlash size={11}/></button>
-                          )}
-                          <button className="btn btn-ghost btn-sm" title="Audit Log" onClick={() => setAnlLog(a)}><FiActivity size={11}/></button>
-                          <button className="btn btn-sm" style={{ background:"rgba(239,68,68,.12)", color:"#ef4444" }} title="Delete" onClick={() => setAnlDel(a)}><FiTrash2 size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => setDbEdit(a)}><FiEdit2 size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Change Role" disabled={a._id === admin?._id} onClick={() => setRoleTarget(a)}><FiShield size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Suspend" disabled={a.status === "suspended"} onClick={() => setStatusTarget({ user: a, action: "suspend" })}><FiUserX size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Reactivate" disabled={a.status === "active"} onClick={() => setStatusTarget({ user: a, action: "reactivate" })}><FiUserCheck size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Delete" disabled={a._id === admin?._id} onClick={() => setDbDelete(a)} style={{ color:"#ef4444", opacity: a._id === admin?._id ? 0.35 : 1 }}><FiTrash2 size={11}/></button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                  {anlFiltered.length === 0 && (
-                    <tr><td colSpan={7} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>No analysts found. Click "New Analyst" to create one.</td></tr>
+                    );
+                  })}
+                  {dbLoading && (
+                    <tr><td colSpan={5} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>Loading analysts…</td></tr>
+                  )}
+                  {!dbLoading && anlFiltered.length === 0 && (
+                    <tr><td colSpan={5} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>No analysts found. Click "New Analyst" to create one.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -785,109 +966,48 @@ const UsersRoles = () => {
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>Operator</th><th>Email / Emp ID</th><th>Department</th><th>Shift</th><th>Account Status</th><th>Last Login</th><th>Perms</th><th>Actions</th></tr>
+                  <tr><th>Name</th><th>Email</th><th>Zone</th><th>Account Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
-                  {filtered.map(op => (
-                    <tr key={op.id}>
+                  {filtered.map(op => {
+                    const opName = op.name || op.username || "—";
+                    return (
+                    <tr key={op._id || op.id}>
                       <td>
                         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                           <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#1d4ed8,#3b82f6)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:12, fontWeight:700, flexShrink:0 }}>
-                            {op.name[0]}
+                            {opName[0].toUpperCase()}
                           </div>
-                          <div>
-                            <div style={{ color:"#f1f5f9", fontWeight:600, fontSize:13 }}>
-                              {op.name}
-                              {isLocked(op) && <FiLock size={10} color="#ef4444" style={{ marginLeft:5 }} title="Account Locked"/>}
-                            </div>
-                            <div style={{ color:"#4a6fa5", fontSize:11 }}>{op.id}</div>
-                          </div>
+                          <div style={{ color:"#f1f5f9", fontWeight:600, fontSize:13 }}>{opName}</div>
                         </div>
                       </td>
-                      <td>
-                        <div style={{ color:"#64748b", fontSize:12 }}>{op.email}</div>
-                        {op.employeeId && <div style={{ color:"#4a6fa5", fontSize:11 }}>{op.employeeId}</div>}
-                      </td>
-                      <td>
-                        <div style={{ color:"#94a3b8", fontSize:12 }}>{op.department||"—"}</div>
-                        {op.designation && <div style={{ color:"#4a6fa5", fontSize:11 }}>{op.designation}</div>}
-                      </td>
-                      <td><span className="badge badge-info" style={{ fontSize:10 }}>{op.shift}</span></td>
-                      <td>{accountStatusBadge(op.accountStatus || (op.status === "Active" ? "active" : "suspended"))}</td>
-                      <td style={{ color:"#4a6fa5", fontSize:12 }}>{op.lastLogin}</td>
-                      <td><span style={{ color:"#22c55e", fontSize:11, fontWeight:600 }}>{op.permissions.length}/{ALL_PERMISSIONS.length}</span></td>
+                      <td><div style={{ color:"#64748b", fontSize:12 }}>{op.email}</div></td>
+                      <td><span className="badge badge-info" style={{ fontSize:10 }}>{op.zone}</span></td>
+                      <td>{accountStatusBadge(op.status)}</td>
                       <td>
                         <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
-                          <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => setEdit(op)}><FiEdit2 size={11}/></button>
-
-                          {op.accountStatus === "pending_activation" && (
-                            <button className="btn btn-ghost btn-sm" title="Resend Activation Link" style={{ color:"#f59e0b" }} onClick={() => handleResendActivation(op)}>
-                              <FiLink size={11}/>
-                            </button>
-                          )}
-
-                          {isLocked(op) && (
-                            <button className="btn btn-ghost btn-sm" title="Unlock Account" style={{ color:"#22c55e" }} onClick={() => handleUnlock(op)}>
-                              <FiUnlock size={11}/>
-                            </button>
-                          )}
-
-                          {op.accountStatus === "active" && (
-                            <button className="btn btn-ghost btn-sm" title="Send Password Reset Link" onClick={() => handleResetPassword(op)}>
-                              <FiKey size={11}/>
-                            </button>
-                          )}
-
-                          {op.accountStatus === "active" && (
-                            <button className="btn btn-ghost btn-sm" title="Suspend" style={{ color:"#f59e0b" }} onClick={() => handleSuspend(op)}>
-                              <FiUserX size={11}/>
-                            </button>
-                          )}
-
-                          {(op.accountStatus === "suspended" || op.accountStatus === "deactivated") && (
-                            <button className="btn btn-ghost btn-sm" title="Reactivate" style={{ color:"#22c55e" }} onClick={() => handleReactivate(op)}>
-                              <FiUserCheck size={11}/>
-                            </button>
-                          )}
-
-                          {op.accountStatus === "active" && (
-                            <button className="btn btn-ghost btn-sm" title="Deactivate" style={{ color:"#ef4444" }} onClick={() => handleDeactivate(op)}>
-                              <FiSlash size={11}/>
-                            </button>
-                          )}
-
-                          <button className="btn btn-ghost btn-sm" title="Audit Logs" onClick={() => setLog(op)}><FiActivity size={11}/></button>
-                          <button className="btn btn-sm" style={{ background:"rgba(239,68,68,.12)", color:"#ef4444" }} title="Delete" onClick={() => setDel(op)}><FiTrash2 size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => setDbEdit(op)}><FiEdit2 size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Change Role" disabled={op._id === admin?._id} onClick={() => setRoleTarget(op)}><FiShield size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Suspend" disabled={op.status === "suspended"} onClick={() => setStatusTarget({ user: op, action: "suspend" })}><FiUserX size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Reactivate" disabled={op.status === "active"} onClick={() => setStatusTarget({ user: op, action: "reactivate" })}><FiUserCheck size={11}/></button>
+                          <button className="btn btn-ghost btn-sm" title="Delete" disabled={op._id === admin?._id} onClick={() => setDbDelete(op)} style={{ color:"#ef4444", opacity: op._id === admin?._id ? 0.35 : 1 }}><FiTrash2 size={11}/></button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                  {filtered.length === 0 && (
-                    <tr><td colSpan={8} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>No operators found in Zone {myZone}</td></tr>
+                    );
+                  })}
+                  {dbLoading && (
+                    <tr><td colSpan={5} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>Loading operators…</td></tr>
+                  )}
+                  {!dbLoading && filtered.length === 0 && (
+                    <tr><td colSpan={5} style={{ textAlign:"center", color:"#4a6fa5", padding:32 }}>No operators found in Zone {myZone}</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Icon legend */}
-          <div style={{ display:"flex", gap:14, marginTop:12, flexWrap:"wrap" }}>
-            {[
-              [FiEdit2,     "#3b82f6", "Edit"],
-              [FiLink,      "#f59e0b", "Resend Activation"],
-              [FiUnlock,    "#22c55e", "Unlock Account"],
-              [FiKey,       "#94a3b8", "Reset Password Link"],
-              [FiUserX,     "#f59e0b", "Suspend"],
-              [FiUserCheck, "#22c55e", "Reactivate"],
-              [FiSlash,     "#ef4444", "Deactivate"],
-              [FiActivity,  "#3b82f6", "Audit Logs"],
-              [FiTrash2,    "#ef4444", "Delete"],
-            ].map(([Icon, color, label]) => (
-              <div key={label} style={{ display:"flex", alignItems:"center", gap:5 }}>
-                <Icon size={11} color={color}/><span style={{ color:"#4a6fa5", fontSize:11 }}>{label}</span>
-              </div>
-            ))}
-          </div>
+
         </>
       )}
 
@@ -1057,6 +1177,29 @@ const UsersRoles = () => {
             <div style={{ display:"flex", gap:10 }}>
               <button className="btn btn-danger" style={{ flex:1, justifyContent:"center" }} onClick={handleAnlDelete}>Remove Permanently</button>
               <button className="btn btn-outline" onClick={() => setAnlDel(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {roleTarget     && <ChangeRoleModal user={roleTarget} onSave={handleRoleSave} onClose={() => setRoleTarget(null)}/>}
+      {dbEditTarget  && <EditUserModal user={dbEditTarget} onSave={handleDbEdit} onClose={() => setDbEdit(null)}/>}
+      {statusTarget  && <ConfirmStatusModal user={statusTarget.user} action={statusTarget.action} onConfirm={handleStatusConfirm} onClose={() => setStatusTarget(null)}/>}
+      {dbDeleteTarget && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setDbDelete(null)}>
+          <div className="modal-box" style={{ maxWidth:380 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <div className="modal-title" style={{ margin:0 }}>Delete User</div>
+              <button onClick={() => setDbDelete(null)} style={{ background:"none", border:"none", color:"#64748b", cursor:"pointer" }}><FiX size={18}/></button>
+            </div>
+            <p style={{ color:"#94a3b8", marginBottom:24, fontSize:13 }}>
+              Permanently delete <strong style={{ color:"#f1f5f9" }}>{dbDeleteTarget.name || dbDeleteTarget.username}</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display:"flex", gap:10 }}>
+              <button className="btn btn-danger" style={{ flex:1, justifyContent:"center" }} onClick={handleDbDelete}>
+                <FiTrash2 size={12}/> Delete Permanently
+              </button>
+              <button className="btn btn-outline" onClick={() => setDbDelete(null)}>Cancel</button>
             </div>
           </div>
         </div>

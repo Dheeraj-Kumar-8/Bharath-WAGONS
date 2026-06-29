@@ -3,9 +3,19 @@ import User from "../models/User.js";
 
 export const getUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
     console.log(`[GET /api/users] returned ${users.length} users`);
-    res.json({ success: true, count: users.length, data: users });
+    res.json({ success: true, count: users.length, users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, user });
   } catch (error) {
     next(error);
   }
@@ -48,30 +58,93 @@ export const createUser = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    console.log(`[PUT /api/users/${req.params.id}] body:`, JSON.stringify(req.body));
+    const { name, zone, status } = req.body;
+    const updates = {};
+    if (name   !== undefined) updates.name   = name.trim();
+    if (zone   !== undefined) updates.zone   = zone;
+    if (status !== undefined) updates.status = status;
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, ...(req.body.role ? { role: req.body.role.toLowerCase() } : {}) },
+      updates,
       { new: true, runValidators: true }
     ).select("-password");
+
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    console.log(`[PUT /api/users/${req.params.id}] updated`);
-    res.json({ success: true, data: user });
+    res.json({ success: true, message: "User updated successfully", user });
   } catch (error) {
-    console.error(`[PUT /api/users/${req.params.id}] error:`, error.message);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors)[0].message;
+      return res.status(400).json({ success: false, message });
+    }
+    next(error);
+  }
+};
+
+export const updateUserRole = async (req, res, next) => {
+  const ALLOWED_ROLES = ["admin", "operator", "analyst"];
+  const { role } = req.body;
+
+  if (!role || !ALLOWED_ROLES.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid role. Allowed values: ${ALLOWED_ROLES.join(", ")}`,
+    });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, message: "User role updated successfully", user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserStatus = async (req, res, next) => {
+  const ALLOWED_STATUSES = ["active", "inactive", "suspended", "blocked"];
+  const { status } = req.body;
+
+  if (!status || !ALLOWED_STATUSES.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(", ")}`,
+    });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, message: "User status updated successfully", user });
+  } catch (error) {
     next(error);
   }
 };
 
 export const deleteUser = async (req, res, next) => {
   try {
-    console.log(`[DELETE /api/users/${req.params.id}]`);
-    const user = await User.findByIdAndDelete(req.params.id);
+    const requestedId = req.params.id;
+    const loggedInId  = req.user.id || req.user._id;
+
+    if (requestedId === String(loggedInId)) {
+      return res.status(400).json({ success: false, message: "You cannot delete your own account" });
+    }
+
+    const user = await User.findByIdAndDelete(requestedId);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    console.log(`[DELETE /api/users/${req.params.id}] deleted`);
-    res.json({ success: true, message: "User deleted" });
+
+    res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    console.error(`[DELETE /api/users/${req.params.id}] error:`, error.message);
     next(error);
   }
 };
