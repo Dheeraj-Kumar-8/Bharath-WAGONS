@@ -3,10 +3,10 @@ import { FiMapPin, FiEye, FiRefreshCw, FiX, FiTruck } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
 import { useOperatorData } from "../context/OperatorDataContext";
 
-const STATUSES = ["On Time","Delayed","Maintenance","Halted"];
+const STATUSES = ["On Time","Running","Delayed","Halted","Maintenance"];
 
 const badge = s => {
-  const m = {"On Time":"badge-ontime","Delayed":"badge-delayed","Maintenance":"badge-maint","Halted":"badge-high","Active":"badge-active","Offline":"badge-offline"};
+  const m = {"On Time":"badge-ontime","Running":"badge-active","Delayed":"badge-delayed","Maintenance":"badge-maint","Halted":"badge-high","Active":"badge-active","Offline":"badge-offline"};
   return <span className={`badge ${m[s]||"badge-info"}`}>{s}</span>;
 };
 
@@ -102,7 +102,7 @@ export default function OperatorWagons() {
               <input placeholder="Search by ID, route, location…" value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
             <select className="form-select" style={{width:"160px",padding:"9px 12px"}} value={filter} onChange={e=>setFilter(e.target.value)}>
-              {["All","On Time","Delayed","Maintenance","Halted"].map(s=><option key={s}>{s}</option>)}
+              {["All","On Time","Running","Delayed","Halted","Maintenance"].map(s=><option key={s}>{s}</option>)}
             </select>
           </div>
           <div className="flex items-center gap-12">

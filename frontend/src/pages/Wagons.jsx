@@ -6,22 +6,12 @@ import { FiTruck, FiActivity, FiAlertTriangle, FiTool } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 
-const TYPES    = ["All", "BCN", "BOXN", "BTPN", "Covered", "Flat", "Hopper", "Tank"];
-const STATUSES = ["All", "Running", "Loading", "Unloading", "Delayed", "Maintenance", "Idle"];
+const TYPES    = ["All","Freight","Tank","Flatbed"];
+const STATUSES = ["All","On Time","Delayed","Maintenance"];
 
-const statusClass = (s) => ({
-  Running:     "badge-active",
-  Loading:     "badge-info",
-  Unloading:   "badge-medium",
-  Delayed:     "badge-high",
-  Maintenance: "badge-critical",
-  Idle:        "badge-info",
-}[s] || "badge-info");
+const statusClass = s => ({ "On Time":"badge-ontime","Delayed":"badge-delayed","Maintenance":"badge-maint" }[s]||"badge-info");
 
-const emptyForm = () => ({
-  id: "", type: "BCN", location: "", dest: "",
-  speed: "", status: "Idle", capacity: "", zone: "",
-});
+const emptyForm = () => ({ id:"", type:"Freight", location:"", dest:"", speed:"", status:"On Time", capacity:"", zone:"" });
 
 // ── Wagon Add / Edit Modal ────────────────────────────────────────────────────
 const WagonModal = ({ wagon, onSave, onClose }) => {
@@ -58,13 +48,13 @@ const WagonModal = ({ wagon, onSave, onClose }) => {
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Type</label>
             <select className="form-select" value={form.type} onChange={e => set("type", e.target.value)}>
-              {["BCN","BOXN","BTPN","Covered","Flat","Hopper","Tank"].map(o => <option key={o}>{o}</option>)}
+              {["Freight","Tank","Flatbed"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Status</label>
             <select className="form-select" value={form.status} onChange={e => set("status", e.target.value)}>
-              {["Running","Loading","Unloading","Delayed","Maintenance","Idle"].map(o => <option key={o}>{o}</option>)}
+              {["On Time","Delayed","Maintenance"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
         </div>
