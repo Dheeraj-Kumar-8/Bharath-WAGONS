@@ -7,12 +7,12 @@ import { useAuth } from "../context/AuthContext";
 import { ALL_WAGONS } from "../data/zoneData";
 import { api } from "../utils/api";
 
-const TYPES    = ["All","Freight","Tank","Flatbed"];
-const STATUSES = ["All","On Time","Delayed","Maintenance"];
+const TYPES    = ["All","BOXN","BCN","BTPN","Hopper","Tank","Covered","Flatbed"];
+const STATUSES = ["All","On Time","Delayed","Maintenance","Halted","Running"];
 
-const statusClass = s => ({ "On Time":"badge-ontime","Delayed":"badge-delayed","Maintenance":"badge-maint" }[s]||"badge-info");
+const statusClass = s => ({ "On Time":"badge-ontime","Running":"badge-active","Delayed":"badge-delayed","Maintenance":"badge-maint","Halted":"badge-high" }[s]||"badge-info");
 
-const emptyForm = () => ({ id:"", type:"Freight", location:"", dest:"", speed:"", status:"On Time", capacity:"", zone:"" });
+const emptyForm = () => ({ id:"", type:"BOXN", location:"", dest:"", speed:"", status:"On Time", capacity:"", zone:"" });
 
 const WagonModal = ({ wagon, onSave, onClose }) => {
   const [form, setForm] = useState(wagon || emptyForm());
@@ -41,13 +41,13 @@ const WagonModal = ({ wagon, onSave, onClose }) => {
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Type</label>
             <select className="form-select" value={form.type} onChange={e => set("type", e.target.value)}>
-              {["Freight","Tank","Flatbed"].map(o => <option key={o}>{o}</option>)}
+              {["BOXN","BCN","BTPN","Hopper","Tank","Covered","Flatbed"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ margin:0 }}>
             <label className="form-label">Status</label>
             <select className="form-select" value={form.status} onChange={e => set("status", e.target.value)}>
-              {["On Time","Delayed","Maintenance"].map(o => <option key={o}>{o}</option>)}
+              {["On Time","Running","Delayed","Halted","Maintenance"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
         </div>
