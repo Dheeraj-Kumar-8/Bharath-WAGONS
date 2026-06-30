@@ -24,10 +24,10 @@ export const api = {
   deleteUser:      (id)         => request("DELETE", `/users/${id}`,        null, true),
 
   // Wagons
-  getWagons:   ()         => request("GET",    "/wagons"),
-  createWagon: (data)     => request("POST",   "/wagons", data),
-  updateWagon: (id, data) => request("PUT",    `/wagons/${id}`, data),
-  deleteWagon: (id)       => request("DELETE", `/wagons/${id}`),
+  getWagons:   ()         => request("GET", "/wagons", null, true),
+  createWagon: (data)     => request("POST", "/wagons", data, true),
+  updateWagon: (id, data) => request("PUT", `/wagons/${id}`, data, true),
+  deleteWagon: (id)       => request("DELETE", `/wagons/${id}`, null, true),
 
   // Analytics
   getAnalytics:   ()     => request("GET",    "/analytics"),

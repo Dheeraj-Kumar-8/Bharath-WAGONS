@@ -1,0 +1,501 @@
+Wagon ID,Wagon Number,Wagon Type,Zone Code,Zone Name,Division,Current Station,Destination Station,Cargo Type,Capacity (Tons),Current Load (Tons),Status,GPS Latitude,GPS Longitude,Speed (km/h),Temperature (°C),Last Updated Timestamp
+WG00001,3307027975,BCN,SR,Southern Railway,Lucknow,Guntur,Bhopal,Automobiles,70,40.4,Unloading,13.824529,79.1235,13,34.8,2026-06-29 19:46:35
+WG00002,6205657693,Covered,SR,Southern Railway,Visakhapatnam,Guntur,Howrah,Containers,60,20.8,Maintenance,12.917702,82.058443,76,31.8,2026-06-29 19:18:35
+WG00003,5096022825,BTPN,ER,Eastern Railway,Kolkata,Hyderabad,Kanpur,Coal,50,29.2,Maintenance,26.504372,83.976987,94,53.5,2026-06-29 21:21:35
+WG00004,9727951177,BCN,SR,Southern Railway,Nagpur,Bhopal,Secunderabad,Containers,55,38.8,Unloading,11.427125,85.908693,33,27.6,2026-06-29 22:30:35
+WG00005,4875755577,Covered,SR,Southern Railway,Mumbai,Warangal,Guntur,Coal,65,38.7,Delayed,31.047296,86.922798,14,49.6,2026-06-29 22:15:35
+WG00006,2384272345,Hopper,SCR,South Central Railway,Chennai,Chennai,Delhi,Cement,55,32.7,Unloading,26.593997,78.101549,43,49.5,2026-06-29 22:34:35
+WG00007,8203543832,Tank,SER,South Eastern Railway,Lucknow,Agra,Mumbai,Containers,75,62.6,Idle,17.146962,86.82813,21,40.8,2026-06-29 20:15:35
+WG00008,4938562599,BCN,NR,North Railway,Visakhapatnam,Guntur,Agra,Cement,70,48.8,Loading,21.987765,69.15997,42,34.1,2026-06-29 16:03:35
+WG00009,8579855114,BTPN,NWR,North Western Railway,Secunderabad,Vijayawada,Agra,Coal,70,25.3,Running,27.722823,80.91453,55,36.6,2026-06-29 21:24:35
+WG00010,8446669538,BCN,SCR,South Central Railway,Secunderabad,Nagpur,Delhi,Iron Ore,70,52.6,Maintenance,28.864963,75.391213,65,22.1,2026-06-29 15:18:35
+WG00011,7352206330,Covered,SR,Southern Railway,Secunderabad,Kanpur,Chennai,Containers,65,26.5,Idle,8.175594,83.849226,60,27.5,2026-06-29 17:10:35
+WG00012,3808816548,Flat,SWR,South Western Railway,Delhi,Agra,Nagpur,Automobiles,55,16.7,Delayed,8.416967,80.001321,87,39.6,2026-06-29 14:16:35
+WG00013,1345447527,Hopper,NER,North Eastern Railway,Mumbai,Chennai,Bhopal,Automobiles,55,43.9,Unloading,17.098415,83.64104,85,38.6,2026-06-29 18:14:35
+WG00014,1797268569,BCN,SER,South Eastern Railway,Nagpur,Bhopal,Guntur,Coal,70,60.7,Idle,9.516735,79.820491,11,46.6,2026-06-29 22:08:35
+WG00015,6900451618,Flat,ER,Eastern Railway,Chennai,Visakhapatnam,Warangal,Coal,75,67.8,Idle,30.331113,80.484315,58,37.9,2026-06-29 16:17:35
+WG00016,4958277865,BCN,SCR,South Central Railway,Kolkata,Chennai,Visakhapatnam,Food Grains,60,54.0,Running,17.11959,68.939882,18,49.0,2026-06-29 22:08:35
+WG00017,2015438742,Hopper,SWR,South Western Railway,Lucknow,Delhi,Agra,Food Grains,70,66.3,Maintenance,20.288961,76.439063,74,52.5,2026-06-30 00:29:35
+WG00018,9086516234,BOXN,WR,Western Railway,Kolkata,Howrah,Guntur,Iron Ore,60,36.1,Running,20.098276,82.06588,76,33.0,2026-06-29 23:14:35
+WG00019,8514808303,BCN,NWR,North Western Railway,Mumbai,Kanpur,Hyderabad,Coal,55,33.4,Maintenance,13.176117,85.419317,60,27.1,2026-06-29 18:20:35
+WG00020,4648414410,Hopper,SWR,South Western Railway,Secunderabad,Chennai,Bhopal,Food Grains,65,54.1,Running,28.371921,80.039484,100,33.6,2026-06-29 15:53:35
+WG00021,5869654436,Flat,SWR,South Western Railway,Mumbai,Hyderabad,Nagpur,Coal,60,32.6,Delayed,16.948692,75.293981,37,37.5,2026-06-30 01:27:35
+WG00022,2220862420,BCN,NWR,North Western Railway,Jaipur,Mumbai,Visakhapatnam,Cement,65,37.9,Running,27.931449,86.506215,0,52.1,2026-06-29 16:44:35
+WG00023,1357092251,BCN,NWR,North Western Railway,Lucknow,Howrah,Agra,Food Grains,75,21.9,Idle,30.977402,87.507836,23,49.0,2026-06-29 21:30:35
+WG00024,6379639823,BTPN,SWR,South Western Railway,Lucknow,Kanpur,Mumbai,Food Grains,60,49.7,Maintenance,12.603734,86.547706,14,53.3,2026-06-30 00:43:35
+WG00025,6286152256,Tank,SR,Southern Railway,Delhi,Mumbai,Delhi,Iron Ore,55,19.7,Idle,18.619319,69.645167,11,36.8,2026-06-29 21:11:35
+WG00026,7930385199,Tank,SWR,South Western Railway,Nagpur,Visakhapatnam,Guntur,Containers,75,33.6,Loading,22.092858,88.784526,11,26.1,2026-06-29 19:54:35
+WG00027,2555996570,Covered,SER,South Eastern Railway,Lucknow,Kanpur,Howrah,Steel,75,30.2,Delayed,31.269886,72.377385,7,38.3,2026-06-29 15:26:35
+WG00028,9696562112,Flat,SER,South Eastern Railway,Visakhapatnam,Mumbai,Kanpur,Containers,55,49.9,Unloading,12.559227,72.105849,99,51.4,2026-06-29 20:38:35
+WG00029,2213030429,Hopper,SR,Southern Railway,Chennai,Howrah,Visakhapatnam,Containers,65,43.8,Delayed,13.14782,73.813104,32,54.4,2026-06-30 00:31:35
+WG00030,2709284068,BOXN,WR,Western Railway,Secunderabad,Guntur,Bhopal,Automobiles,70,46.5,Running,22.459387,81.990159,49,54.8,2026-06-29 14:58:35
+WG00031,9177475031,Covered,WR,Western Railway,Kolkata,Howrah,Agra,Petroleum,75,41.2,Running,13.763454,82.020039,1,22.8,2026-06-30 01:37:35
+WG00032,1894865016,Hopper,WR,Western Railway,Chennai,Warangal,Kanpur,Containers,55,30.4,Loading,8.147022,80.562744,95,39.4,2026-06-30 01:23:35
+WG00033,3512663946,Covered,WR,Western Railway,Nagpur,Kanpur,Hyderabad,Iron Ore,70,41.6,Unloading,21.963569,71.164267,92,42.7,2026-06-29 22:21:35
+WG00034,7804314127,BOXN,ER,Eastern Railway,Nagpur,Visakhapatnam,Howrah,Containers,70,65.5,Idle,23.28016,69.619542,99,24.2,2026-06-30 01:09:35
+WG00035,5229665316,BTPN,NWR,North Western Railway,Delhi,Nagpur,Hyderabad,Containers,70,58.4,Idle,30.110387,73.686865,86,22.7,2026-06-29 20:03:35
+WG00036,1245278654,BCN,WR,Western Railway,Kolkata,Agra,Delhi,Food Grains,50,21.5,Maintenance,30.539611,86.221188,1,37.4,2026-06-29 21:34:35
+WG00037,3591010782,Tank,NR,North Railway,Visakhapatnam,Visakhapatnam,Vijayawada,Cement,60,59.3,Loading,14.074418,76.446958,33,26.9,2026-06-29 20:05:35
+WG00038,3888911886,Hopper,SER,South Eastern Railway,Nagpur,Delhi,Warangal,Steel,60,32.4,Idle,20.056797,83.637013,32,32.8,2026-06-29 21:26:35
+WG00039,5648295320,Flat,SR,Southern Railway,Jaipur,Chennai,Agra,Iron Ore,55,52.8,Unloading,15.659688,83.248458,34,52.0,2026-06-29 18:17:35
+WG00040,3380721872,BCN,ER,Eastern Railway,Mumbai,Chennai,Bhopal,Containers,50,49.4,Idle,10.380819,81.145449,2,32.4,2026-06-29 20:58:35
+WG00041,3920454041,BCN,NWR,North Western Railway,Chennai,Guntur,Nagpur,Automobiles,60,28.6,Running,14.451757,86.927525,38,39.4,2026-06-30 00:48:35
+WG00042,6037206237,Tank,SER,South Eastern Railway,Nagpur,Guntur,Agra,Petroleum,60,34.2,Running,17.479527,88.227466,20,37.3,2026-06-29 19:16:35
+WG00043,2982624564,BCN,SR,Southern Railway,Kolkata,Bhopal,Secunderabad,Coal,60,49.0,Idle,9.292939,69.638928,94,53.1,2026-06-29 14:47:35
+WG00044,4374330439,Covered,WR,Western Railway,Nagpur,Hyderabad,Chennai,Food Grains,60,24.9,Idle,10.792261,85.473558,75,51.2,2026-06-29 21:43:35
+WG00045,8675421340,Flat,CR,Central Railway,Nagpur,Chennai,Bhopal,Automobiles,65,63.2,Running,21.939039,71.119462,48,28.0,2026-06-29 17:12:35
+WG00046,5328952808,Hopper,CR,Central Railway,Kolkata,Vijayawada,Nagpur,Containers,55,15.2,Loading,16.380223,88.579959,62,53.9,2026-06-29 16:30:35
+WG00047,8829860846,Covered,NER,North Eastern Railway,Jaipur,Bhopal,Visakhapatnam,Food Grains,50,34.1,Delayed,28.737644,71.407412,69,49.5,2026-06-29 21:44:35
+WG00048,5561897666,Hopper,NER,North Eastern Railway,Lucknow,Howrah,Guntur,Food Grains,65,52.0,Loading,27.242805,75.849338,6,49.3,2026-06-29 17:57:35
+WG00049,3959133855,BCN,CR,Central Railway,Hyderabad,Nagpur,Warangal,Iron Ore,50,47.1,Loading,17.993601,68.925236,44,48.8,2026-06-29 21:40:35
+WG00050,4090912220,Covered,NWR,North Western Railway,Chennai,Nagpur,Bhopal,Automobiles,50,27.9,Maintenance,27.594904,75.72337,84,39.8,2026-06-29 16:30:35
+WG00051,2741964352,Hopper,NER,North Eastern Railway,Hyderabad,Visakhapatnam,Bhopal,Steel,70,58.3,Loading,22.818532,83.287879,66,44.8,2026-06-29 14:09:35
+WG00052,4367706041,Tank,ER,Eastern Railway,Jaipur,Hyderabad,Chennai,Petroleum,75,32.1,Idle,27.586788,87.898848,95,34.4,2026-06-30 00:29:35
+WG00053,9557008900,BTPN,ER,Eastern Railway,Lucknow,Visakhapatnam,Hyderabad,Automobiles,70,69.3,Delayed,25.333538,74.983522,78,48.1,2026-06-29 17:43:35
+WG00054,2785116185,Covered,NWR,North Western Railway,Secunderabad,Howrah,Vijayawada,Iron Ore,70,38.9,Unloading,24.838437,77.77829,56,46.9,2026-06-29 20:44:35
+WG00055,2395821831,Tank,SER,South Eastern Railway,Nagpur,Delhi,Howrah,Cement,55,39.0,Loading,16.800672,80.704566,40,24.6,2026-06-29 18:45:35
+WG00056,2093002380,Tank,WR,Western Railway,Visakhapatnam,Guntur,Delhi,Containers,70,55.1,Loading,12.292474,76.028963,51,42.3,2026-06-30 01:43:35
+WG00057,6977487851,Tank,CR,Central Railway,Nagpur,Nagpur,Warangal,Petroleum,60,19.4,Delayed,25.899275,72.979394,74,44.3,2026-06-29 15:17:35
+WG00058,2109831454,Flat,NWR,North Western Railway,Hyderabad,Howrah,Agra,Petroleum,60,18.9,Running,27.89078,88.807849,80,52.7,2026-06-29 16:05:35
+WG00059,4901526845,BOXN,NWR,North Western Railway,Mumbai,Mumbai,Warangal,Automobiles,75,72.9,Delayed,13.823346,88.084757,89,29.6,2026-06-29 19:20:35
+WG00060,3635709560,BCN,NWR,North Western Railway,Jaipur,Secunderabad,Guntur,Containers,75,25.6,Running,10.099315,86.097547,98,45.6,2026-06-30 01:41:35
+WG00061,9425213627,BCN,WR,Western Railway,Delhi,Chennai,Visakhapatnam,Coal,50,43.3,Delayed,22.867082,77.108653,28,30.5,2026-06-29 19:08:35
+WG00062,8619912411,BCN,SWR,South Western Railway,Delhi,Kanpur,Delhi,Iron Ore,75,63.4,Running,9.126514,77.861962,19,29.8,2026-06-29 22:49:35
+WG00063,2400144314,Covered,ER,Eastern Railway,Visakhapatnam,Mumbai,Chennai,Iron Ore,65,20.7,Loading,21.02919,69.541792,45,44.8,2026-06-29 17:36:35
+WG00064,6299236495,BCN,SCR,South Central Railway,Mumbai,Visakhapatnam,Hyderabad,Containers,65,49.8,Maintenance,13.469067,68.193834,89,50.1,2026-06-29 22:49:35
+WG00065,2393065340,Covered,SWR,South Western Railway,Kolkata,Bhopal,Agra,Steel,55,29.3,Loading,21.998516,77.361848,49,30.3,2026-06-29 14:27:35
+WG00066,2163809461,BTPN,SER,South Eastern Railway,Nagpur,Mumbai,Warangal,Petroleum,65,34.3,Unloading,8.37643,79.374261,64,34.0,2026-06-29 22:58:35
+WG00067,2073097071,Tank,SR,Southern Railway,Secunderabad,Secunderabad,Hyderabad,Petroleum,55,27.3,Running,29.088974,81.307029,36,48.0,2026-06-29 14:48:35
+WG00068,9356978986,BOXN,ER,Eastern Railway,Mumbai,Guntur,Warangal,Containers,70,40.9,Delayed,21.624368,81.040589,70,39.2,2026-06-30 00:22:35
+WG00069,5988914405,Covered,SER,South Eastern Railway,Visakhapatnam,Vijayawada,Guntur,Steel,50,30.3,Delayed,27.033654,82.370503,83,25.0,2026-06-29 21:47:35
+WG00070,9271349462,Hopper,NWR,North Western Railway,Delhi,Hyderabad,Howrah,Containers,65,34.0,Unloading,10.05338,71.635665,22,42.1,2026-06-30 01:46:35
+WG00071,4830046841,BOXN,SER,South Eastern Railway,Secunderabad,Secunderabad,Howrah,Food Grains,75,74.1,Delayed,21.837101,68.056991,56,25.4,2026-06-29 22:20:35
+WG00072,5843519163,Covered,CR,Central Railway,Chennai,Warangal,Vijayawada,Coal,50,32.7,Running,23.942301,75.135494,16,29.6,2026-06-29 18:04:35
+WG00073,1420590893,BTPN,NWR,North Western Railway,Kolkata,Hyderabad,Kanpur,Automobiles,60,21.3,Maintenance,23.854154,74.44485,51,53.6,2026-06-29 18:32:35
+WG00074,7256000847,Flat,WR,Western Railway,Kolkata,Hyderabad,Secunderabad,Containers,70,30.5,Running,10.845737,88.189029,51,51.5,2026-06-30 00:52:35
+WG00075,8172101359,Flat,SER,South Eastern Railway,Secunderabad,Warangal,Delhi,Food Grains,75,74.4,Maintenance,9.263784,79.03289,66,32.7,2026-06-29 22:21:35
+WG00076,7221642811,Covered,SCR,South Central Railway,Kolkata,Howrah,Kanpur,Automobiles,70,49.3,Loading,26.490621,82.566147,32,46.4,2026-06-29 16:46:35
+WG00077,3296607859,Hopper,WR,Western Railway,Visakhapatnam,Warangal,Hyderabad,Coal,50,36.7,Idle,28.877033,86.97776,39,54.5,2026-06-29 21:14:35
+WG00078,5318069610,Flat,NER,North Eastern Railway,Jaipur,Howrah,Nagpur,Containers,60,30.6,Delayed,23.885498,87.039051,80,50.0,2026-06-29 22:26:35
+WG00079,5384317393,Covered,SCR,South Central Railway,Chennai,Hyderabad,Bhopal,Coal,75,66.8,Loading,11.141687,68.161093,1,23.9,2026-06-29 22:54:35
+WG00080,4627737009,Hopper,NWR,North Western Railway,Secunderabad,Hyderabad,Mumbai,Containers,65,64.8,Maintenance,25.539651,69.566106,74,52.3,2026-06-29 23:50:35
+WG00081,2268774560,BTPN,SCR,South Central Railway,Visakhapatnam,Secunderabad,Chennai,Containers,60,29.2,Idle,17.381999,81.477172,61,47.0,2026-06-29 23:54:35
+WG00082,6831258839,Hopper,SWR,South Western Railway,Chennai,Guntur,Nagpur,Food Grains,60,47.3,Idle,10.792326,84.293477,39,20.4,2026-06-29 20:26:35
+WG00083,5771842808,Covered,SCR,South Central Railway,Jaipur,Visakhapatnam,Bhopal,Automobiles,60,18.9,Running,9.501786,76.001472,61,22.1,2026-06-29 19:47:35
+WG00084,3544583897,BCN,NER,North Eastern Railway,Hyderabad,Warangal,Delhi,Cement,75,51.2,Unloading,21.350188,80.472854,81,26.5,2026-06-29 15:20:35
+WG00085,4586412553,Hopper,SR,Southern Railway,Mumbai,Secunderabad,Kanpur,Coal,50,45.4,Idle,15.150492,77.125984,31,52.0,2026-06-29 20:05:35
+WG00086,2215462606,BCN,NER,North Eastern Railway,Hyderabad,Bhopal,Visakhapatnam,Steel,60,19.7,Loading,29.390933,78.475497,21,38.4,2026-06-29 15:48:35
+WG00087,5011657493,Hopper,NWR,North Western Railway,Secunderabad,Agra,Chennai,Cement,70,27.1,Delayed,28.173279,85.398181,44,54.4,2026-06-29 14:21:35
+WG00088,7496622317,Hopper,ER,Eastern Railway,Delhi,Kanpur,Guntur,Cement,55,34.5,Idle,26.04654,75.248875,92,28.0,2026-06-29 21:15:35
+WG00089,9141675864,BCN,SR,Southern Railway,Chennai,Delhi,Agra,Iron Ore,50,39.3,Idle,24.657521,81.165001,62,22.4,2026-06-29 20:24:35
+WG00090,2649606256,Hopper,SWR,South Western Railway,Delhi,Delhi,Kanpur,Iron Ore,60,35.3,Idle,24.561679,88.687438,86,37.4,2026-06-29 14:45:35
+WG00091,9691336249,BOXN,SER,South Eastern Railway,Secunderabad,Bhopal,Chennai,Containers,65,32.3,Maintenance,19.066193,79.955429,68,29.4,2026-06-29 15:29:35
+WG00092,2730328686,BOXN,ER,Eastern Railway,Mumbai,Vijayawada,Hyderabad,Cement,50,38.6,Loading,22.391047,77.754035,39,33.2,2026-06-30 00:43:35
+WG00093,8093077450,Tank,SER,South Eastern Railway,Secunderabad,Howrah,Secunderabad,Food Grains,65,23.5,Idle,15.060084,77.390773,24,30.5,2026-06-29 21:29:35
+WG00094,4628621377,BCN,NR,North Railway,Hyderabad,Delhi,Bhopal,Containers,50,13.9,Unloading,10.788618,72.311831,63,48.1,2026-06-29 20:50:35
+WG00095,3658987504,Tank,SER,South Eastern Railway,Kolkata,Guntur,Howrah,Petroleum,65,25.0,Running,14.97256,79.965383,53,23.4,2026-06-30 01:19:35
+WG00096,9846598553,Hopper,NR,North Railway,Chennai,Nagpur,Visakhapatnam,Automobiles,50,45.5,Maintenance,29.944394,69.870312,47,46.5,2026-06-30 01:27:35
+WG00097,7252198928,BTPN,SR,Southern Railway,Jaipur,Visakhapatnam,Kanpur,Petroleum,55,45.2,Maintenance,12.907271,78.444208,22,34.4,2026-06-30 01:40:35
+WG00098,5539604357,BTPN,NER,North Eastern Railway,Nagpur,Howrah,Delhi,Steel,70,54.0,Running,23.98808,82.14231,8,26.3,2026-06-29 18:02:35
+WG00099,8518758202,Flat,SER,South Eastern Railway,Secunderabad,Delhi,Kanpur,Iron Ore,70,69.2,Loading,10.177395,79.862697,36,53.3,2026-06-29 20:27:35
+WG00100,7259620972,BOXN,ER,Eastern Railway,Jaipur,Hyderabad,Howrah,Iron Ore,60,55.6,Idle,18.844365,75.437001,93,44.9,2026-06-29 23:16:35
+WG00101,9337868552,Covered,SR,Southern Railway,Kolkata,Delhi,Kanpur,Cement,75,19.4,Maintenance,19.603875,78.118663,59,42.3,2026-06-29 23:35:35
+WG00102,1573756546,BOXN,SCR,South Central Railway,Visakhapatnam,Delhi,Agra,Iron Ore,60,26.4,Unloading,25.481271,85.524093,15,33.7,2026-06-29 22:07:35
+WG00103,2572118863,BTPN,SWR,South Western Railway,Delhi,Warangal,Howrah,Petroleum,50,43.4,Loading,12.476994,88.892502,96,43.9,2026-06-29 21:08:35
+WG00104,2096861109,Tank,NWR,North Western Railway,Secunderabad,Mumbai,Howrah,Automobiles,55,19.6,Idle,24.80013,73.531737,31,22.0,2026-06-29 14:31:35
+WG00105,9428131617,Flat,SER,South Eastern Railway,Hyderabad,Agra,Delhi,Automobiles,55,23.1,Maintenance,10.468599,87.83232,23,35.4,2026-06-29 19:49:35
+WG00106,1333025000,Covered,CR,Central Railway,Chennai,Chennai,Howrah,Cement,60,21.6,Idle,12.863354,84.657836,58,45.9,2026-06-29 19:19:35
+WG00107,2496602311,Flat,CR,Central Railway,Mumbai,Guntur,Chennai,Cement,75,30.3,Running,26.694282,81.722961,23,43.5,2026-06-30 01:28:35
+WG00108,7445190655,BCN,CR,Central Railway,Jaipur,Delhi,Mumbai,Coal,70,53.6,Idle,16.869504,72.728885,60,52.2,2026-06-30 01:34:35
+WG00109,5110220351,Tank,SCR,South Central Railway,Hyderabad,Vijayawada,Kanpur,Containers,75,63.7,Loading,16.383621,77.818694,2,28.8,2026-06-30 00:59:35
+WG00110,2403636744,Flat,ER,Eastern Railway,Lucknow,Nagpur,Secunderabad,Iron Ore,65,17.3,Idle,16.2373,68.172234,88,44.4,2026-06-29 17:48:35
+WG00111,2606611457,Tank,WR,Western Railway,Delhi,Warangal,Guntur,Containers,60,16.3,Idle,19.146355,85.068391,93,34.0,2026-06-29 17:51:35
+WG00112,5207004479,Flat,WR,Western Railway,Chennai,Vijayawada,Visakhapatnam,Coal,65,37.9,Loading,23.471838,77.037486,9,25.7,2026-06-29 16:10:35
+WG00113,6277584440,Hopper,NER,North Eastern Railway,Lucknow,Chennai,Visakhapatnam,Coal,55,31.8,Delayed,24.458106,70.350134,2,21.5,2026-06-29 20:17:35
+WG00114,1806422544,BOXN,SWR,South Western Railway,Chennai,Hyderabad,Delhi,Iron Ore,75,74.5,Unloading,20.162228,79.800183,91,35.2,2026-06-29 20:04:35
+WG00115,4695131604,BOXN,SWR,South Western Railway,Secunderabad,Howrah,Bhopal,Steel,75,38.1,Loading,23.917834,78.203211,21,45.5,2026-06-29 13:57:35
+WG00116,8232841813,BCN,SCR,South Central Railway,Nagpur,Secunderabad,Hyderabad,Petroleum,65,31.4,Delayed,9.611778,86.903488,96,20.3,2026-06-29 18:53:35
+WG00117,9373104751,BTPN,NR,North Railway,Delhi,Howrah,Kanpur,Automobiles,50,24.8,Maintenance,8.968513,88.970596,3,38.3,2026-06-29 18:52:35
+WG00118,9737644923,BTPN,SER,South Eastern Railway,Secunderabad,Howrah,Secunderabad,Containers,60,49.7,Maintenance,22.673866,83.737277,5,34.0,2026-06-29 15:14:35
+WG00119,2392022490,Hopper,SER,South Eastern Railway,Hyderabad,Bhopal,Kanpur,Food Grains,50,38.0,Unloading,27.403954,84.567474,82,25.9,2026-06-29 15:53:35
+WG00120,7275292627,Tank,NWR,North Western Railway,Jaipur,Mumbai,Bhopal,Petroleum,65,41.8,Maintenance,24.226811,88.086545,88,50.4,2026-06-29 20:12:35
+WG00121,7950575562,Tank,SR,Southern Railway,Jaipur,Warangal,Bhopal,Iron Ore,60,59.9,Maintenance,19.711843,80.520628,99,52.0,2026-06-29 21:30:35
+WG00122,7950289247,Hopper,SR,Southern Railway,Hyderabad,Bhopal,Kanpur,Petroleum,50,18.9,Unloading,22.728067,86.044184,17,39.4,2026-06-29 17:57:35
+WG00123,7459100945,BTPN,WR,Western Railway,Lucknow,Delhi,Howrah,Cement,55,22.8,Maintenance,10.0085,82.060283,8,52.0,2026-06-29 14:42:35
+WG00124,5062623348,Tank,ER,Eastern Railway,Delhi,Howrah,Hyderabad,Steel,70,66.5,Loading,18.287634,71.104435,43,51.0,2026-06-29 21:15:35
+WG00125,3561877615,BOXN,SWR,South Western Railway,Hyderabad,Nagpur,Secunderabad,Steel,55,34.3,Running,11.105308,80.857115,53,35.9,2026-06-29 14:45:35
+WG00126,1845461521,Flat,WR,Western Railway,Kolkata,Hyderabad,Delhi,Automobiles,75,38.8,Unloading,12.062505,87.10117,73,38.7,2026-06-29 19:29:35
+WG00127,8909445543,Hopper,ER,Eastern Railway,Jaipur,Mumbai,Kanpur,Iron Ore,75,60.6,Idle,14.8782,72.026787,55,45.0,2026-06-29 18:52:35
+WG00128,8203594234,Covered,SWR,South Western Railway,Kolkata,Mumbai,Guntur,Steel,75,46.1,Maintenance,27.638098,70.578861,83,23.7,2026-06-29 22:25:35
+WG00129,8699700552,Covered,NER,North Eastern Railway,Visakhapatnam,Kanpur,Howrah,Cement,60,47.1,Loading,21.040433,86.592242,75,50.8,2026-06-29 15:05:35
+WG00130,1405814934,BTPN,SCR,South Central Railway,Kolkata,Hyderabad,Nagpur,Cement,50,38.5,Maintenance,24.604317,77.255031,90,42.9,2026-06-29 22:37:35
+WG00131,9872471739,BCN,SER,South Eastern Railway,Hyderabad,Vijayawada,Nagpur,Containers,70,48.5,Maintenance,15.468513,81.931914,32,39.3,2026-06-30 00:49:35
+WG00132,1816839272,Tank,NWR,North Western Railway,Lucknow,Bhopal,Chennai,Automobiles,65,40.2,Loading,10.335663,72.84192,52,42.5,2026-06-29 13:57:35
+WG00133,9487292544,BOXN,CR,Central Railway,Nagpur,Kanpur,Hyderabad,Coal,55,52.1,Idle,23.408741,77.142308,85,53.1,2026-06-29 20:39:35
+WG00134,7011555865,Tank,SWR,South Western Railway,Delhi,Mumbai,Secunderabad,Automobiles,55,19.4,Maintenance,20.055348,80.48795,33,23.7,2026-06-30 01:29:35
+WG00135,1380316276,Flat,SWR,South Western Railway,Delhi,Secunderabad,Bhopal,Coal,70,19.2,Running,15.747808,84.606056,99,32.9,2026-06-29 17:10:35
+WG00136,3164277679,BCN,SER,South Eastern Railway,Delhi,Mumbai,Visakhapatnam,Food Grains,65,26.7,Idle,9.764474,84.954021,27,50.1,2026-06-29 21:48:35
+WG00137,1799611715,BTPN,NER,North Eastern Railway,Chennai,Secunderabad,Agra,Petroleum,60,31.5,Running,23.808005,75.272269,9,29.6,2026-06-30 00:54:35
+WG00138,7864171421,BTPN,SWR,South Western Railway,Nagpur,Bhopal,Chennai,Cement,60,34.8,Loading,25.023893,74.806487,17,40.9,2026-06-29 18:07:35
+WG00139,4328131653,BCN,NWR,North Western Railway,Secunderabad,Hyderabad,Nagpur,Petroleum,50,17.6,Maintenance,30.19313,74.595187,82,53.6,2026-06-29 16:41:35
+WG00140,9304418486,BTPN,NR,North Railway,Chennai,Bhopal,Howrah,Food Grains,70,51.0,Maintenance,8.856295,88.680224,49,38.4,2026-06-29 16:02:35
+WG00141,6833837855,Covered,NWR,North Western Railway,Nagpur,Bhopal,Vijayawada,Petroleum,70,47.2,Maintenance,19.041959,84.76992,13,28.6,2026-06-29 21:05:35
+WG00142,1074179647,BOXN,SR,Southern Railway,Hyderabad,Agra,Kanpur,Steel,50,39.1,Loading,10.844878,88.987396,97,52.7,2026-06-29 21:27:35
+WG00143,7293098502,BCN,ER,Eastern Railway,Hyderabad,Hyderabad,Bhopal,Iron Ore,60,59.7,Idle,30.79285,84.686565,91,44.6,2026-06-29 20:23:35
+WG00144,7389320872,BOXN,CR,Central Railway,Nagpur,Secunderabad,Hyderabad,Coal,60,54.3,Unloading,22.4592,76.012431,33,54.9,2026-06-29 20:40:35
+WG00145,4191114551,BTPN,WR,Western Railway,Nagpur,Delhi,Visakhapatnam,Food Grains,60,25.6,Loading,29.682893,78.012656,97,27.3,2026-06-29 16:36:35
+WG00146,4076341251,Flat,NWR,North Western Railway,Chennai,Warangal,Vijayawada,Cement,65,63.1,Maintenance,8.351755,71.161503,14,36.2,2026-06-29 13:54:35
+WG00147,7317906028,BCN,SR,Southern Railway,Hyderabad,Agra,Nagpur,Food Grains,60,52.8,Loading,15.632522,83.309665,17,53.6,2026-06-29 14:46:35
+WG00148,3169308798,Covered,ER,Eastern Railway,Chennai,Kanpur,Nagpur,Cement,60,45.2,Unloading,17.429556,74.381342,46,46.1,2026-06-29 14:25:35
+WG00149,5466526513,Tank,NER,North Eastern Railway,Jaipur,Hyderabad,Guntur,Food Grains,70,45.5,Running,15.081807,72.003497,27,43.5,2026-06-29 18:58:35
+WG00150,7631563045,Hopper,SCR,South Central Railway,Hyderabad,Agra,Chennai,Automobiles,60,28.3,Running,11.794761,87.014289,42,50.7,2026-06-29 20:07:35
+WG00151,2436111216,BCN,CR,Central Railway,Hyderabad,Delhi,Warangal,Coal,60,56.5,Idle,11.386222,74.820629,40,41.9,2026-06-29 21:13:35
+WG00152,4731083772,Tank,SR,Southern Railway,Kolkata,Warangal,Nagpur,Containers,60,49.2,Unloading,22.506758,88.743175,28,35.1,2026-06-30 01:29:35
+WG00153,2823258027,BTPN,ER,Eastern Railway,Nagpur,Delhi,Secunderabad,Automobiles,70,57.4,Delayed,20.368632,85.108194,11,49.5,2026-06-29 23:28:35
+WG00154,4489134559,BOXN,NER,North Eastern Railway,Chennai,Chennai,Nagpur,Food Grains,70,36.4,Loading,25.484978,80.865886,39,20.5,2026-06-30 00:32:35
+WG00155,5135320789,BOXN,SCR,South Central Railway,Jaipur,Delhi,Vijayawada,Containers,60,17.8,Idle,30.638149,87.268121,80,35.1,2026-06-29 19:34:35
+WG00156,1608800905,Covered,SR,Southern Railway,Chennai,Delhi,Secunderabad,Iron Ore,70,54.1,Delayed,19.596972,71.137674,43,25.9,2026-06-29 22:51:35
+WG00157,3363141798,BOXN,WR,Western Railway,Lucknow,Mumbai,Vijayawada,Petroleum,60,17.3,Running,20.022785,78.713186,100,30.5,2026-06-29 17:47:35
+WG00158,2621231775,BTPN,CR,Central Railway,Hyderabad,Guntur,Bhopal,Iron Ore,55,19.5,Delayed,20.319741,74.925156,68,52.5,2026-06-29 14:32:35
+WG00159,1035920751,BOXN,SWR,South Western Railway,Secunderabad,Bhopal,Visakhapatnam,Petroleum,65,26.7,Running,11.675288,71.45503,91,48.4,2026-06-29 23:17:35
+WG00160,4577204937,BCN,NER,North Eastern Railway,Kolkata,Visakhapatnam,Vijayawada,Containers,70,27.2,Maintenance,15.133227,82.637859,37,37.9,2026-06-29 14:30:35
+WG00161,1561891432,Covered,NWR,North Western Railway,Delhi,Nagpur,Hyderabad,Automobiles,75,66.7,Unloading,27.016288,76.194764,31,47.0,2026-06-29 19:01:35
+WG00162,1493533266,Flat,ER,Eastern Railway,Mumbai,Bhopal,Kanpur,Iron Ore,55,50.6,Maintenance,30.318485,79.139073,30,52.2,2026-06-29 16:40:35
+WG00163,4696967163,Hopper,CR,Central Railway,Delhi,Mumbai,Vijayawada,Food Grains,75,56.0,Idle,18.002851,87.444435,20,35.8,2026-06-29 21:43:35
+WG00164,7179046363,BTPN,WR,Western Railway,Chennai,Nagpur,Delhi,Cement,75,61.9,Delayed,9.11662,80.980491,9,50.7,2026-06-29 16:31:35
+WG00165,5599191919,BTPN,WR,Western Railway,Mumbai,Hyderabad,Guntur,Cement,65,22.8,Loading,22.758043,72.169892,63,32.4,2026-06-29 22:14:35
+WG00166,7176536085,BTPN,NER,North Eastern Railway,Visakhapatnam,Chennai,Agra,Iron Ore,55,14.0,Idle,24.147643,68.066183,59,39.1,2026-06-29 23:01:35
+WG00167,4909943362,BCN,NWR,North Western Railway,Delhi,Warangal,Visakhapatnam,Iron Ore,55,39.4,Maintenance,17.4169,81.389666,84,40.2,2026-06-29 19:26:35
+WG00168,5589479639,BOXN,NWR,North Western Railway,Chennai,Mumbai,Nagpur,Coal,55,54.6,Delayed,29.068203,71.974272,60,40.3,2026-06-29 20:54:35
+WG00169,5604236069,Tank,SER,South Eastern Railway,Mumbai,Visakhapatnam,Bhopal,Food Grains,60,59.0,Running,18.753598,81.915932,63,27.7,2026-06-30 00:13:35
+WG00170,8938487266,BCN,SR,Southern Railway,Secunderabad,Agra,Secunderabad,Cement,55,26.0,Idle,26.052506,78.868108,55,50.1,2026-06-29 21:53:35
+WG00171,1529700031,Tank,SER,South Eastern Railway,Chennai,Chennai,Mumbai,Cement,55,32.8,Delayed,12.10852,74.156698,79,38.0,2026-06-29 15:35:35
+WG00172,1055279146,Hopper,WR,Western Railway,Secunderabad,Secunderabad,Agra,Steel,75,46.5,Loading,19.735837,80.845756,89,34.7,2026-06-29 17:22:35
+WG00173,3258730793,BCN,NER,North Eastern Railway,Secunderabad,Agra,Delhi,Coal,55,18.9,Running,8.252649,79.901771,31,47.1,2026-06-29 16:15:35
+WG00174,3002220477,Hopper,NWR,North Western Railway,Nagpur,Howrah,Visakhapatnam,Cement,55,34.9,Delayed,9.643258,87.038309,31,37.4,2026-06-29 13:55:35
+WG00175,5168806538,Flat,NWR,North Western Railway,Kolkata,Kanpur,Hyderabad,Cement,65,21.9,Loading,22.104327,86.590491,68,41.9,2026-06-29 14:56:35
+WG00176,2720065503,Hopper,SWR,South Western Railway,Jaipur,Chennai,Secunderabad,Steel,60,18.8,Unloading,9.743251,83.18534,78,35.7,2026-06-29 18:53:35
+WG00177,8318512775,Hopper,SER,South Eastern Railway,Chennai,Chennai,Bhopal,Iron Ore,60,54.9,Loading,16.196797,84.26027,74,42.6,2026-06-30 01:13:35
+WG00178,1699982280,BTPN,NER,North Eastern Railway,Jaipur,Vijayawada,Bhopal,Petroleum,75,69.5,Running,10.652651,71.117394,72,47.0,2026-06-29 22:38:35
+WG00179,1682989693,BCN,SWR,South Western Railway,Lucknow,Delhi,Visakhapatnam,Iron Ore,65,53.6,Maintenance,15.832677,85.933922,45,35.1,2026-06-30 00:43:35
+WG00180,8020214132,Flat,SCR,South Central Railway,Chennai,Vijayawada,Howrah,Containers,60,26.6,Loading,13.561833,80.449908,16,33.4,2026-06-29 16:31:35
+WG00181,1215433893,Flat,WR,Western Railway,Delhi,Vijayawada,Warangal,Containers,50,32.9,Delayed,24.970567,72.997701,80,44.8,2026-06-30 01:13:35
+WG00182,8005786823,BTPN,SWR,South Western Railway,Jaipur,Guntur,Nagpur,Iron Ore,60,25.2,Loading,20.556601,80.164062,6,31.6,2026-06-29 22:28:35
+WG00183,6041050881,BTPN,SCR,South Central Railway,Lucknow,Delhi,Chennai,Coal,60,39.1,Running,28.581862,81.076046,36,47.3,2026-06-30 00:25:35
+WG00184,8360545262,BCN,CR,Central Railway,Delhi,Guntur,Visakhapatnam,Food Grains,65,60.8,Idle,11.953189,82.837127,49,40.4,2026-06-29 14:39:35
+WG00185,7183907945,Tank,NR,North Railway,Secunderabad,Visakhapatnam,Kanpur,Cement,65,18.7,Running,28.551428,78.047954,18,47.8,2026-06-30 00:58:35
+WG00186,2375073172,Hopper,SER,South Eastern Railway,Visakhapatnam,Secunderabad,Warangal,Cement,75,44.8,Running,9.812966,83.864692,41,22.7,2026-06-29 17:44:35
+WG00187,5037111845,BCN,SER,South Eastern Railway,Nagpur,Vijayawada,Visakhapatnam,Food Grains,75,66.0,Unloading,25.451326,79.862509,100,33.8,2026-06-29 13:58:35
+WG00188,3798318878,BCN,SCR,South Central Railway,Secunderabad,Mumbai,Warangal,Iron Ore,55,37.7,Delayed,16.420602,78.265788,58,38.3,2026-06-29 15:01:35
+WG00189,3895691944,Covered,CR,Central Railway,Secunderabad,Agra,Hyderabad,Petroleum,65,23.0,Maintenance,17.341857,74.187176,78,37.0,2026-06-29 17:30:35
+WG00190,8970955650,BOXN,SWR,South Western Railway,Delhi,Kanpur,Visakhapatnam,Coal,65,22.6,Running,21.703401,68.105177,31,44.3,2026-06-29 14:13:35
+WG00191,7949614341,BOXN,CR,Central Railway,Secunderabad,Howrah,Visakhapatnam,Petroleum,75,54.7,Idle,18.091335,74.416221,17,20.9,2026-06-29 20:29:35
+WG00192,8362247232,Flat,ER,Eastern Railway,Delhi,Howrah,Delhi,Iron Ore,75,68.1,Running,20.70244,79.373117,15,50.9,2026-06-29 21:11:35
+WG00193,4037076520,Flat,NR,North Railway,Visakhapatnam,Agra,Chennai,Containers,75,45.9,Loading,31.352938,68.683383,91,40.5,2026-06-29 15:03:35
+WG00194,9232022338,BOXN,ER,Eastern Railway,Jaipur,Agra,Delhi,Containers,50,15.4,Idle,23.696332,72.52384,20,40.5,2026-06-29 16:57:35
+WG00195,9045147427,BCN,SWR,South Western Railway,Mumbai,Hyderabad,Chennai,Automobiles,70,47.2,Maintenance,28.753295,88.973399,2,53.6,2026-06-29 22:52:35
+WG00196,1383198427,Tank,SCR,South Central Railway,Chennai,Agra,Visakhapatnam,Iron Ore,55,31.1,Idle,15.377597,85.844577,8,34.1,2026-06-29 16:38:35
+WG00197,1849716076,Covered,SCR,South Central Railway,Mumbai,Nagpur,Kanpur,Containers,50,24.1,Maintenance,21.734958,86.941849,89,43.3,2026-06-29 21:58:35
+WG00198,9980020717,Hopper,NR,North Railway,Chennai,Chennai,Bhopal,Steel,65,55.9,Idle,13.231441,82.019577,29,42.3,2026-06-29 16:39:35
+WG00199,3083359737,BTPN,SR,Southern Railway,Visakhapatnam,Visakhapatnam,Guntur,Cement,65,44.5,Loading,22.476841,86.254715,92,54.0,2026-06-29 18:27:35
+WG00200,3416468050,BOXN,ER,Eastern Railway,Nagpur,Hyderabad,Visakhapatnam,Automobiles,60,35.0,Maintenance,17.406193,76.817809,38,28.2,2026-06-29 14:52:35
+WG00201,9674304400,Flat,WR,Western Railway,Delhi,Secunderabad,Nagpur,Containers,75,38.7,Loading,11.046768,68.146229,35,21.8,2026-06-30 00:18:35
+WG00202,6823311866,Covered,SCR,South Central Railway,Lucknow,Nagpur,Mumbai,Food Grains,75,43.6,Maintenance,14.771683,77.54239,36,53.4,2026-06-29 17:41:35
+WG00203,1813180796,BTPN,SWR,South Western Railway,Chennai,Vijayawada,Secunderabad,Petroleum,55,20.6,Unloading,10.665618,78.125275,9,37.5,2026-06-29 20:56:35
+WG00204,2969830583,BCN,NWR,North Western Railway,Kolkata,Hyderabad,Bhopal,Iron Ore,65,58.5,Delayed,9.048656,69.517192,40,39.9,2026-06-29 23:33:35
+WG00205,7760424016,BOXN,WR,Western Railway,Mumbai,Guntur,Warangal,Automobiles,60,15.2,Idle,10.949455,75.480634,54,47.8,2026-06-29 23:22:35
+WG00206,8474800289,BOXN,SCR,South Central Railway,Nagpur,Bhopal,Visakhapatnam,Cement,65,57.7,Unloading,10.371163,78.280749,41,50.8,2026-06-29 22:39:35
+WG00207,1728132217,BCN,CR,Central Railway,Mumbai,Bhopal,Nagpur,Coal,75,60.3,Delayed,22.437587,74.901693,71,39.5,2026-06-29 14:46:35
+WG00208,3177466655,BCN,ER,Eastern Railway,Chennai,Kanpur,Secunderabad,Petroleum,70,40.2,Maintenance,12.056946,72.794612,33,48.5,2026-06-29 21:02:35
+WG00209,9356216957,Hopper,WR,Western Railway,Visakhapatnam,Chennai,Delhi,Cement,65,54.3,Unloading,27.098119,80.234357,35,44.4,2026-06-29 19:56:35
+WG00210,3923500462,Tank,SR,Southern Railway,Mumbai,Secunderabad,Hyderabad,Food Grains,55,50.0,Maintenance,25.401314,70.515667,24,31.3,2026-06-29 19:57:35
+WG00211,6003565344,BCN,SCR,South Central Railway,Kolkata,Nagpur,Hyderabad,Food Grains,70,21.3,Running,19.472318,82.967648,29,38.5,2026-06-29 23:51:35
+WG00212,5270928558,BTPN,WR,Western Railway,Kolkata,Mumbai,Delhi,Containers,55,46.6,Maintenance,12.81636,80.384003,53,20.2,2026-06-29 22:14:35
+WG00213,3555362526,BTPN,WR,Western Railway,Hyderabad,Secunderabad,Bhopal,Steel,70,49.4,Running,13.721151,81.259729,4,49.1,2026-06-29 17:42:35
+WG00214,2469822851,BOXN,NWR,North Western Railway,Mumbai,Vijayawada,Howrah,Steel,55,28.6,Idle,23.023468,79.451518,71,49.1,2026-06-29 19:17:35
+WG00215,4075528800,BTPN,SR,Southern Railway,Hyderabad,Secunderabad,Bhopal,Cement,55,33.4,Unloading,17.799715,75.501637,41,49.1,2026-06-29 22:43:35
+WG00216,4712696846,BCN,SWR,South Western Railway,Lucknow,Chennai,Hyderabad,Petroleum,75,59.4,Unloading,14.911271,78.004624,14,54.8,2026-06-30 01:09:35
+WG00217,7640533637,BTPN,NWR,North Western Railway,Secunderabad,Bhopal,Vijayawada,Food Grains,60,27.4,Delayed,12.099585,76.95497,68,28.1,2026-06-29 22:37:35
+WG00218,5778004069,Tank,CR,Central Railway,Jaipur,Mumbai,Agra,Containers,60,35.9,Maintenance,25.884778,83.693422,23,49.2,2026-06-29 18:28:35
+WG00219,4882027720,Tank,CR,Central Railway,Chennai,Nagpur,Mumbai,Food Grains,50,14.2,Running,21.493922,81.451262,59,45.6,2026-06-29 20:17:35
+WG00220,8901058220,BTPN,SWR,South Western Railway,Secunderabad,Secunderabad,Kanpur,Coal,55,50.3,Idle,18.016017,80.126879,98,41.0,2026-06-29 14:14:35
+WG00221,9325148769,BOXN,SWR,South Western Railway,Mumbai,Chennai,Vijayawada,Coal,60,57.3,Delayed,30.709494,84.202111,46,39.7,2026-06-29 13:59:35
+WG00222,6005770112,Flat,NER,North Eastern Railway,Secunderabad,Nagpur,Secunderabad,Containers,50,40.9,Maintenance,25.379776,78.419284,17,36.5,2026-06-29 20:53:35
+WG00223,5595341645,Covered,SWR,South Western Railway,Delhi,Bhopal,Kanpur,Coal,65,21.0,Loading,24.839761,86.888125,66,34.3,2026-06-30 00:34:35
+WG00224,5981868208,Tank,CR,Central Railway,Secunderabad,Guntur,Nagpur,Food Grains,75,55.7,Unloading,25.34538,73.06668,86,54.9,2026-06-30 00:49:35
+WG00225,5607121735,Hopper,ER,Eastern Railway,Jaipur,Bhopal,Visakhapatnam,Steel,55,38.7,Loading,11.934582,72.958218,10,35.6,2026-06-29 16:40:35
+WG00226,9422879758,BTPN,SWR,South Western Railway,Delhi,Secunderabad,Bhopal,Automobiles,60,49.2,Maintenance,26.840708,77.184148,2,35.0,2026-06-29 18:11:35
+WG00227,6271304620,BCN,ER,Eastern Railway,Kolkata,Secunderabad,Warangal,Iron Ore,75,61.3,Running,30.981342,84.865777,66,49.0,2026-06-29 16:30:35
+WG00228,1436161321,BOXN,SCR,South Central Railway,Kolkata,Warangal,Guntur,Food Grains,70,61.9,Loading,8.119683,83.887343,79,39.4,2026-06-29 15:40:35
+WG00229,2456664765,Hopper,ER,Eastern Railway,Lucknow,Chennai,Kanpur,Food Grains,70,67.6,Delayed,20.202515,76.614392,48,45.6,2026-06-29 20:03:35
+WG00230,9902796547,Covered,CR,Central Railway,Nagpur,Kanpur,Secunderabad,Petroleum,70,41.5,Loading,11.744258,71.023579,15,53.1,2026-06-30 00:56:35
+WG00231,5085979152,Covered,SWR,South Western Railway,Lucknow,Nagpur,Secunderabad,Automobiles,55,19.2,Maintenance,21.037587,82.662796,23,20.4,2026-06-30 01:06:35
+WG00232,1807675234,Hopper,SWR,South Western Railway,Hyderabad,Visakhapatnam,Kanpur,Coal,55,29.4,Unloading,23.682326,76.497192,10,27.9,2026-06-29 22:40:35
+WG00233,8397434312,BTPN,SR,Southern Railway,Delhi,Howrah,Bhopal,Steel,75,39.8,Maintenance,23.736882,84.077445,34,33.1,2026-06-29 23:10:35
+WG00234,2566464818,Hopper,NWR,North Western Railway,Secunderabad,Kanpur,Delhi,Iron Ore,55,35.2,Loading,29.94412,83.94365,21,32.3,2026-06-30 00:00:35
+WG00235,8748387901,BOXN,SCR,South Central Railway,Chennai,Agra,Hyderabad,Automobiles,55,49.9,Running,10.97752,75.311307,73,42.8,2026-06-29 17:25:35
+WG00236,2790680375,Covered,CR,Central Railway,Jaipur,Delhi,Warangal,Iron Ore,50,29.6,Running,10.524927,71.209571,62,20.1,2026-06-29 22:57:35
+WG00237,5796762212,Covered,NWR,North Western Railway,Chennai,Agra,Vijayawada,Petroleum,60,37.4,Idle,22.209079,85.500075,34,40.5,2026-06-29 23:15:35
+WG00238,5265138863,BOXN,WR,Western Railway,Visakhapatnam,Kanpur,Agra,Automobiles,60,42.1,Loading,16.096732,88.347685,17,39.7,2026-06-29 23:50:35
+WG00239,7962078957,Tank,ER,Eastern Railway,Jaipur,Vijayawada,Guntur,Petroleum,50,47.5,Delayed,15.97719,80.86132,21,31.8,2026-06-29 16:59:35
+WG00240,5767702915,BTPN,NWR,North Western Railway,Secunderabad,Nagpur,Agra,Steel,65,20.3,Loading,19.957403,78.355763,34,28.0,2026-06-29 22:14:35
+WG00241,4747128672,BOXN,SR,Southern Railway,Hyderabad,Howrah,Delhi,Cement,60,25.8,Maintenance,22.010946,88.001467,23,31.9,2026-06-29 18:00:35
+WG00242,2341355755,BTPN,NWR,North Western Railway,Chennai,Bhopal,Nagpur,Iron Ore,75,29.0,Idle,30.752766,75.735527,61,51.5,2026-06-29 23:17:35
+WG00243,9730568370,BOXN,CR,Central Railway,Kolkata,Chennai,Bhopal,Iron Ore,50,31.3,Running,11.220049,72.653287,57,44.9,2026-06-30 01:27:35
+WG00244,3605784350,BTPN,SWR,South Western Railway,Jaipur,Visakhapatnam,Hyderabad,Containers,70,46.9,Idle,18.258808,81.066036,69,52.0,2026-06-29 19:42:35
+WG00245,9707032950,BCN,WR,Western Railway,Nagpur,Guntur,Visakhapatnam,Iron Ore,50,20.3,Maintenance,28.047699,88.763498,20,50.4,2026-06-29 23:23:35
+WG00246,2394324227,BTPN,SER,South Eastern Railway,Lucknow,Warangal,Hyderabad,Coal,65,26.2,Delayed,27.197996,81.930469,39,30.7,2026-06-29 20:53:35
+WG00247,5761257887,Hopper,SCR,South Central Railway,Jaipur,Warangal,Delhi,Coal,75,54.6,Running,28.723559,69.356743,80,27.7,2026-06-30 01:37:35
+WG00248,8231383244,Tank,ER,Eastern Railway,Chennai,Warangal,Vijayawada,Steel,65,24.1,Maintenance,23.552409,69.089689,23,25.7,2026-06-29 23:50:35
+WG00249,9695595134,Hopper,SCR,South Central Railway,Nagpur,Guntur,Bhopal,Cement,65,61.6,Delayed,28.180352,83.870694,91,51.0,2026-06-29 19:03:35
+WG00250,1642171012,Tank,SWR,South Western Railway,Delhi,Howrah,Delhi,Containers,70,57.3,Loading,17.328842,68.064266,15,26.6,2026-06-29 16:23:35
+WG00251,6588169617,Tank,NER,North Eastern Railway,Visakhapatnam,Bhopal,Secunderabad,Petroleum,65,58.6,Loading,13.497962,72.940168,76,33.1,2026-06-29 23:11:35
+WG00252,7948718540,BOXN,NWR,North Western Railway,Nagpur,Howrah,Agra,Cement,70,66.7,Idle,8.502664,84.594986,7,37.5,2026-06-29 22:19:35
+WG00253,8707183082,Hopper,NWR,North Western Railway,Visakhapatnam,Hyderabad,Chennai,Steel,55,32.5,Unloading,10.536903,72.546573,75,33.0,2026-06-29 22:55:35
+WG00254,6611801850,Covered,NWR,North Western Railway,Nagpur,Howrah,Nagpur,Automobiles,55,50.8,Unloading,30.852753,70.253635,89,28.7,2026-06-29 15:52:35
+WG00255,3023378130,BCN,NER,North Eastern Railway,Hyderabad,Nagpur,Visakhapatnam,Containers,70,55.3,Loading,16.565415,77.661667,56,23.3,2026-06-29 16:33:35
+WG00256,4973319791,Hopper,NER,North Eastern Railway,Kolkata,Vijayawada,Guntur,Petroleum,60,29.8,Idle,19.123147,77.958258,17,34.2,2026-06-30 00:17:35
+WG00257,6413579717,Hopper,ER,Eastern Railway,Delhi,Agra,Secunderabad,Containers,50,21.0,Idle,13.871898,74.180476,55,47.5,2026-06-29 17:06:35
+WG00258,1649361659,Covered,SCR,South Central Railway,Hyderabad,Howrah,Delhi,Automobiles,50,20.1,Idle,17.708762,76.833581,26,32.0,2026-06-30 00:40:35
+WG00259,6645388698,BTPN,CR,Central Railway,Secunderabad,Delhi,Visakhapatnam,Cement,50,42.0,Maintenance,20.405564,80.12268,7,22.1,2026-06-30 00:27:35
+WG00260,6493986728,BOXN,NR,North Railway,Secunderabad,Secunderabad,Nagpur,Steel,50,35.7,Maintenance,24.961559,72.882077,95,39.5,2026-06-30 00:21:35
+WG00261,5216861867,Flat,CR,Central Railway,Lucknow,Warangal,Visakhapatnam,Iron Ore,55,46.8,Maintenance,28.923853,86.855175,54,32.7,2026-06-30 00:57:35
+WG00262,6545501351,BTPN,NWR,North Western Railway,Chennai,Bhopal,Kanpur,Iron Ore,60,39.9,Idle,25.238028,83.634185,63,45.6,2026-06-29 19:37:35
+WG00263,7398848946,Hopper,SWR,South Western Railway,Chennai,Nagpur,Delhi,Food Grains,75,44.8,Unloading,18.772422,81.186135,11,47.7,2026-06-29 17:12:35
+WG00264,7494524640,BOXN,SR,Southern Railway,Mumbai,Warangal,Visakhapatnam,Petroleum,60,36.5,Loading,29.664595,87.532905,96,31.1,2026-06-29 16:27:35
+WG00265,6385465531,Tank,WR,Western Railway,Mumbai,Nagpur,Mumbai,Food Grains,60,18.6,Running,10.642244,69.599011,34,28.9,2026-06-29 23:39:35
+WG00266,4111007952,Hopper,SCR,South Central Railway,Lucknow,Vijayawada,Chennai,Coal,65,25.2,Running,28.502928,78.175144,51,27.3,2026-06-29 18:59:35
+WG00267,5390855673,Covered,NWR,North Western Railway,Mumbai,Nagpur,Kanpur,Cement,60,17.6,Idle,21.967288,84.981349,30,32.9,2026-06-29 14:45:35
+WG00268,5427954801,BCN,NR,North Railway,Chennai,Guntur,Kanpur,Automobiles,55,32.3,Running,22.364756,68.547124,51,54.7,2026-06-29 19:10:35
+WG00269,3263828528,BTPN,WR,Western Railway,Secunderabad,Visakhapatnam,Secunderabad,Food Grains,70,23.7,Unloading,23.42385,75.687838,63,25.8,2026-06-29 17:24:35
+WG00270,1793918369,Tank,SCR,South Central Railway,Secunderabad,Guntur,Mumbai,Cement,65,41.0,Delayed,25.414661,72.962332,60,46.2,2026-06-29 16:36:35
+WG00271,7981435362,Flat,CR,Central Railway,Nagpur,Mumbai,Visakhapatnam,Coal,50,20.9,Idle,10.39672,72.235195,53,47.6,2026-06-30 01:44:35
+WG00272,8733498185,BOXN,WR,Western Railway,Delhi,Nagpur,Secunderabad,Iron Ore,70,42.6,Maintenance,25.246686,68.765848,50,26.7,2026-06-29 21:20:35
+WG00273,5422871854,Covered,NR,North Railway,Delhi,Mumbai,Guntur,Automobiles,60,40.0,Unloading,10.543752,82.551869,0,40.1,2026-06-29 18:54:35
+WG00274,1511573481,BTPN,NER,North Eastern Railway,Mumbai,Howrah,Guntur,Iron Ore,50,14.4,Maintenance,26.933832,75.330877,46,30.9,2026-06-29 21:57:35
+WG00275,8591034021,Tank,SR,Southern Railway,Nagpur,Delhi,Warangal,Coal,75,67.6,Idle,21.884494,87.687658,18,30.9,2026-06-29 21:51:35
+WG00276,2645761411,Tank,SWR,South Western Railway,Hyderabad,Agra,Secunderabad,Food Grains,60,40.5,Unloading,31.47483,74.510434,65,24.4,2026-06-29 23:35:35
+WG00277,3128449203,Flat,SCR,South Central Railway,Nagpur,Howrah,Delhi,Containers,50,28.8,Maintenance,12.274815,85.386968,80,42.4,2026-06-29 18:47:35
+WG00278,7791317649,Hopper,WR,Western Railway,Chennai,Hyderabad,Visakhapatnam,Cement,65,50.8,Delayed,12.873188,83.69931,26,24.3,2026-06-29 22:35:35
+WG00279,6683903431,Covered,SWR,South Western Railway,Chennai,Hyderabad,Warangal,Steel,75,41.3,Maintenance,10.731317,84.314569,35,24.6,2026-06-29 15:46:35
+WG00280,3090143452,BTPN,SCR,South Central Railway,Mumbai,Guntur,Chennai,Food Grains,60,29.3,Unloading,9.575352,85.925162,24,51.9,2026-06-30 00:15:35
+WG00281,8681551614,BOXN,SCR,South Central Railway,Lucknow,Guntur,Mumbai,Cement,70,48.6,Unloading,21.099068,68.379139,10,44.4,2026-06-30 00:33:35
+WG00282,9989027305,BCN,SCR,South Central Railway,Lucknow,Kanpur,Mumbai,Cement,75,47.9,Delayed,18.441642,76.570527,78,38.5,2026-06-29 21:35:35
+WG00283,9401093996,BTPN,CR,Central Railway,Visakhapatnam,Chennai,Visakhapatnam,Automobiles,75,62.9,Maintenance,8.649957,69.886975,48,22.7,2026-06-29 23:17:35
+WG00284,7652846695,BCN,NWR,North Western Railway,Nagpur,Bhopal,Mumbai,Automobiles,55,40.2,Running,30.963163,88.137669,82,51.8,2026-06-30 00:48:35
+WG00285,2445594444,Tank,NR,North Railway,Lucknow,Chennai,Kanpur,Cement,65,46.8,Delayed,24.622778,85.229691,34,23.5,2026-06-29 14:56:35
+WG00286,3475767218,Covered,NWR,North Western Railway,Visakhapatnam,Chennai,Hyderabad,Steel,70,28.8,Running,30.243055,71.64296,10,52.8,2026-06-30 00:59:35
+WG00287,6977579625,Flat,SWR,South Western Railway,Chennai,Kanpur,Chennai,Coal,50,17.1,Maintenance,20.780116,68.906361,52,39.6,2026-06-29 22:07:35
+WG00288,5930439023,Hopper,WR,Western Railway,Nagpur,Agra,Hyderabad,Cement,75,63.9,Loading,15.956658,73.134481,70,35.6,2026-06-29 19:00:35
+WG00289,7947250958,BOXN,NWR,North Western Railway,Kolkata,Delhi,Vijayawada,Food Grains,75,37.8,Idle,26.470255,73.516105,65,23.4,2026-06-30 01:15:35
+WG00290,3526879564,BOXN,SWR,South Western Railway,Hyderabad,Secunderabad,Hyderabad,Containers,55,37.4,Unloading,27.881447,70.893929,28,53.1,2026-06-30 01:41:35
+WG00291,5194650924,Flat,ER,Eastern Railway,Jaipur,Nagpur,Guntur,Iron Ore,50,48.4,Idle,30.765694,74.652977,18,41.2,2026-06-30 01:43:35
+WG00292,5439440524,Covered,SR,Southern Railway,Chennai,Mumbai,Bhopal,Automobiles,65,20.9,Unloading,19.582517,86.992189,91,54.9,2026-06-29 21:51:35
+WG00293,2659085345,Flat,WR,Western Railway,Kolkata,Guntur,Warangal,Food Grains,70,37.0,Maintenance,8.357815,81.364173,0,33.0,2026-06-29 15:14:35
+WG00294,9767709642,Tank,SWR,South Western Railway,Jaipur,Howrah,Visakhapatnam,Cement,75,46.6,Running,20.839109,86.862549,78,40.5,2026-06-29 23:02:35
+WG00295,4948715277,BTPN,SR,Southern Railway,Kolkata,Visakhapatnam,Bhopal,Steel,70,62.1,Unloading,14.774462,68.399891,57,44.8,2026-06-30 00:34:35
+WG00296,3286892752,BTPN,SCR,South Central Railway,Nagpur,Delhi,Chennai,Containers,50,42.8,Delayed,13.378387,86.436303,76,44.8,2026-06-29 23:12:35
+WG00297,2079204449,Covered,CR,Central Railway,Hyderabad,Warangal,Kanpur,Steel,55,22.7,Idle,31.121836,71.585206,83,42.6,2026-06-29 19:15:35
+WG00298,3499886614,Flat,SCR,South Central Railway,Nagpur,Secunderabad,Agra,Coal,50,37.4,Idle,25.006186,69.332846,73,40.2,2026-06-30 01:41:35
+WG00299,6123513753,Flat,SER,South Eastern Railway,Jaipur,Mumbai,Secunderabad,Petroleum,60,51.5,Maintenance,16.342012,75.355865,3,40.1,2026-06-29 16:36:35
+WG00300,7203776221,BOXN,NR,North Railway,Mumbai,Mumbai,Nagpur,Automobiles,50,20.7,Delayed,22.563116,76.376668,13,49.6,2026-06-29 21:40:35
+WG00301,3551555642,BTPN,SWR,South Western Railway,Nagpur,Visakhapatnam,Chennai,Iron Ore,50,24.4,Maintenance,16.409683,74.472563,31,53.8,2026-06-29 18:06:35
+WG00302,9891291465,Tank,SR,Southern Railway,Visakhapatnam,Howrah,Kanpur,Automobiles,75,63.5,Running,16.782482,68.451434,95,33.8,2026-06-30 00:03:35
+WG00303,8000238933,Covered,NWR,North Western Railway,Visakhapatnam,Agra,Kanpur,Automobiles,65,29.2,Idle,20.018974,80.207025,53,54.3,2026-06-29 14:09:35
+WG00304,4102940968,Tank,SER,South Eastern Railway,Lucknow,Bhopal,Guntur,Cement,70,52.3,Unloading,30.486215,82.775947,53,20.5,2026-06-29 23:40:35
+WG00305,8683256568,BOXN,CR,Central Railway,Visakhapatnam,Secunderabad,Visakhapatnam,Food Grains,60,57.6,Loading,26.433485,69.907693,21,29.0,2026-06-29 17:50:35
+WG00306,3405153086,BCN,SWR,South Western Railway,Jaipur,Warangal,Vijayawada,Containers,50,46.5,Loading,17.958319,75.568113,41,51.2,2026-06-29 18:56:35
+WG00307,2321284258,BOXN,CR,Central Railway,Hyderabad,Chennai,Agra,Steel,65,49.9,Delayed,29.46456,69.09852,34,29.0,2026-06-30 01:22:35
+WG00308,5088197860,Flat,NR,North Railway,Jaipur,Chennai,Bhopal,Containers,50,40.6,Maintenance,12.000554,78.735586,10,21.1,2026-06-29 17:48:35
+WG00309,9128196217,Flat,SCR,South Central Railway,Mumbai,Delhi,Hyderabad,Iron Ore,75,33.9,Delayed,23.626837,69.391931,94,49.6,2026-06-29 15:26:35
+WG00310,2922590387,Covered,NWR,North Western Railway,Jaipur,Delhi,Chennai,Food Grains,55,15.8,Running,21.803215,78.786062,23,50.6,2026-06-29 19:53:35
+WG00311,9932717678,Flat,CR,Central Railway,Kolkata,Visakhapatnam,Vijayawada,Food Grains,70,54.5,Idle,9.950802,77.095935,74,47.3,2026-06-29 20:30:35
+WG00312,5576517982,BOXN,NWR,North Western Railway,Chennai,Delhi,Chennai,Food Grains,75,33.6,Running,17.40239,80.364707,87,38.2,2026-06-30 01:15:35
+WG00313,8602384265,BCN,ER,Eastern Railway,Lucknow,Kanpur,Guntur,Petroleum,60,31.5,Running,30.01279,76.980205,38,47.7,2026-06-30 01:22:35
+WG00314,4324182431,Hopper,WR,Western Railway,Nagpur,Secunderabad,Mumbai,Containers,70,63.6,Loading,25.073767,73.362221,26,52.4,2026-06-29 15:12:35
+WG00315,5702402901,BTPN,SER,South Eastern Railway,Chennai,Secunderabad,Bhopal,Food Grains,50,35.1,Loading,31.465221,78.119359,57,44.0,2026-06-30 01:33:35
+WG00316,6091282977,Tank,SWR,South Western Railway,Hyderabad,Guntur,Nagpur,Cement,65,36.0,Loading,21.610683,78.867429,67,47.3,2026-06-30 01:31:35
+WG00317,6423269997,BTPN,SR,Southern Railway,Delhi,Agra,Bhopal,Iron Ore,75,54.9,Unloading,17.936916,68.847243,73,28.7,2026-06-29 22:29:35
+WG00318,9152608364,BOXN,NR,North Railway,Kolkata,Chennai,Kanpur,Containers,70,65.3,Loading,22.968259,79.538907,52,21.5,2026-06-29 19:13:35
+WG00319,3145452510,BTPN,CR,Central Railway,Mumbai,Kanpur,Howrah,Iron Ore,50,29.2,Loading,25.081951,86.670693,30,31.4,2026-06-29 23:44:35
+WG00320,8782697203,BCN,SR,Southern Railway,Visakhapatnam,Visakhapatnam,Secunderabad,Steel,65,17.1,Idle,24.447995,71.216367,55,50.6,2026-06-29 13:51:35
+WG00321,7919162964,Tank,SWR,South Western Railway,Chennai,Vijayawada,Howrah,Automobiles,50,21.8,Delayed,19.15269,72.577596,62,20.9,2026-06-29 23:43:35
+WG00322,2847057682,BCN,ER,Eastern Railway,Hyderabad,Vijayawada,Chennai,Steel,50,24.8,Maintenance,19.029989,82.394023,71,42.1,2026-06-29 23:46:35
+WG00323,6089044010,BCN,CR,Central Railway,Lucknow,Secunderabad,Kanpur,Containers,50,31.5,Delayed,19.185768,75.456597,70,33.1,2026-06-29 15:24:35
+WG00324,6158583327,BCN,NWR,North Western Railway,Chennai,Agra,Chennai,Steel,50,19.2,Idle,12.793504,70.337141,80,39.1,2026-06-29 22:54:35
+WG00325,9494618324,BTPN,SWR,South Western Railway,Mumbai,Warangal,Agra,Iron Ore,50,18.6,Running,12.348757,85.950911,53,45.6,2026-06-30 01:22:35
+WG00326,4078571834,Flat,NR,North Railway,Kolkata,Agra,Delhi,Food Grains,60,33.4,Maintenance,26.248384,74.303087,13,48.1,2026-06-30 00:20:35
+WG00327,1295143737,Covered,NWR,North Western Railway,Jaipur,Nagpur,Delhi,Coal,70,59.9,Running,16.466531,71.52246,90,50.6,2026-06-29 18:33:35
+WG00328,1969527471,BCN,ER,Eastern Railway,Secunderabad,Visakhapatnam,Guntur,Containers,75,47.9,Unloading,22.413642,70.401175,95,23.2,2026-06-29 20:40:35
+WG00329,9492847920,BOXN,WR,Western Railway,Delhi,Hyderabad,Agra,Containers,75,65.0,Unloading,23.809481,83.619937,86,36.0,2026-06-29 15:49:35
+WG00330,8031415097,Hopper,SCR,South Central Railway,Visakhapatnam,Chennai,Kanpur,Iron Ore,50,34.8,Idle,31.292998,83.153069,64,40.4,2026-06-29 18:46:35
+WG00331,9761467543,BTPN,NWR,North Western Railway,Delhi,Kanpur,Howrah,Coal,60,47.7,Unloading,15.98559,88.945684,58,47.7,2026-06-29 20:33:35
+WG00332,4853846034,Flat,NWR,North Western Railway,Nagpur,Guntur,Chennai,Steel,65,26.7,Delayed,29.803571,87.616654,10,41.5,2026-06-29 21:48:35
+WG00333,9706547011,Flat,SCR,South Central Railway,Lucknow,Vijayawada,Chennai,Petroleum,75,42.5,Idle,21.437068,88.337633,2,53.0,2026-06-29 21:22:35
+WG00334,2362929542,Covered,SR,Southern Railway,Secunderabad,Chennai,Warangal,Cement,50,15.0,Running,26.124568,69.087114,61,21.2,2026-06-29 14:54:35
+WG00335,1561607570,Covered,NER,North Eastern Railway,Secunderabad,Kanpur,Vijayawada,Cement,50,20.2,Idle,16.793333,83.626055,90,34.6,2026-06-29 17:49:35
+WG00336,7648606046,Tank,SR,Southern Railway,Jaipur,Bhopal,Nagpur,Steel,55,53.2,Delayed,24.055899,86.566993,1,23.3,2026-06-29 17:49:35
+WG00337,6885366632,BOXN,SR,Southern Railway,Delhi,Mumbai,Kanpur,Food Grains,75,39.1,Loading,14.21523,87.571782,69,54.9,2026-06-29 18:54:35
+WG00338,5991476594,BTPN,NR,North Railway,Mumbai,Howrah,Nagpur,Steel,50,13.7,Idle,14.909206,80.395761,50,29.6,2026-06-29 15:05:35
+WG00339,8476620034,Flat,SCR,South Central Railway,Lucknow,Warangal,Delhi,Coal,65,53.5,Maintenance,9.113782,85.345351,59,26.6,2026-06-29 22:10:35
+WG00340,3217919670,BOXN,ER,Eastern Railway,Kolkata,Hyderabad,Howrah,Petroleum,60,51.5,Idle,26.563991,78.390619,60,40.6,2026-06-29 13:58:35
+WG00341,8821112728,BTPN,NR,North Railway,Visakhapatnam,Vijayawada,Kanpur,Steel,70,66.7,Running,25.604758,70.951587,49,23.3,2026-06-29 17:34:35
+WG00342,9286028108,Covered,ER,Eastern Railway,Secunderabad,Visakhapatnam,Howrah,Iron Ore,50,44.1,Idle,23.825969,86.741554,100,47.5,2026-06-29 19:03:35
+WG00343,2355410197,BTPN,WR,Western Railway,Delhi,Howrah,Vijayawada,Coal,65,42.6,Running,10.861721,73.5326,76,30.5,2026-06-29 18:40:35
+WG00344,4220202623,Flat,NWR,North Western Railway,Mumbai,Visakhapatnam,Warangal,Petroleum,75,71.9,Idle,19.079759,86.436855,74,52.6,2026-06-30 00:06:35
+WG00345,6938201808,Hopper,SR,Southern Railway,Kolkata,Kanpur,Agra,Containers,70,58.7,Loading,8.545074,72.990346,52,35.6,2026-06-30 00:47:35
+WG00346,4848659572,Covered,SR,Southern Railway,Hyderabad,Warangal,Visakhapatnam,Cement,55,47.2,Delayed,27.362249,77.108106,51,30.6,2026-06-29 20:54:35
+WG00347,7166027427,BTPN,NWR,North Western Railway,Jaipur,Delhi,Howrah,Cement,55,43.7,Loading,15.28792,71.6521,10,49.9,2026-06-29 23:16:35
+WG00348,6985808546,Tank,NWR,North Western Railway,Jaipur,Kanpur,Vijayawada,Steel,55,42.0,Delayed,9.309825,82.343605,35,35.2,2026-06-29 14:56:35
+WG00349,2699298143,Covered,SWR,South Western Railway,Chennai,Delhi,Mumbai,Food Grains,60,44.1,Running,8.245796,79.254502,65,27.6,2026-06-29 22:21:35
+WG00350,7090679659,Hopper,NR,North Railway,Hyderabad,Nagpur,Agra,Cement,60,55.0,Delayed,18.700152,75.907508,52,31.9,2026-06-29 17:10:35
+WG00351,7727002244,BOXN,SWR,South Western Railway,Lucknow,Chennai,Secunderabad,Steel,50,15.2,Unloading,19.301906,85.542039,34,46.4,2026-06-29 16:04:35
+WG00352,3524568686,Tank,SWR,South Western Railway,Delhi,Guntur,Visakhapatnam,Iron Ore,75,71.9,Delayed,24.822255,83.981264,46,43.0,2026-06-29 21:52:35
+WG00353,2866491593,Tank,SER,South Eastern Railway,Jaipur,Vijayawada,Kanpur,Containers,75,34.1,Delayed,18.126424,76.407453,25,48.7,2026-06-29 21:53:35
+WG00354,4021144389,Hopper,SR,Southern Railway,Kolkata,Visakhapatnam,Vijayawada,Coal,75,40.3,Maintenance,17.804694,79.053362,65,50.3,2026-06-29 17:22:35
+WG00355,2214494429,Covered,NER,North Eastern Railway,Delhi,Kanpur,Hyderabad,Steel,65,22.9,Unloading,8.523088,81.537818,9,54.4,2026-06-30 00:05:35
+WG00356,7763038620,BCN,SER,South Eastern Railway,Nagpur,Kanpur,Howrah,Petroleum,70,57.1,Idle,21.078624,72.157314,40,36.6,2026-06-29 21:57:35
+WG00357,7834784272,Hopper,ER,Eastern Railway,Nagpur,Kanpur,Hyderabad,Containers,70,46.4,Delayed,18.90719,75.343015,99,54.6,2026-06-29 14:01:35
+WG00358,1609646931,Hopper,CR,Central Railway,Kolkata,Hyderabad,Guntur,Coal,60,35.2,Maintenance,10.840207,80.398992,65,34.7,2026-06-29 23:18:35
+WG00359,8569487101,Hopper,NR,North Railway,Nagpur,Guntur,Chennai,Steel,70,18.4,Maintenance,8.925688,84.978846,47,33.8,2026-06-29 19:26:35
+WG00360,5290138682,BTPN,ER,Eastern Railway,Kolkata,Kanpur,Guntur,Cement,55,46.0,Delayed,20.131622,88.801015,19,49.0,2026-06-29 17:00:35
+WG00361,7064563064,Tank,SWR,South Western Railway,Nagpur,Vijayawada,Hyderabad,Containers,50,29.8,Loading,26.713146,69.127817,20,53.6,2026-06-29 19:22:35
+WG00362,3966568342,Flat,CR,Central Railway,Visakhapatnam,Kanpur,Vijayawada,Food Grains,50,30.8,Idle,21.387065,85.012907,42,30.2,2026-06-30 00:37:35
+WG00363,6151149047,BCN,NR,North Railway,Jaipur,Hyderabad,Guntur,Food Grains,65,20.0,Maintenance,9.438214,68.03981,43,27.9,2026-06-29 15:42:35
+WG00364,6130019177,BTPN,SWR,South Western Railway,Mumbai,Guntur,Agra,Petroleum,60,39.7,Delayed,15.932441,74.62401,63,27.9,2026-06-30 00:45:35
+WG00365,8412652315,Covered,NR,North Railway,Delhi,Hyderabad,Delhi,Food Grains,70,59.1,Delayed,24.86315,72.882258,43,25.8,2026-06-29 13:59:35
+WG00366,4570752279,Flat,NER,North Eastern Railway,Secunderabad,Vijayawada,Howrah,Containers,65,44.9,Delayed,23.570144,88.279892,72,42.7,2026-06-30 01:00:35
+WG00367,1812288050,Tank,SER,South Eastern Railway,Chennai,Visakhapatnam,Delhi,Coal,55,42.7,Unloading,20.888642,70.811135,73,29.5,2026-06-29 23:13:35
+WG00368,3849503504,Hopper,SER,South Eastern Railway,Nagpur,Howrah,Warangal,Containers,60,22.2,Idle,8.692507,80.532652,48,23.5,2026-06-29 22:12:35
+WG00369,6796172201,Hopper,SWR,South Western Railway,Hyderabad,Chennai,Mumbai,Steel,65,63.7,Loading,20.352674,78.344932,13,24.6,2026-06-29 14:43:35
+WG00370,6392449907,Hopper,CR,Central Railway,Hyderabad,Mumbai,Chennai,Containers,70,38.0,Idle,28.544868,71.968469,45,34.6,2026-06-29 14:08:35
+WG00371,1557295938,BCN,SER,South Eastern Railway,Hyderabad,Warangal,Secunderabad,Steel,65,22.3,Idle,25.299781,81.260181,61,46.1,2026-06-29 18:16:35
+WG00372,8229139887,Flat,SER,South Eastern Railway,Lucknow,Mumbai,Vijayawada,Iron Ore,50,20.1,Loading,10.582538,77.175968,29,36.0,2026-06-29 13:48:35
+WG00373,6361678196,BOXN,WR,Western Railway,Lucknow,Howrah,Agra,Containers,70,59.0,Maintenance,26.861512,78.772594,82,25.4,2026-06-29 20:34:35
+WG00374,4870088942,Flat,SWR,South Western Railway,Delhi,Chennai,Delhi,Steel,60,18.7,Maintenance,9.006269,80.560642,11,20.4,2026-06-29 18:14:35
+WG00375,6681171113,Covered,NWR,North Western Railway,Jaipur,Delhi,Mumbai,Steel,60,29.5,Idle,17.608165,88.470517,75,27.0,2026-06-29 19:11:35
+WG00376,4801689989,BCN,WR,Western Railway,Lucknow,Delhi,Chennai,Petroleum,70,28.3,Idle,13.338447,84.626189,47,23.8,2026-06-29 23:20:35
+WG00377,9509876716,Covered,NER,North Eastern Railway,Delhi,Vijayawada,Guntur,Cement,65,25.4,Delayed,21.697384,72.543664,43,49.8,2026-06-29 16:18:35
+WG00378,1394464721,Flat,NER,North Eastern Railway,Chennai,Bhopal,Nagpur,Steel,55,44.7,Unloading,13.036689,68.55484,49,30.3,2026-06-30 00:23:35
+WG00379,2825766274,BOXN,CR,Central Railway,Mumbai,Hyderabad,Vijayawada,Automobiles,60,59.1,Delayed,8.30588,69.037356,58,49.6,2026-06-29 22:43:35
+WG00380,9316875107,Tank,CR,Central Railway,Lucknow,Secunderabad,Visakhapatnam,Automobiles,70,18.8,Unloading,14.869063,73.769716,83,39.9,2026-06-29 15:05:35
+WG00381,9702061658,Flat,NER,North Eastern Railway,Kolkata,Kanpur,Hyderabad,Automobiles,55,20.5,Loading,29.045098,72.275205,16,48.3,2026-06-30 01:01:35
+WG00382,6750044087,Tank,NR,North Railway,Jaipur,Visakhapatnam,Hyderabad,Food Grains,65,34.9,Maintenance,11.083842,76.771773,46,50.3,2026-06-29 22:03:35
+WG00383,7870819713,BTPN,SR,Southern Railway,Delhi,Vijayawada,Bhopal,Coal,70,24.7,Loading,27.028546,75.459762,99,25.2,2026-06-29 13:55:35
+WG00384,1447376307,BOXN,SER,South Eastern Railway,Chennai,Warangal,Howrah,Cement,50,31.3,Delayed,21.796246,87.342695,66,23.5,2026-06-29 19:02:35
+WG00385,1053706343,Covered,ER,Eastern Railway,Secunderabad,Hyderabad,Howrah,Cement,65,17.8,Unloading,26.917436,74.748147,62,21.1,2026-06-30 00:13:35
+WG00386,5620835828,Flat,NER,North Eastern Railway,Jaipur,Bhopal,Visakhapatnam,Containers,70,45.5,Running,23.980325,83.582155,44,30.5,2026-06-30 00:24:35
+WG00387,8910244128,Flat,SR,Southern Railway,Nagpur,Vijayawada,Guntur,Automobiles,70,38.0,Delayed,19.076478,78.710848,29,53.1,2026-06-29 15:09:35
+WG00388,2995942259,BOXN,WR,Western Railway,Nagpur,Visakhapatnam,Bhopal,Steel,75,73.7,Unloading,17.715041,73.650408,95,45.4,2026-06-29 14:28:35
+WG00389,8948349917,BOXN,CR,Central Railway,Secunderabad,Mumbai,Guntur,Petroleum,55,20.7,Unloading,14.370809,78.696839,94,20.1,2026-06-29 16:56:35
+WG00390,2493704958,Hopper,SER,South Eastern Railway,Kolkata,Chennai,Mumbai,Steel,50,21.2,Maintenance,14.427474,84.911406,25,36.1,2026-06-29 20:50:35
+WG00391,2010294540,Tank,ER,Eastern Railway,Secunderabad,Mumbai,Warangal,Containers,50,49.1,Idle,10.068355,69.57882,5,39.2,2026-06-29 15:48:35
+WG00392,8119438408,BTPN,NR,North Railway,Kolkata,Bhopal,Visakhapatnam,Cement,75,51.7,Loading,16.087927,78.11742,68,25.0,2026-06-29 18:04:35
+WG00393,2177998351,Covered,NER,North Eastern Railway,Jaipur,Kanpur,Bhopal,Coal,75,67.2,Idle,13.281459,68.182718,19,23.9,2026-06-30 01:02:35
+WG00394,1965069131,Tank,SWR,South Western Railway,Hyderabad,Chennai,Warangal,Iron Ore,50,44.9,Loading,22.171427,87.442772,69,22.6,2026-06-29 19:36:35
+WG00395,8398668732,BOXN,CR,Central Railway,Delhi,Guntur,Secunderabad,Containers,65,39.0,Maintenance,31.270863,87.060767,67,44.8,2026-06-29 22:38:35
+WG00396,6599915638,BOXN,SWR,South Western Railway,Jaipur,Delhi,Warangal,Containers,65,50.5,Loading,29.528891,87.987771,90,31.0,2026-06-29 19:05:35
+WG00397,7156116147,Covered,SCR,South Central Railway,Kolkata,Nagpur,Hyderabad,Steel,55,52.1,Unloading,19.824639,70.504284,40,34.3,2026-06-29 21:30:35
+WG00398,9891374851,BCN,NR,North Railway,Delhi,Guntur,Kanpur,Containers,55,23.0,Unloading,15.51943,88.089542,76,24.4,2026-06-29 15:00:35
+WG00399,3796111287,BTPN,SER,South Eastern Railway,Lucknow,Kanpur,Mumbai,Iron Ore,50,23.8,Loading,18.575907,84.500377,35,36.7,2026-06-29 18:14:35
+WG00400,8614775561,BOXN,ER,Eastern Railway,Chennai,Visakhapatnam,Agra,Cement,75,50.1,Idle,9.852228,73.966449,42,30.9,2026-06-29 20:20:35
+WG00401,5806503217,BOXN,SER,South Eastern Railway,Visakhapatnam,Chennai,Kanpur,Food Grains,60,36.9,Idle,20.325554,74.257714,52,48.0,2026-06-29 17:18:35
+WG00402,4611839173,BTPN,SCR,South Central Railway,Delhi,Hyderabad,Nagpur,Iron Ore,50,17.3,Delayed,14.780954,78.492389,75,27.0,2026-06-29 20:28:35
+WG00403,1475007030,Flat,NR,North Railway,Chennai,Guntur,Agra,Containers,60,22.3,Delayed,26.36417,87.546493,74,38.2,2026-06-29 21:08:35
+WG00404,8984488475,Covered,NWR,North Western Railway,Secunderabad,Delhi,Chennai,Iron Ore,55,20.4,Idle,15.112463,80.312596,14,41.5,2026-06-29 22:04:35
+WG00405,3110496598,Tank,SCR,South Central Railway,Delhi,Mumbai,Bhopal,Iron Ore,75,19.9,Running,28.318967,77.348609,12,47.1,2026-06-29 19:41:35
+WG00406,3615133568,BTPN,SR,Southern Railway,Hyderabad,Visakhapatnam,Vijayawada,Cement,60,38.2,Unloading,17.235906,82.437851,33,26.4,2026-06-29 16:28:35
+WG00407,3013429658,BCN,WR,Western Railway,Secunderabad,Guntur,Hyderabad,Iron Ore,65,27.7,Loading,30.162188,68.531335,56,25.2,2026-06-29 18:23:35
+WG00408,2141399840,BTPN,ER,Eastern Railway,Chennai,Bhopal,Nagpur,Containers,70,23.0,Idle,15.318935,69.898526,29,37.7,2026-06-29 20:39:35
+WG00409,9623374814,Covered,NR,North Railway,Secunderabad,Nagpur,Mumbai,Cement,50,28.9,Running,15.742717,68.577946,56,35.0,2026-06-29 20:50:35
+WG00410,9239364817,BOXN,SWR,South Western Railway,Kolkata,Secunderabad,Delhi,Iron Ore,60,40.8,Unloading,21.512818,86.3019,57,38.4,2026-06-30 00:48:35
+WG00411,1568491963,BCN,NR,North Railway,Hyderabad,Secunderabad,Warangal,Cement,75,44.4,Maintenance,13.466232,87.130152,48,27.6,2026-06-29 14:35:35
+WG00412,3359166967,BTPN,NER,North Eastern Railway,Chennai,Warangal,Hyderabad,Food Grains,60,31.2,Delayed,14.876815,79.339185,24,29.1,2026-06-29 17:06:35
+WG00413,9554647030,Covered,ER,Eastern Railway,Delhi,Bhopal,Agra,Petroleum,70,59.7,Running,25.262503,84.120434,30,52.4,2026-06-30 01:27:35
+WG00414,7253607532,Covered,SR,Southern Railway,Lucknow,Guntur,Hyderabad,Cement,60,51.1,Running,23.913159,81.994542,75,51.0,2026-06-29 19:40:35
+WG00415,8601927133,BOXN,SCR,South Central Railway,Chennai,Bhopal,Chennai,Petroleum,75,36.7,Loading,21.184425,80.384169,40,25.8,2026-06-29 19:32:35
+WG00416,7393003567,BCN,SWR,South Western Railway,Nagpur,Vijayawada,Mumbai,Steel,75,63.1,Delayed,24.051507,82.283445,75,51.2,2026-06-29 22:06:35
+WG00417,5148359292,Hopper,NER,North Eastern Railway,Mumbai,Secunderabad,Nagpur,Iron Ore,70,40.6,Maintenance,16.160162,87.745832,62,30.3,2026-06-29 14:03:35
+WG00418,5392353088,Hopper,NER,North Eastern Railway,Lucknow,Delhi,Warangal,Cement,60,35.5,Maintenance,9.07685,72.22998,43,33.1,2026-06-29 19:18:35
+WG00419,1890688681,BTPN,SR,Southern Railway,Hyderabad,Nagpur,Mumbai,Iron Ore,55,32.0,Idle,8.677578,77.303746,85,48.3,2026-06-30 01:31:35
+WG00420,1712217735,BTPN,NR,North Railway,Chennai,Nagpur,Visakhapatnam,Coal,75,59.3,Delayed,22.454364,88.255499,100,24.6,2026-06-29 15:43:35
+WG00421,9895907366,BCN,NR,North Railway,Visakhapatnam,Chennai,Bhopal,Automobiles,75,22.6,Delayed,25.683023,86.2971,49,22.2,2026-06-29 15:33:35
+WG00422,7489618345,BTPN,SCR,South Central Railway,Secunderabad,Delhi,Chennai,Petroleum,50,41.4,Maintenance,28.852491,72.756605,66,22.1,2026-06-29 17:18:35
+WG00423,6597737617,BCN,WR,Western Railway,Nagpur,Guntur,Bhopal,Containers,55,50.2,Running,28.625826,75.44397,92,31.0,2026-06-29 15:23:35
+WG00424,1641776254,BOXN,NER,North Eastern Railway,Visakhapatnam,Kanpur,Howrah,Coal,50,34.2,Idle,12.585383,68.973545,11,47.5,2026-06-29 22:18:35
+WG00425,4422168469,Flat,SER,South Eastern Railway,Delhi,Secunderabad,Delhi,Iron Ore,60,54.6,Delayed,16.334149,73.100813,73,47.9,2026-06-29 22:05:35
+WG00426,2870383180,BOXN,NWR,North Western Railway,Kolkata,Mumbai,Kanpur,Containers,70,33.6,Delayed,24.579359,68.496022,36,24.2,2026-06-29 15:10:35
+WG00427,5023411814,Covered,WR,Western Railway,Nagpur,Visakhapatnam,Howrah,Cement,55,48.9,Loading,25.418968,86.199793,96,42.5,2026-06-29 17:00:35
+WG00428,7925078425,BTPN,SR,Southern Railway,Chennai,Kanpur,Vijayawada,Iron Ore,50,42.6,Maintenance,10.829856,74.526679,12,30.0,2026-06-29 23:51:35
+WG00429,4185675200,BCN,SWR,South Western Railway,Hyderabad,Bhopal,Hyderabad,Cement,50,16.3,Loading,12.445116,69.937097,14,44.0,2026-06-29 17:46:35
+WG00430,5948560634,BCN,WR,Western Railway,Mumbai,Nagpur,Howrah,Iron Ore,50,24.9,Idle,11.510319,81.617752,30,34.4,2026-06-29 18:08:35
+WG00431,5552706012,Covered,CR,Central Railway,Nagpur,Kanpur,Delhi,Coal,75,35.7,Running,11.238471,77.964882,51,24.3,2026-06-30 00:00:35
+WG00432,4519289989,BOXN,SR,Southern Railway,Jaipur,Hyderabad,Bhopal,Containers,70,51.8,Idle,8.747519,81.335413,86,42.4,2026-06-29 15:38:35
+WG00433,3782175359,BTPN,ER,Eastern Railway,Nagpur,Nagpur,Vijayawada,Coal,50,17.5,Idle,14.364083,83.496035,91,44.0,2026-06-30 01:03:35
+WG00434,5338892844,Covered,SER,South Eastern Railway,Kolkata,Chennai,Mumbai,Steel,60,58.0,Idle,30.240523,86.261957,79,25.0,2026-06-29 18:15:35
+WG00435,8048407378,BCN,NER,North Eastern Railway,Visakhapatnam,Howrah,Hyderabad,Cement,55,43.4,Unloading,23.591221,74.615643,11,21.9,2026-06-30 00:21:35
+WG00436,3212294017,Flat,SR,Southern Railway,Kolkata,Guntur,Chennai,Automobiles,70,38.6,Idle,16.246876,82.293478,48,52.0,2026-06-29 20:38:35
+WG00437,8827573776,Hopper,SCR,South Central Railway,Nagpur,Warangal,Secunderabad,Iron Ore,60,22.4,Unloading,10.104514,79.040062,21,47.0,2026-06-29 16:31:35
+WG00438,8364767860,BTPN,SWR,South Western Railway,Hyderabad,Agra,Secunderabad,Automobiles,65,33.6,Running,22.112701,82.668619,15,47.0,2026-06-30 00:28:35
+WG00439,8865017394,Hopper,NR,North Railway,Delhi,Howrah,Visakhapatnam,Food Grains,65,24.0,Delayed,22.121641,79.993416,40,32.1,2026-06-29 20:36:35
+WG00440,2517374390,BOXN,SWR,South Western Railway,Kolkata,Guntur,Mumbai,Food Grains,70,19.5,Running,19.955605,86.844824,2,23.6,2026-06-30 00:52:35
+WG00441,5175944942,BCN,SCR,South Central Railway,Hyderabad,Warangal,Guntur,Petroleum,75,34.7,Idle,17.966977,71.374123,70,27.5,2026-06-29 23:30:35
+WG00442,4385573528,Tank,WR,Western Railway,Mumbai,Vijayawada,Mumbai,Coal,60,25.8,Loading,22.914011,88.79208,79,32.9,2026-06-29 19:44:35
+WG00443,1481620818,Tank,ER,Eastern Railway,Kolkata,Howrah,Vijayawada,Coal,75,26.3,Maintenance,24.555923,87.283176,35,52.6,2026-06-29 17:10:35
+WG00444,4037392839,Tank,CR,Central Railway,Chennai,Agra,Bhopal,Food Grains,75,29.1,Unloading,13.976615,80.941822,91,31.4,2026-06-29 20:35:35
+WG00445,5596668360,Flat,NWR,North Western Railway,Nagpur,Howrah,Secunderabad,Automobiles,65,44.0,Delayed,15.940847,83.426004,56,54.3,2026-06-29 21:30:35
+WG00446,2066552989,BTPN,NER,North Eastern Railway,Jaipur,Chennai,Nagpur,Coal,65,17.2,Unloading,12.320166,74.770466,34,42.1,2026-06-29 22:20:35
+WG00447,7459411080,BTPN,NR,North Railway,Nagpur,Kanpur,Visakhapatnam,Steel,70,51.0,Loading,9.232565,79.007058,19,26.7,2026-06-29 15:37:35
+WG00448,7417698571,Flat,SWR,South Western Railway,Lucknow,Chennai,Agra,Iron Ore,75,44.2,Unloading,12.948857,70.771736,3,21.8,2026-06-29 17:34:35
+WG00449,4863181815,Hopper,SWR,South Western Railway,Mumbai,Warangal,Howrah,Cement,55,15.3,Running,29.785696,69.517542,93,43.4,2026-06-29 14:04:35
+WG00450,1894023158,Hopper,SER,South Eastern Railway,Delhi,Chennai,Hyderabad,Steel,70,43.8,Idle,27.021381,78.135067,3,31.1,2026-06-29 20:52:35
+WG00451,7467606998,BOXN,NER,North Eastern Railway,Kolkata,Guntur,Visakhapatnam,Containers,60,45.2,Unloading,18.48982,86.881174,81,46.5,2026-06-29 15:47:35
+WG00452,7269542723,Covered,SR,Southern Railway,Nagpur,Agra,Guntur,Steel,70,33.5,Delayed,10.791113,68.123006,98,51.9,2026-06-29 20:58:35
+WG00453,8155183899,Flat,NR,North Railway,Hyderabad,Bhopal,Howrah,Containers,75,74.6,Loading,26.423247,76.474484,88,51.0,2026-06-29 23:16:35
+WG00454,8878420797,Tank,WR,Western Railway,Hyderabad,Secunderabad,Nagpur,Cement,55,49.6,Loading,13.430696,81.976622,16,45.3,2026-06-29 18:01:35
+WG00455,8541655173,Flat,ER,Eastern Railway,Mumbai,Nagpur,Hyderabad,Iron Ore,50,45.1,Loading,12.381125,84.618339,20,38.7,2026-06-29 17:20:35
+WG00456,3191451552,BOXN,NR,North Railway,Kolkata,Delhi,Howrah,Food Grains,60,50.9,Loading,19.089274,70.256076,92,22.7,2026-06-29 18:43:35
+WG00457,9283906957,Covered,WR,Western Railway,Nagpur,Bhopal,Guntur,Cement,60,55.8,Idle,17.00686,83.175011,0,29.4,2026-06-29 21:39:35
+WG00458,6352587907,BTPN,SCR,South Central Railway,Hyderabad,Chennai,Nagpur,Petroleum,60,23.8,Unloading,24.356324,75.383129,37,46.1,2026-06-30 00:29:35
+WG00459,7753652111,Covered,NWR,North Western Railway,Nagpur,Vijayawada,Warangal,Coal,55,33.4,Delayed,10.161216,85.738012,32,40.5,2026-06-29 19:01:35
+WG00460,5382494001,Hopper,WR,Western Railway,Delhi,Vijayawada,Chennai,Automobiles,65,55.4,Unloading,27.620902,73.443825,67,44.3,2026-06-30 00:48:35
+WG00461,7865408388,Tank,NER,North Eastern Railway,Delhi,Howrah,Agra,Containers,65,26.3,Idle,27.129851,78.703041,85,26.1,2026-06-29 23:32:35
+WG00462,1266719624,Tank,SCR,South Central Railway,Mumbai,Vijayawada,Chennai,Coal,55,28.7,Unloading,27.268742,72.923024,65,25.6,2026-06-30 00:26:35
+WG00463,8958409864,Covered,SWR,South Western Railway,Jaipur,Kanpur,Warangal,Containers,65,17.2,Maintenance,21.424483,86.959346,100,24.2,2026-06-29 19:14:35
+WG00464,6622190369,Flat,SR,Southern Railway,Jaipur,Kanpur,Nagpur,Automobiles,65,46.4,Maintenance,31.380648,71.86943,26,44.1,2026-06-29 14:21:35
+WG00465,5519894200,Hopper,WR,Western Railway,Jaipur,Howrah,Kanpur,Petroleum,70,69.3,Idle,8.69278,75.938572,72,42.8,2026-06-29 17:20:35
+WG00466,7256135912,Flat,NER,North Eastern Railway,Hyderabad,Warangal,Kanpur,Automobiles,50,48.3,Running,26.598853,70.595502,12,41.1,2026-06-29 15:46:35
+WG00467,3025827926,Hopper,WR,Western Railway,Secunderabad,Bhopal,Nagpur,Cement,60,45.8,Loading,11.066573,73.513853,69,50.2,2026-06-30 00:02:35
+WG00468,1323278817,Hopper,NER,North Eastern Railway,Jaipur,Kanpur,Warangal,Food Grains,75,50.4,Unloading,24.87759,83.198697,76,24.5,2026-06-30 00:31:35
+WG00469,5223634295,BCN,NR,North Railway,Secunderabad,Kanpur,Guntur,Steel,50,34.2,Loading,28.503567,76.919709,85,48.8,2026-06-29 21:43:35
+WG00470,3851869133,BOXN,SR,Southern Railway,Chennai,Chennai,Howrah,Petroleum,70,40.2,Unloading,19.755642,80.832016,66,46.4,2026-06-29 20:36:35
+WG00471,3364845130,Hopper,SR,Southern Railway,Secunderabad,Mumbai,Visakhapatnam,Containers,65,29.3,Unloading,22.774946,72.819872,28,43.4,2026-06-29 18:28:35
+WG00472,9350078766,BTPN,WR,Western Railway,Visakhapatnam,Warangal,Agra,Iron Ore,75,61.8,Loading,26.852973,81.525339,21,42.9,2026-06-29 17:51:35
+WG00473,9438037463,BTPN,CR,Central Railway,Nagpur,Nagpur,Delhi,Cement,75,23.9,Unloading,26.807252,78.563959,61,32.2,2026-06-29 21:35:35
+WG00474,2683073776,Tank,SER,South Eastern Railway,Chennai,Kanpur,Vijayawada,Petroleum,60,21.9,Delayed,17.982133,79.256459,89,35.0,2026-06-29 17:22:35
+WG00475,2392163679,BCN,ER,Eastern Railway,Nagpur,Visakhapatnam,Delhi,Petroleum,65,46.0,Unloading,12.802869,74.381278,37,39.7,2026-06-29 21:11:35
+WG00476,4273335977,BCN,NWR,North Western Railway,Mumbai,Hyderabad,Vijayawada,Cement,55,39.4,Loading,17.309919,88.464086,61,25.8,2026-06-29 15:50:35
+WG00477,8666743545,BTPN,NWR,North Western Railway,Mumbai,Delhi,Agra,Steel,50,16.9,Unloading,28.359957,81.537126,40,33.9,2026-06-29 21:38:35
+WG00478,2385837842,BTPN,SWR,South Western Railway,Nagpur,Howrah,Visakhapatnam,Petroleum,75,46.6,Idle,11.149592,84.815646,71,52.7,2026-06-29 20:45:35
+WG00479,7311939641,BTPN,SCR,South Central Railway,Hyderabad,Warangal,Visakhapatnam,Containers,65,35.0,Delayed,13.271382,77.126805,27,45.9,2026-06-29 16:05:35
+WG00480,2068385910,Hopper,NER,North Eastern Railway,Hyderabad,Vijayawada,Warangal,Automobiles,50,48.8,Maintenance,23.407005,68.230422,85,23.7,2026-06-29 23:16:35
+WG00481,7316129482,BCN,NR,North Railway,Hyderabad,Mumbai,Warangal,Automobiles,50,46.4,Loading,20.896271,88.98992,26,44.7,2026-06-30 00:21:35
+WG00482,5093449473,BOXN,NR,North Railway,Kolkata,Agra,Guntur,Coal,65,30.5,Loading,17.097452,71.37673,0,34.9,2026-06-29 19:57:35
+WG00483,5174221405,BTPN,NR,North Railway,Kolkata,Hyderabad,Warangal,Iron Ore,75,23.6,Maintenance,21.224485,69.926349,63,25.0,2026-06-29 21:51:35
+WG00484,6304302958,BTPN,NER,North Eastern Railway,Lucknow,Kanpur,Guntur,Coal,55,44.7,Delayed,8.953974,74.407724,39,54.9,2026-06-29 21:20:35
+WG00485,1688402427,Hopper,SCR,South Central Railway,Lucknow,Hyderabad,Chennai,Food Grains,60,33.6,Delayed,27.385,68.863509,40,48.4,2026-06-30 00:27:35
+WG00486,5634179971,BOXN,NWR,North Western Railway,Secunderabad,Mumbai,Kanpur,Coal,75,26.8,Running,10.706368,84.504802,40,34.0,2026-06-29 20:57:35
+WG00487,4955644974,Flat,SER,South Eastern Railway,Chennai,Nagpur,Vijayawada,Iron Ore,65,55.2,Loading,9.437916,81.432957,15,42.0,2026-06-29 14:24:35
+WG00488,9783242255,Flat,CR,Central Railway,Nagpur,Guntur,Mumbai,Petroleum,70,21.8,Loading,9.69138,79.830286,80,41.4,2026-06-30 00:49:35
+WG00489,1754129501,Hopper,NWR,North Western Railway,Visakhapatnam,Guntur,Visakhapatnam,Coal,75,64.7,Loading,28.568769,82.643265,81,53.8,2026-06-29 21:14:35
+WG00490,9244422507,Tank,NWR,North Western Railway,Nagpur,Visakhapatnam,Secunderabad,Cement,65,34.2,Running,28.061948,71.408564,68,23.9,2026-06-29 19:40:35
+WG00491,9176725106,Covered,WR,Western Railway,Kolkata,Hyderabad,Kanpur,Cement,60,23.3,Loading,25.171771,77.380635,7,24.1,2026-06-30 01:47:35
+WG00492,4745154055,Flat,SR,Southern Railway,Secunderabad,Secunderabad,Guntur,Petroleum,60,45.4,Delayed,24.40986,69.791876,75,37.3,2026-06-29 18:16:35
+WG00493,1282483653,Flat,SER,South Eastern Railway,Nagpur,Delhi,Guntur,Steel,70,47.2,Delayed,28.655195,71.600842,68,47.6,2026-06-29 18:17:35
+WG00494,1352884246,Flat,SER,South Eastern Railway,Secunderabad,Guntur,Chennai,Steel,50,34.8,Idle,21.940584,71.029825,41,49.8,2026-06-30 00:05:35
+WG00495,8066138207,Hopper,SER,South Eastern Railway,Chennai,Howrah,Vijayawada,Cement,70,31.7,Running,30.422266,82.050082,23,50.9,2026-06-29 18:21:35
+WG00496,6155836696,Covered,CR,Central Railway,Lucknow,Nagpur,Visakhapatnam,Iron Ore,60,35.5,Maintenance,24.814555,86.591867,91,42.6,2026-06-29 19:13:35
+WG00497,2654473672,BTPN,ER,Eastern Railway,Jaipur,Chennai,Secunderabad,Steel,70,52.7,Delayed,21.769639,73.66933,71,35.9,2026-06-29 15:02:35
+WG00498,7843938802,BCN,WR,Western Railway,Secunderabad,Warangal,Visakhapatnam,Petroleum,65,54.5,Maintenance,24.953917,83.795805,90,45.2,2026-06-29 19:48:35
+WG00499,3328598122,Covered,WR,Western Railway,Delhi,Warangal,Guntur,Petroleum,50,48.4,Maintenance,27.95892,77.107821,86,28.1,2026-06-30 01:05:35
+WG00500,7213817233,BOXN,ER,Eastern Railway,Visakhapatnam,Hyderabad,Bhopal,Cement,50,36.0,Running,22.917495,82.189228,73,21.0,2026-06-29 18:36:35

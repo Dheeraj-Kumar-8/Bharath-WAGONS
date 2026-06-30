@@ -2,19 +2,27 @@ import mongoose from "mongoose";
 
 const wagonSchema = new mongoose.Schema(
   {
-    wagonId:         { type: String, required: true, unique: true },
-    wagonType:       { type: String, required: true },
-    currentLocation: { type: String, default: "Unknown" },
-    destination:     { type: String, default: "—" },
-    speed:           { type: Number, default: 0 },
-    capacity:        { type: String, default: "—" },
-    zone:            { type: String, default: "NR" },
+    wagonId:        { type: String, required: true, unique: true },
+    wagonNumber:    { type: String, default: "" },
+    wagonType:      { type: String, required: true },
+    zone:           { type: String, default: "NR" },
+    zoneName:       { type: String, default: "" },
+    division:       { type: String, default: "" },
+    currentStation: { type: String, default: "Unknown" },
+    destination:    { type: String, default: "" },
+    cargoType:      { type: String, default: "" },
+    capacity:       { type: Number, default: 0 },
+    currentLoad:    { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ["Active", "Idle", "Maintenance", "Decommissioned"],
+      enum: ["Running", "Loading", "Unloading", "Delayed", "Maintenance", "Idle"],
       default: "Idle",
     },
-    lastUpdated: { type: Date, default: Date.now },
+    gpsLatitude:  { type: Number, default: 0 },
+    gpsLongitude: { type: Number, default: 0 },
+    speed:        { type: Number, default: 0 },
+    temperature:  { type: Number, default: 0 },
+    lastUpdated:  { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
