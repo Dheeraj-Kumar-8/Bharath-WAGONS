@@ -47,6 +47,7 @@ export default function MapTilerRailwayMap({
   wagons        = [],
   selected      = null,
   searchStation = "",
+  focusWagon    = null,
   onSelectWagon,
   getStationCoords,
   zoneColors    = {},
@@ -96,19 +97,39 @@ export default function MapTilerRailwayMap({
     mapRef.current.on("load", () => setMapReady(true));
   }, [ready]);
 
-  // Compute marker data
-  const markerData = useMemo(() => wagons.map((w, i) => {
-    const parts     = w.route?.split("→").map(s => s.trim()) ?? [];
-    const livePos   = getStationCoords?.(w.location);
-    const originPos = getStationCoords?.(parts[0] ?? "");
-    const destPos   = getStationCoords?.(parts[parts.length - 1] ?? "");
-    // Keep each marker pinned to the resolved station coordinates while zooming.
-    const pos = livePos || originPos || destPos || { lat: 22.5937, lng: 78.9629 };
-    const color = w.gps === "Offline"
-      ? "#64748b"
-      : statusColors[w.status] || ["#22c55e","#f59e0b","#f97316","#3b82f6"][i % 4];
-    return { w, pos: isValidLatLng(pos) ? pos : { lat: 22.5937, lng: 78.9629 }, color, isSel: selected?.id === w.id };
-  }), [wagons, selected?.id, getStationCoords, statusColors]);
+  // Compute marker data with circular jitter for overlapping coordinates
+  const markerData = useMemo(() => {
+    const JITTER_R = 0.06; // degrees (~6 km) — tight circle, clearly same station
+    // Step 1: resolve raw positions
+    const raw = wagons.map((w, i) => {
+      const parts     = w.route?.split("→").map(s => s.trim()) ?? [];
+      const livePos   = getStationCoords?.(w.location);
+      const originPos = getStationCoords?.(parts[0] ?? "");
+      const destPos   = getStationCoords?.(parts[parts.length - 1] ?? "");
+      const pos = livePos || originPos || destPos || { lat: 22.5937, lng: 78.9629 };
+      const color = w.gps === "Offline"
+        ? "#64748b"
+        : statusColors[w.status] || ["#22c55e","#f59e0b","#f97316","#3b82f6"][i % 4];
+      return { w, pos: isValidLatLng(pos) ? pos : { lat: 22.5937, lng: 78.9629 }, color };
+    });
+    // Step 2: group by "lat,lng" key, then spread duplicates in a circle
+    const seen = {};
+    return raw.map(item => {
+      const key = `${item.pos.lat.toFixed(4)},${item.pos.lng.toFixed(4)}`;
+      seen[key] = (seen[key] || 0) + 1;
+      const idx = seen[key] - 1;
+      let jitteredPos = item.pos;
+      if (idx > 0) {
+        // first wagon stays at exact coord; subsequent ones orbit around it
+        const angle = (2 * Math.PI * idx) / Math.max(seen[key], 6);
+        jitteredPos = {
+          lat: item.pos.lat + JITTER_R * Math.sin(angle),
+          lng: item.pos.lng + JITTER_R * Math.cos(angle),
+        };
+      }
+      return { w: item.w, pos: jitteredPos, color: item.color, isSel: selected?.id === item.w.id };
+    });
+  }, [wagons, selected?.id, getStationCoords, statusColors]);
 
   const searchPos = useMemo(() => {
     const c = getStationCoords?.(searchStation);
@@ -180,7 +201,59 @@ export default function MapTilerRailwayMap({
       markersRef.current = [];
       if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
     };
-  }, [markerData, searchPos, searchStation, onSelectWagon, mapReady]);
+  }, [markerData, searchPos, onSelectWagon, mapReady]);
+
+  // Draw static route line for selected wagon (current station → destination)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+
+    const SOURCE_ID = "selected-route";
+    const LAYER_ID  = "selected-route-line";
+
+    const cleanup = () => {
+      if (map.getLayer(LAYER_ID))   map.removeLayer(LAYER_ID);
+      if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+    };
+
+    cleanup();
+
+    if (!selected) return;
+
+    const fromPos = getStationCoords?.(selected.location);
+    const toPos   = getStationCoords?.(selected.destination);
+    if (!isValidLatLng(fromPos) || !isValidLatLng(toPos)) return;
+    if (fromPos.lat === toPos.lat && fromPos.lng === toPos.lng) return;
+
+    map.addSource(SOURCE_ID, {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: [
+          [fromPos.lng, fromPos.lat],
+          [toPos.lng,   toPos.lat],
+        ]},
+      },
+    });
+
+    map.addLayer({
+      id:     LAYER_ID,
+      type:   "line",
+      source: SOURCE_ID,
+      paint:  { "line-color": "#2563eb", "line-width": 4, "line-opacity": 0.8 },
+    });
+
+    return () => { cleanup(); };
+  }, [selected, mapReady, getStationCoords]);
+
+  // Auto-zoom when a single search result is found
+  useEffect(() => {
+    if (!mapReady || !focusWagon) return;
+    const pos = getStationCoords?.(focusWagon.location);
+    if (isValidLatLng(pos)) {
+      mapRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 9, duration: 800 });
+    }
+  }, [focusWagon, mapReady, getStationCoords]);
 
   const resetView = () =>
     mapRef.current?.flyTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, duration: 600 });

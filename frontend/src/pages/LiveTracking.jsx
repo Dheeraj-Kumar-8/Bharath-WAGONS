@@ -1,20 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   FiMapPin, FiWifi, FiWifiOff, FiRefreshCw, FiNavigation,
-  FiSearch, FiZoomIn, FiZoomOut, FiMaximize2, FiX,
+  FiSearch, FiX,
   FiClock, FiActivity, FiPackage, FiAlertTriangle, FiChevronRight,
 } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import GoogleRailwayMap from "../components/GoogleRailwayMap";
-
-// ── Map geometry ──────────────────────────────────────────────────────────────
-const MAP_LAT_MIN = 8,  MAP_LAT_MAX = 37;
-const MAP_LNG_MIN = 68, MAP_LNG_MAX = 97;
-const W = 800, H = 620;
-const geo2svg = (lat, lng) => ({
-  x: ((lng - MAP_LNG_MIN) / (MAP_LNG_MAX - MAP_LNG_MIN)) * W,
-  y: H - ((lat - MAP_LAT_MIN) / (MAP_LAT_MAX - MAP_LAT_MIN)) * H,
-});
+import { useAuth } from "../context/AuthContext";
+import { api } from "../utils/api";
 
 const ALL_STATIONS = {
   // NR — North Railway
@@ -106,51 +99,12 @@ const ALL_STATIONS = {
   "Kolkata":         { lat:22.57, lng:88.36, major:true  },
 };
 
-// Admin-level fleet data — all zones
-const ADMIN_WAGONS = [
-  { id:"WGN-NR-001", zone:"NR", route:"New Delhi → Lucknow",        location:"Kanpur Jn.",   status:"On Time",    gps:"Active",  speed:82, health:91, cargo:"Coal",       load:78, eta:"2h 10m", type:"Freight",    lastPing:"2s ago" },
-  { id:"WGN-NR-002", zone:"NR", route:"Amritsar → New Delhi",       location:"Ambala Cantt.",status:"Delayed",    gps:"Active",  speed:48, health:74, cargo:"Steel",      load:92, eta:"4h 35m", type:"Heavy Goods", lastPing:"4s ago" },
-  { id:"WGN-NR-003", zone:"NR", route:"New Delhi → Patna",          location:"Allahabad Jn.",status:"On Time",    gps:"Active",  speed:91, health:88, cargo:"Grain",      load:65, eta:"5h 20m", type:"Freight",    lastPing:"1s ago" },
-  { id:"WGN-SR-001", zone:"SR", route:"Chennai Central → Madurai",  location:"Trichy",       status:"On Time",    gps:"Active",  speed:76, health:93, cargo:"Textiles",   load:55, eta:"3h 15m", type:"Cargo",      lastPing:"3s ago" },
-  { id:"WGN-SR-002", zone:"SR", route:"Ernakulam → Chennai Central",location:"Coimbatore",   status:"Delayed",    gps:"Active",  speed:54, health:70, cargo:"Spices",     load:82, eta:"5h 50m", type:"Cargo",      lastPing:"6s ago" },
-  { id:"WGN-SR-003", zone:"SR", route:"Thiruvananthapuram → Madurai",location:"Madurai",     status:"On Time",    gps:"Active",  speed:0,  health:85, cargo:"Cement",     load:88, eta:"Arrived", type:"Freight",   lastPing:"5s ago" },
-  { id:"WGN-ER-001", zone:"ER", route:"Howrah → Patna",             location:"Asansol Jn.",  status:"On Time",    gps:"Active",  speed:87, health:90, cargo:"Iron Ore",   load:95, eta:"3h 40m", type:"Heavy Goods",lastPing:"2s ago" },
-  { id:"WGN-ER-002", zone:"ER", route:"Howrah → New Delhi",         location:"Dhanbad Jn.",  status:"Delayed",    gps:"Active",  speed:42, health:66, cargo:"Coal",       load:100,eta:"9h 15m", type:"Freight",   lastPing:"8s ago" },
-  { id:"WGN-ER-003", zone:"ER", route:"Patna Jn. → Bhagalpur",     location:"Patna Jn.",    status:"On Time",    gps:"Active",  speed:69, health:82, cargo:"Rice",       load:72, eta:"1h 55m", type:"Cargo",     lastPing:"3s ago" },
-  { id:"WGN-WR-001", zone:"WR", route:"Mumbai Central → Ahmedabad", location:"Surat",        status:"On Time",    gps:"Active",  speed:94, health:96, cargo:"Auto Parts", load:60, eta:"2h 05m", type:"Cargo",     lastPing:"1s ago" },
-  { id:"WGN-WR-002", zone:"WR", route:"Ahmedabad → Rajkot",         location:"Vadodara Jn.", status:"On Time",    gps:"Active",  speed:78, health:89, cargo:"Cotton",     load:74, eta:"3h 30m", type:"Freight",   lastPing:"4s ago" },
-  { id:"WGN-WR-003", zone:"WR", route:"Mumbai Central → Pune",      location:"Pune",         status:"Maintenance",gps:"Offline", speed:0,  health:38, cargo:"Machinery",  load:45, eta:"N/A",    type:"Freight",   lastPing:"12m ago"},
-  { id:"WGN-NER-001",zone:"NER",route:"Guwahati → Dibrugarh",       location:"Tinsukia Jn.", status:"On Time",    gps:"Active",  speed:65, health:87, cargo:"Tea",        load:68, eta:"2h 20m", type:"Cargo",     lastPing:"3s ago" },
-  { id:"WGN-NER-002",zone:"NER",route:"New Jalpaiguri → Guwahati",  location:"New Jalpaiguri",status:"On Time",   gps:"Active",  speed:71, health:91, cargo:"Timber",     load:80, eta:"4h 00m", type:"Heavy Goods",lastPing:"2s ago" },
-  { id:"WGN-NWR-001",zone:"NWR",route:"Jaipur Jn. → Jodhpur",      location:"Ajmer",        status:"On Time",    gps:"Active",  speed:83, health:93, cargo:"Marble",     load:85, eta:"1h 45m", type:"Freight",   lastPing:"2s ago" },
-  { id:"WGN-NWR-002",zone:"NWR",route:"Bikaner → Jaipur Jn.",       location:"Bikaner",      status:"Delayed",    gps:"Active",  speed:34, health:72, cargo:"Fertiliser", load:91, eta:"6h 10m", type:"Cargo",     lastPing:"5s ago" },
-  { id:"WGN-SER-001",zone:"SER",route:"Howrah → Bhubaneswar",       location:"Kharagpur",    status:"On Time",    gps:"Active",  speed:88, health:94, cargo:"Steel",      load:76, eta:"2h 30m", type:"Heavy Goods",lastPing:"1s ago" },
-  { id:"WGN-SER-002",zone:"SER",route:"Raipur Jn. → Bilaspur",      location:"Bilaspur",     status:"On Time",    gps:"Active",  speed:0,  health:80, cargo:"Coal",       load:100,eta:"Arrived",type:"Freight",   lastPing:"4s ago" },
-  { id:"WGN-SWR-001",zone:"SWR",route:"Bengaluru → Mysuru",         location:"Mysuru",       status:"On Time",    gps:"Active",  speed:0,  health:95, cargo:"Electronics",load:50, eta:"Arrived",type:"Cargo",     lastPing:"2s ago" },
-  { id:"WGN-SWR-002",zone:"SWR",route:"Hubli → Mangaluru",          location:"Hubli",        status:"On Time",    gps:"Active",  speed:72, health:88, cargo:"Coffee",     load:62, eta:"3h 50m", type:"Cargo",     lastPing:"3s ago" },
-];
-
-const STATUS_COLOR = { "On Time":"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" };
-const STATUS_BADGE = { "On Time":"badge-active", Delayed:"badge-delayed", Halted:"badge-high", Maintenance:"badge-maint" };
-const GPS_COLOR    = { Active:"#22c55e", Offline:"#ef4444", Weak:"#f59e0b" };
-const ROUTE_COLORS = ["#3b82f6","#f59e0b","#22c55e","#ef4444","#8b5cf6","#f97316","#06b6d4","#a855f7","#10b981","#ec4899"];
+const STATUS_COLOR = { Running:"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" };
+const STATUS_BADGE = { Running:"badge-active", Delayed:"badge-delayed", Halted:"badge-high", Maintenance:"badge-maint" };
+const GPS_COLOR = { Active:"#22c55e", Offline:"#ef4444", Weak:"#f59e0b" };
 const ZONE_COLORS  = { NR:"#3b82f6", SR:"#22c55e", ER:"#f59e0b", WR:"#a855f7", NER:"#06b6d4", NWR:"#f97316", SER:"#10b981", SWR:"#ec4899" };
 
 const speedColor  = s => s > 80 ? "#ef4444" : s > 50 ? "#f59e0b" : s > 0 ? "#22c55e" : "#64748b";
-const healthColor = h => h >= 75 ? "#22c55e" : h >= 50 ? "#f59e0b" : "#ef4444";
-
-function parseRouteStations(route) { return route.split("→").map(s => s.trim()); }
-
-
-function getStationCoords(name) {
-  const exact = ALL_STATIONS[name];
-  if (exact) return geo2svg(exact.lat, exact.lng);
-  const key = Object.keys(ALL_STATIONS).find(k =>
-    k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase())
-  );
-  if (key) return geo2svg(ALL_STATIONS[key].lat, ALL_STATIONS[key].lng);
-  return null;
-}
 
 function getLatLng(name) {
   if (!name) return null;
@@ -160,257 +114,6 @@ function getLatLng(name) {
     k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase())
   );
   return key ? { lat: ALL_STATIONS[key].lat, lng: ALL_STATIONS[key].lng } : null;
-}
-
-const INDIA_POINTS = [
-  [37.1,74.5],[36.9,76.9],[35.5,77.8],[34.5,76.5],[34.1,74.5],
-  [32.7,74.6],[31.4,75.7],[30.2,77.6],[29.0,79.5],[28.0,80.5],
-  [27.5,83.5],[26.9,87.0],[26.5,88.5],[25.6,89.5],[24.5,91.0],
-  [23.6,92.5],[24.0,94.0],[25.5,95.5],[27.2,97.0],[28.2,96.0],
-  [26.5,90.0],[22.0,88.5],[21.0,87.0],[20.0,86.5],[17.7,83.3],
-  [14.8,80.2],[13.1,80.3],[11.1,79.8],[8.1,77.5],[8.5,76.9],
-  [9.5,76.2],[10.8,76.1],[11.9,75.3],[12.8,74.8],[14.0,74.4],
-  [15.5,73.9],[16.5,73.5],[17.4,73.3],[18.9,72.8],[20.2,72.6],
-  [21.2,72.5],[22.3,68.8],[23.7,68.2],[24.9,68.3],[27.2,65.9],
-  [28.5,69.5],[30.0,70.2],[31.5,71.0],[32.4,72.0],[34.5,71.5],[37.1,74.5],
-].map(([lat, lng]) => geo2svg(lat, lng));
-const indiaPath = "M " + INDIA_POINTS.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L ") + " Z";
-
-// ── Railway Map (identical logic to OperatorTracking) ─────────────────────────
-// ── Railway Map (identical logic to OperatorTracking) ─────────────────────────
-function RailwayMap({ wagons, selected, onSelectWagon, searchStation }) {
-  const svgRef = useRef(null);
-  const [zoom, setZoom]         = useState(1);
-  const [pan, setPan]           = useState({ x:0, y:0 });
-  const [dragging, setDragging] = useState(false);
-  const [dragStart, setDragStart] = useState(null);
-  const [tooltip, setTooltip]   = useState(null);
-  const [hovered, setHovered]   = useState(null);
-  const MIN_ZOOM = 0.6, MAX_ZOOM = 5;
-
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    setZoom(z => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * (e.deltaY < 0 ? 1.15 : 0.87))));
-  }, []);
-
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    el.addEventListener("wheel", handleWheel, { passive:false });
-    return () => el.removeEventListener("wheel", handleWheel);
-  }, [handleWheel]);
-
-  const onMouseDown = e => { if (e.button !== 0) return; setDragging(true); setDragStart({ x:e.clientX - pan.x, y:e.clientY - pan.y }); };
-  const onMouseMove = e => { if (!dragging) return; setPan({ x:e.clientX - dragStart.x, y:e.clientY - dragStart.y }); };
-  const onMouseUp   = () => setDragging(false);
-  const resetView   = () => { setZoom(1); setPan({ x:0, y:0 }); };
-
-  const wagonData = useMemo(() => wagons.map((w, idx) => {
-    const stations   = parseRouteStations(w.route);
-    const origin     = stations[0];
-    const dest       = stations[stations.length - 1];
-    const originC    = getStationCoords(origin);
-    const destC      = getStationCoords(dest);
-    const currentC   = getStationCoords(w.location);
-    let pos = currentC;
-    if (!pos && originC && destC) pos = { x:(originC.x+destC.x)/2, y:(originC.y+destC.y)/2 };
-    if (!pos) pos = { x:W/2, y:H/2 };
-    const seed = w.id.split("").reduce((a,c) => a+c.charCodeAt(0), 0);
-    pos = { x:pos.x + ((seed%7)-3)*2, y:pos.y + ((seed%5)-2)*2 };
-    return { wagon:w, pos, originCoords:originC, destCoords:destC, currentCoords:currentC||pos,
-      color: ZONE_COLORS[w.zone] || ROUTE_COLORS[idx % ROUTE_COLORS.length], origin, destination:dest };
-  }), [wagons]);
-
-  const selectedData = selected ? wagonData.find(d => d.wagon.id === selected.id) : null;
-  const highlightCoords = searchStation ? getStationCoords(searchStation) : null;
-
-  return (
-    <div style={{ position:"relative", width:"100%", height:"100%", background:"#030d1f", overflow:"hidden", cursor:dragging?"grabbing":"grab", userSelect:"none" }}>
-      {/* Controls */}
-      <div style={{ position:"absolute", top:12, right:12, display:"flex", flexDirection:"column", gap:4, zIndex:10 }}>
-        {[
-          { icon:FiZoomIn,    onClick:()=>setZoom(z=>Math.min(MAX_ZOOM,z*1.3)), title:"Zoom In"  },
-          { icon:FiZoomOut,   onClick:()=>setZoom(z=>Math.max(MIN_ZOOM,z/1.3)), title:"Zoom Out" },
-          { icon:FiMaximize2, onClick:resetView,                                 title:"Reset"    },
-        ].map(({ icon:Icon, onClick, title }) => (
-          <button key={title} onClick={onClick} title={title} style={{ width:32, height:32, borderRadius:8, border:"1px solid #1a3356", background:"rgba(13,31,60,.92)", color:"#94a3b8", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <Icon size={14}/>
-          </button>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div style={{ position:"absolute", bottom:10, left:10, background:"rgba(6,14,30,.9)", border:"1px solid #1a3356", borderRadius:8, padding:"8px 12px", zIndex:10 }}>
-        {[["On Time","#22c55e"],["Delayed","#f59e0b"],["Maintenance","#f97316"],["GPS Offline","#64748b"]].map(([l,c]) => (
-          <div key={l} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3 }}>
-            <div style={{ width:8, height:8, borderRadius:"50%", background:c }}/><span style={{ color:"#94a3b8", fontSize:10 }}>{l}</span>
-          </div>
-        ))}
-        <div style={{ borderTop:"1px solid #1a3356", marginTop:6, paddingTop:6 }}>
-          {Object.entries(ZONE_COLORS).map(([z,c]) => (
-            <div key={z} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
-              <div style={{ width:8, height:8, borderRadius:2, background:c }}/><span style={{ color:"#94a3b8", fontSize:10 }}>{z}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ position:"absolute", bottom:10, right:10, background:"rgba(6,14,30,.9)", border:"1px solid #1a3356", borderRadius:6, padding:"4px 8px", zIndex:10 }}>
-        <span style={{ color:"#4a6fa5", fontSize:10 }}>{Math.round(zoom*100)}%</span>
-      </div>
-
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
-        style={{ width:"100%", height:"100%", display:"block",
-          transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
-          transformOrigin:"400px 310px",
-          transition: dragging ? "none" : "transform .15s ease" }}
-        onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
-        <defs>
-          <radialGradient id="bgGlow2" cx="50%" cy="50%" r="60%">
-            <stop offset="0%"   stopColor="#0a1f3c" stopOpacity="1"/>
-            <stop offset="100%" stopColor="#020d1e" stopOpacity="1"/>
-          </radialGradient>
-          <filter id="glow2"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <filter id="softglow2"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-
-        <rect width={W} height={H} fill="url(#bgGlow2)"/>
-        <path d={indiaPath} fill="rgba(37,99,235,.06)" stroke="#1a3a60" strokeWidth="1.2"/>
-
-        {[10,15,20,25,30,35].map(lat => { const {y} = geo2svg(lat,0); return <line key={lat} x1={0} y1={y} x2={W} y2={y} stroke="#0d2040" strokeWidth="0.5" strokeDasharray="4,8"/>; })}
-        {[70,75,80,85,90,95].map(lng => { const {x} = geo2svg(0,lng); return <line key={lng} x1={x} y1={0} x2={x} y2={H} stroke="#0d2040" strokeWidth="0.5" strokeDasharray="4,8"/>; })}
-
-        {/* Route lines */}
-        {wagonData.map(({ wagon:w, originCoords, destCoords, currentCoords, color }) => {
-          if (!originCoords || !destCoords) return null;
-          const isSel = selected?.id === w.id;
-          const isHov = hovered === w.id;
-          return (
-            <g key={`route-${w.id}`}>
-              <line x1={originCoords.x} y1={originCoords.y} x2={destCoords.x} y2={destCoords.y}
-                stroke={color} strokeWidth={isSel?2:1} strokeOpacity={isSel?0.5:isHov?0.35:0.15} strokeDasharray="6,5"/>
-              {currentCoords && (
-                <line x1={originCoords.x} y1={originCoords.y} x2={currentCoords.x} y2={currentCoords.y}
-                  stroke={color} strokeWidth={isSel?2.5:1.5} strokeOpacity={isSel?0.9:isHov?0.6:0.3}/>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Route station dots for selected wagon */}
-        {selectedData && (() => {
-          const stations = parseRouteStations(selectedData.wagon.route);
-          return stations.map((name, i) => {
-            const coords = getStationCoords(name);
-            if (!coords) return null;
-            const isCurrent  = name === selectedData.wagon.location || name.toLowerCase().includes(selectedData.wagon.location.toLowerCase()) || selectedData.wagon.location.toLowerCase().includes(name.toLowerCase());
-            const isOrigin   = i === 0;
-            const isDest     = i === stations.length - 1;
-            const dotColor   = isCurrent ? "#f59e0b" : isOrigin ? "#22c55e" : isDest ? "#ef4444" : "#3b82f6";
-            return (
-              <g key={`st-${name}`}>
-                {isCurrent && (
-                  <circle cx={coords.x} cy={coords.y} r={14} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeOpacity="0.5" strokeDasharray="4,3">
-                    <animate attributeName="r" values="10;18;10" dur="2s" repeatCount="indefinite"/>
-                    <animate attributeName="stroke-opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
-                  </circle>
-                )}
-                <circle cx={coords.x} cy={coords.y} r={isCurrent?7:5} fill={dotColor} filter={isCurrent?"url(#softglow2)":"none"}/>
-                <text x={coords.x+9} y={coords.y+4} fill={isCurrent?"#f59e0b":"#cbd5e1"} fontSize={isCurrent?"9":"8"} fontWeight={isCurrent?"700":"500"}>{name}</text>
-              </g>
-            );
-          });
-        })()}
-
-        {/* Major stations */}
-        {Object.entries(ALL_STATIONS).filter(([,v]) => v.major).map(([name, st]) => {
-          const { x, y } = geo2svg(st.lat, st.lng);
-          const isHL = searchStation && (name.toLowerCase().includes(searchStation.toLowerCase()) || searchStation.toLowerCase().includes(name.toLowerCase()));
-          return (
-            <g key={`maj-${name}`}>
-              {isHL && <circle cx={x} cy={y} r={14} fill="none" stroke="#06b6d4" strokeWidth="1.5" strokeOpacity="0.6"/>}
-              <circle cx={x} cy={y} r={isHL?5:4} fill={isHL?"#06b6d4":"#2a4a6e"} stroke="#1a3a60" strokeWidth="1" fillOpacity={0.8}/>
-              <text x={x+7} y={y+4} fill={isHL?"#06b6d4":"#3a5a7c"} fontSize="8" fontWeight={isHL?"700":"400"}>{name}</text>
-            </g>
-          );
-        })}
-
-        {highlightCoords && !Object.entries(ALL_STATIONS).filter(([,v])=>v.major).some(([n]) => n.toLowerCase().includes(searchStation.toLowerCase())) && (
-          <g>
-            <circle cx={highlightCoords.x} cy={highlightCoords.y} r={14} fill="none" stroke="#06b6d4" strokeWidth="1.5" strokeOpacity="0.6"/>
-            <circle cx={highlightCoords.x} cy={highlightCoords.y} r={5} fill="#06b6d4"/>
-            <text x={highlightCoords.x+9} y={highlightCoords.y+4} fill="#06b6d4" fontSize="9" fontWeight="700">{searchStation}</text>
-          </g>
-        )}
-
-        {/* Wagon dots */}
-        {wagonData.map(({ wagon:w, pos, color }) => {
-          const isSel = selected?.id === w.id;
-          const isHov = hovered === w.id;
-          const col   = w.gps === "Offline" ? "#64748b" : STATUS_COLOR[w.status] || color;
-          return (
-            <g key={w.id} onClick={() => onSelectWagon(w)}
-              onMouseEnter={() => { setHovered(w.id); setTooltip({ x:pos.x, y:pos.y, content:`${w.id} · ${w.zone} · ${w.status} · ${w.speed} km/h` }); }}
-              onMouseLeave={() => { setHovered(null); setTooltip(null); }}
-              style={{ cursor:"pointer" }}>
-              {w.gps !== "Offline" && (
-                <circle cx={pos.x} cy={pos.y} r={isSel?18:12} fill="none" stroke={col} strokeWidth="1" strokeOpacity={isSel?"0.5":"0.3"}>
-                  <animate attributeName="r" values={isSel?"14;22;14":"8;14;8"} dur="2.5s" repeatCount="indefinite"/>
-                  <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite"/>
-                </circle>
-              )}
-              <circle cx={pos.x} cy={pos.y} r={isSel?11:isHov?9:7} fill={col} fillOpacity={isSel?0.25:0.15} stroke={col} strokeWidth={isSel?2:1.5} style={{ transition:"all .2s" }}/>
-              <circle cx={pos.x} cy={pos.y} r={isSel?5:4} fill={col} filter="url(#glow2)" style={{ transition:"all .2s" }}/>
-              {(isSel||isHov) && (
-                <g>
-                  <rect x={pos.x+10} y={pos.y-10} width={68} height={16} rx={4} fill="rgba(6,14,30,.92)" stroke={col} strokeWidth="0.8"/>
-                  <text x={pos.x+14} y={pos.y+1} fill={col} fontSize="8" fontWeight="700">{w.id}</text>
-                </g>
-              )}
-            </g>
-          );
-        })}
-
-        {tooltip && (
-          <g>
-            <rect x={tooltip.x+12} y={tooltip.y-18} rx={5} ry={5} width={tooltip.content.length*5.5+16} height={18} fill="rgba(13,31,60,.97)" stroke="#2a4a6e" strokeWidth="0.8"/>
-            <text x={tooltip.x+20} y={tooltip.y-5} fill="#e2e8f0" fontSize="9" fontWeight="600">{tooltip.content}</text>
-          </g>
-        )}
-      </svg>
-    </div>
-  );
-}
-
-// ── Journey Strip ─────────────────────────────────────────────────────────────
-function JourneyStrip({ wagon }) {
-  if (!wagon) return null;
-  const stations = parseRouteStations(wagon.route);
-  const cl = wagon.location.toLowerCase();
-  const currentIdx = stations.findIndex(s => s.toLowerCase().includes(cl) || cl.includes(s.toLowerCase()));
-  return (
-    <div style={{ overflowX:"auto", paddingBottom:4 }}>
-      <div style={{ display:"flex", alignItems:"center", minWidth:"max-content" }}>
-        {stations.map((name, i) => {
-          const isCurrent   = i === currentIdx;
-          const isCompleted = i < currentIdx;
-          const isLast      = i === stations.length - 1;
-          const dotColor    = isCurrent ? "#f59e0b" : isCompleted ? "#22c55e" : "#1a3356";
-          const textColor   = isCurrent ? "#f59e0b" : isCompleted ? "#22c55e" : "#60a5fa";
-          return (
-            <div key={name+i} style={{ display:"flex", alignItems:"center" }}>
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
-                <span style={{ color:textColor, fontSize:10, fontWeight:isCurrent?700:500, whiteSpace:"nowrap", maxWidth:80, textAlign:"center" }}>{name}</span>
-                <div style={{ width:isCurrent?12:9, height:isCurrent?12:9, borderRadius:"50%", background:dotColor, border:`2px solid ${dotColor}`, boxShadow:isCurrent?`0 0 8px ${dotColor}`:"none" }}/>
-                <span style={{ color:textColor, fontSize:9 }}>{isCurrent?"● NOW":isCompleted?"✓":"→"}</span>
-              </div>
-              {!isLast && <div style={{ width:36, height:2, background:`linear-gradient(90deg,${isCompleted?"#22c55e":"#1a3356"},#1a3356)`, margin:"0 2px", flexShrink:0, marginTop:14 }}/>}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
 }
 
 // ── Detail Panel ──────────────────────────────────────────────────────────────
@@ -423,12 +126,21 @@ function DetailPanel({ wagon, onClose }) {
     </div>
   );
   const statusCol = STATUS_COLOR[wagon.status] || "#3b82f6";
-  const sc = speedColor(wagon.speed);
-  const hc = healthColor(wagon.health);
-  const zoneCol = ZONE_COLORS[wagon.zone] || "#3b82f6";
+  const sc        = speedColor(wagon.speed);
+  const zoneCol   = ZONE_COLORS[wagon.zone] || "#3b82f6";
+  const loadPct   = wagon.capacity ? Math.round((wagon.load / wagon.capacity) * 100) : wagon.load;
+  const loadBar   = Math.min(loadPct, 100);
+  const gpsCoords = (wagon.gpsLatitude != null && wagon.gpsLongitude != null)
+    ? `${wagon.gpsLatitude.toFixed(4)}, ${wagon.gpsLongitude.toFixed(4)}`
+    : "N/A";
+  const lastUpdatedStr = wagon.lastUpdated
+    ? new Date(wagon.lastUpdated).toLocaleString()
+    : "N/A";
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:0, height:"100%", overflowY:"auto", overflowX:"hidden" }}>
+
+      {/* Header */}
       <div style={{ padding:"14px 16px", borderBottom:"1px solid #1a3356", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:36, height:36, borderRadius:10, background:`${statusCol}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🚆</div>
@@ -446,18 +158,20 @@ function DetailPanel({ wagon, onClose }) {
         </div>
       </div>
 
+      {/* GPS status bar */}
       <div style={{ padding:"8px 16px", background:wagon.gps==="Active"?"rgba(34,197,94,.07)":"rgba(239,68,68,.07)", borderBottom:"1px solid #1a3356", display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
         {wagon.gps==="Active" ? <FiWifi size={12} color="#22c55e"/> : <FiWifiOff size={12} color="#ef4444"/>}
         <span style={{ color:GPS_COLOR[wagon.gps], fontSize:12, fontWeight:600 }}>GPS {wagon.gps}</span>
-        <span style={{ color:"#4a6fa5", fontSize:11, marginLeft:"auto" }}>Ping: {wagon.lastPing}</span>
+        <span style={{ color:"#4a6fa5", fontSize:11, marginLeft:"auto" }}>{gpsCoords}</span>
       </div>
 
+      {/* Location & Destination */}
       <div style={{ padding:12, display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, flexShrink:0 }}>
         {[
-          { icon:FiMapPin,     label:"Location", value:wagon.location,       color:"#f1f5f9" },
-          { icon:FiNavigation, label:"Route",    value:wagon.route,           color:"#f1f5f9" },
-          { icon:FiActivity,   label:"Speed",    value:`${wagon.speed} km/h`, color:sc        },
-          { icon:FiClock,      label:"ETA",      value:wagon.eta,             color:wagon.status==="Delayed"?"#f59e0b":"#22c55e" },
+          { icon:FiMapPin,     label:"Current Station", value:wagon.location,          color:"#f1f5f9" },
+          { icon:FiNavigation, label:"Destination",     value:wagon.destination,       color:"#f1f5f9" },
+          { icon:FiActivity,   label:"Speed",           value:`${wagon.speed} km/h`,   color:sc        },
+          { icon:FiClock,      label:"Last Updated",    value:lastUpdatedStr,          color:"#94a3b8" },
         ].map(({ icon:Icon, label, value, color }) => (
           <div key={label} style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:9, padding:"10px 12px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:4 }}>
@@ -476,6 +190,7 @@ function DetailPanel({ wagon, onClose }) {
         </div>
       )}
 
+      {/* Speed bar */}
       <div style={{ padding:"0 12px 10px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
           <span style={{ color:"#64748b", fontSize:11 }}>Speed</span>
@@ -484,33 +199,43 @@ function DetailPanel({ wagon, onClose }) {
         <div className="progress-bg"><div className="progress-fill" style={{ width:`${Math.min(wagon.speed/120*100,100)}%`, background:sc }}/></div>
       </div>
 
+      {/* Cargo */}
       <div style={{ margin:"0 12px 10px", background:"#071628", border:"1px solid #1a3356", borderRadius:9, padding:"10px 12px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
           <FiPackage size={12} color="#4a6fa5"/>
           <span style={{ color:"#64748b", fontSize:11, textTransform:"uppercase", letterSpacing:.5 }}>Cargo</span>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-          {[["Type",wagon.cargo||"—"],["Load",`${wagon.load}%`]].map(([l,v]) => (
+          {[
+            ["Type",     wagon.cargo || "N/A"],
+            ["Load",     wagon.capacity != null ? `${wagon.load} / ${wagon.capacity} t` : `${wagon.load} t`],
+            ["Capacity", wagon.capacity != null ? `${wagon.capacity} t` : "N/A"],
+            ["Fill",     wagon.capacity != null ? `${loadPct}%` : "N/A"],
+          ].map(([l,v]) => (
             <div key={l}><div style={{ color:"#4a6fa5", fontSize:10 }}>{l}</div><div style={{ color:"#f1f5f9", fontSize:12, fontWeight:600, marginTop:2 }}>{v}</div></div>
           ))}
         </div>
         <div style={{ marginTop:10 }}>
-          <div className="progress-bg"><div className="progress-fill" style={{ width:`${wagon.load}%`, background:wagon.load>85?"#ef4444":wagon.load>65?"#f59e0b":"#22c55e" }}/></div>
+          <div className="progress-bg"><div className="progress-fill" style={{ width:`${loadBar}%`, background:loadBar>85?"#ef4444":loadBar>65?"#f59e0b":"#22c55e" }}/></div>
         </div>
       </div>
 
-      <div style={{ margin:"0 12px 10px" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-          <span style={{ color:"#64748b", fontSize:11 }}>Wagon Health</span>
-          <span style={{ color:hc, fontSize:12, fontWeight:700 }}>{wagon.health}%</span>
+      {/* Temperature */}
+      <div style={{ margin:"0 12px 10px", background:"#071628", border:"1px solid #1a3356", borderRadius:9, padding:"10px 12px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+          <div>
+            <div style={{ color:"#4a6fa5", fontSize:10, textTransform:"uppercase", letterSpacing:.5 }}>Temperature</div>
+            <div style={{ color: wagon.temperature != null ? (wagon.temperature > 60 ? "#ef4444" : wagon.temperature > 40 ? "#f59e0b" : "#22c55e") : "#64748b", fontSize:12, fontWeight:700, marginTop:4 }}>
+              {wagon.temperature != null ? `${wagon.temperature} °C` : "N/A"}
+            </div>
+          </div>
+          <div>
+            <div style={{ color:"#4a6fa5", fontSize:10, textTransform:"uppercase", letterSpacing:.5 }}>Wagon Health</div>
+            <div style={{ color:"#64748b", fontSize:12, fontWeight:700, marginTop:4 }}>N/A</div>
+          </div>
         </div>
-        <div className="progress-bg"><div className="progress-fill" style={{ width:`${wagon.health}%`, background:hc }}/></div>
       </div>
 
-      <div style={{ margin:"0 12px 12px", background:"#071628", border:"1px solid #1a3356", borderRadius:9, padding:"10px 12px" }}>
-        <div style={{ color:"#64748b", fontSize:11, textTransform:"uppercase", letterSpacing:.5, marginBottom:10 }}>Route Progress</div>
-        <JourneyStrip wagon={wagon}/>
-      </div>
     </div>
   );
 }
@@ -520,8 +245,14 @@ function WagonListItem({ wagon, selected, onClick }) {
   const col      = wagon.gps==="Offline" ? "#64748b" : STATUS_COLOR[wagon.status]||"#3b82f6";
   const isActive = selected?.id === wagon.id;
   const zoneCol  = ZONE_COLORS[wagon.zone] || "#3b82f6";
+  const rowRef   = useRef(null);
+
+  useEffect(() => {
+    if (isActive) rowRef.current?.scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }, [isActive]);
+
   return (
-    <div onClick={onClick} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:9, cursor:"pointer", marginBottom:2, background:isActive?"rgba(37,99,235,.18)":"transparent", border:`1px solid ${isActive?"#2563eb":"transparent"}`, transition:"all .15s" }}
+    <div ref={rowRef} onClick={onClick} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:9, cursor:"pointer", marginBottom:2, background:isActive?"rgba(37,99,235,.18)":"transparent", border:`1px solid ${isActive?"#2563eb":"transparent"}`, transition:"all .15s" }}
       onMouseEnter={e => { if (!isActive) e.currentTarget.style.background="rgba(37,99,235,.08)"; }}
       onMouseLeave={e => { if (!isActive) e.currentTarget.style.background="transparent"; }}>
       <div style={{ width:8, height:8, borderRadius:"50%", background:col, flexShrink:0, boxShadow:wagon.gps!=="Offline"?`0 0 6px ${col}`:"none" }}/>
@@ -549,23 +280,89 @@ const LiveTracking = () => {
   const [filterZone,    setFilterZone]    = useState("All");
   const [filterStatus,  setFilterStatus]  = useState("All");
   const [refreshing,    setRefreshing]    = useState(false);
+  const [refreshMsg,    setRefreshMsg]    = useState(null);
   const [lastRefresh,   setLastRefresh]   = useState(new Date());
+  const [wagons,        setWagons]        = useState([]);
+  const [allWagons,     setAllWagons]     = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [focusWagon,    setFocusWagon]    = useState(null);
+  const { admin } = useAuth();
 
-  useEffect(() => { setSelected(ADMIN_WAGONS[0]); }, []);
+  const fetchWagons = useCallback(() => {
+    setLoading(true);
+    return api.getWagons()
+      .then(res => {
+        const mapped = (res.data || []).map(w => ({
+          _id:          w._id,
+          id:           w.wagonId,
+          zone:         w.zone              || "—",
+          route:        w.destination       || "",
+          location:     w.currentStation    || "Unknown",
+          destination:  w.destination       || "N/A",
+          status:       w.status            || "On Time",
+          gps:          (w.gpsLatitude || w.gpsLongitude) ? "Active" : "Offline",
+          gpsLatitude:  w.gpsLatitude       ?? null,
+          gpsLongitude: w.gpsLongitude      ?? null,
+          speed:        w.speed             ?? 0,
+          temperature:  w.temperature       ?? null,
+          health:       null,
+          cargo:        w.cargoType         || "—",
+          load:         w.currentLoad       ?? 0,
+          capacity:     w.capacity          ?? null,
+          lastUpdated:  w.lastUpdated        || null,
+          eta:          null,
+          type:         w.wagonType         || "—",
+          lastPing:     null,
+        }));
+        setAllWagons(mapped);
+        const rows = mapped.filter(w => w.zone === admin?.zone);
+        setWagons(rows);
+        if (rows.length > 0) setSelected(rows[0]);
+      })
+      .catch(err => console.error("[LiveTracking] API fetch failed:", err.message))
+      .finally(() => setLoading(false));
+  }, [admin?.zone]);
+
+  useEffect(() => { fetchWagons(); }, [fetchWagons]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => { setLastRefresh(new Date()); setRefreshing(false); }, 800);
+    setRefreshMsg(null);
+    fetchWagons()
+      .then(() => { setLastRefresh(new Date()); setRefreshMsg("success"); })
+      .catch(() => setRefreshMsg("error"))
+      .finally(() => { setRefreshing(false); setTimeout(() => setRefreshMsg(null), 2500); });
   };
 
-  const filteredList = useMemo(() => ADMIN_WAGONS.filter(w => {
+  const filteredList = useMemo(() => wagons.filter(w => {
     const matchSearch = w.id.toLowerCase().includes(searchWagon.toLowerCase()) ||
       w.location.toLowerCase().includes(searchWagon.toLowerCase()) ||
       w.route.toLowerCase().includes(searchWagon.toLowerCase());
     const matchZone   = filterZone   === "All" || w.zone   === filterZone;
     const matchStatus = filterStatus === "All" || w.status === filterStatus;
     return matchSearch && matchZone && matchStatus;
-  }), [searchWagon, filterZone, filterStatus]);
+  }), [searchWagon, filterZone, filterStatus, wagons]);
+
+  useEffect(() => {
+    if (filteredList.length === 1) {
+      setSelected(filteredList[0]);
+      setFocusWagon(filteredList[0]);
+    } else {
+      setFocusWagon(null);
+    }
+  }, [filteredList]);
+
+  if (loading) return (
+    <DashboardLayout>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:400 }}>
+        <div style={{ textAlign:"center" }}>
+          <FiRefreshCw size={28} color="#3b82f6" style={{ animation:"spin .9s linear infinite", marginBottom:12 }}/>
+          <div style={{ color:"#4a6fa5", fontSize:14, fontWeight:600 }}>Loading live wagons…</div>
+        </div>
+      </div>
+      <style>{`@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }`}</style>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -577,6 +374,12 @@ const LiveTracking = () => {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ color:"#4a6fa5", fontSize:11 }}>Updated: {lastRefresh.toLocaleTimeString()}</span>
+          {refreshMsg === "success" && (
+            <span style={{ color:"#22c55e", fontSize:11, fontWeight:600, animation:"pulse .4s ease" }}>✓ Live data refreshed successfully</span>
+          )}
+          {refreshMsg === "error" && (
+            <span style={{ color:"#ef4444", fontSize:11, fontWeight:600 }}>⚠ Failed to refresh live data</span>
+          )}
           <button onClick={handleRefresh} style={{ display:"flex", alignItems:"center", gap:6, background:"#071628", border:"1px solid #1a3356", borderRadius:8, color:"#60a5fa", padding:"6px 14px", cursor:"pointer", fontSize:12 }}>
             <FiRefreshCw size={13} style={{ animation: refreshing ? "spin .7s linear infinite" : "none" }}/>
             Refresh
@@ -612,6 +415,7 @@ const LiveTracking = () => {
             selected={selected}
             onSelectWagon={setSelected}
             searchStation={searchStation}
+            focusWagon={focusWagon}
             getStationCoords={getLatLng}
             zoneColors={ZONE_COLORS}
             statusColors={STATUS_COLOR}
@@ -632,7 +436,7 @@ const LiveTracking = () => {
           <div style={{ padding:"8px", maxHeight:280, overflowY:"auto" }}>
             {filteredList.length === 0
               ? <div style={{ textAlign:"center", padding:32, color:"#4a6fa5", fontSize:12 }}>No wagons match filter</div>
-              : filteredList.map(w => <WagonListItem key={w.id} wagon={w} selected={selected} onClick={()=>setSelected(ADMIN_WAGONS.find(x=>x.id===w.id)||w)}/>)
+              : filteredList.map(w => <WagonListItem key={w.id} wagon={w} selected={selected} onClick={()=>{ setSelected(w); setFocusWagon(w); }}/>)
             }
           </div>
         </div>
@@ -645,36 +449,39 @@ const LiveTracking = () => {
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
               <thead>
                 <tr>
-                  {["Zone","Total","On Time","Delayed","Maint."].map(h => (
+                  {["Zone","Total","Running","Loading","Unloading","Delayed","Maint.","Idle"].map(h => (
                     <th key={h} style={{ color:"#4a6fa5", fontSize:10, fontWeight:700, textTransform:"uppercase", padding:"8px 14px", textAlign:h==="Zone"?"left":"center", borderBottom:"1px solid #1a3356" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Object.keys(ZONE_COLORS).map(zone => {
-                  const zw = ADMIN_WAGONS.filter(w => w.zone === zone);
-                  const onTime = zw.filter(w => w.status === "On Time").length;
-                  const delayed = zw.filter(w => w.status === "Delayed").length;
-                  const maint = zw.filter(w => w.status === "Maintenance").length;
-                  const zc = ZONE_COLORS[zone];
+                {(() => {
+                  const zoneData  = allWagons.filter(w => w.zone === admin?.zone);
+                  const zc        = ZONE_COLORS[admin?.zone] || "#3b82f6";
+                  const running   = zoneData.filter(w => w.status === "Running").length;
+                  const loading   = zoneData.filter(w => w.status === "Loading").length;
+                  const unloading = zoneData.filter(w => w.status === "Unloading").length;
+                  const delayed   = zoneData.filter(w => w.status === "Delayed").length;
+                  const maint     = zoneData.filter(w => w.status === "Maintenance").length;
+                  const idle      = zoneData.filter(w => w.status === "Idle").length;
                   return (
-                    <tr key={zone} onClick={()=>setFilterZone(zone === filterZone ? "All" : zone)}
-                      style={{ cursor:"pointer", borderBottom:"1px solid rgba(26,51,86,.4)", background: filterZone===zone?`${zc}10`:"transparent" }}
-                      onMouseEnter={e=>e.currentTarget.style.background=`${zc}10`}
-                      onMouseLeave={e=>e.currentTarget.style.background=filterZone===zone?`${zc}10`:"transparent"}>
+                    <tr style={{ borderBottom:"1px solid rgba(26,51,86,.4)" }}>
                       <td style={{ padding:"9px 14px" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                           <div style={{ width:8, height:8, borderRadius:2, background:zc }}/>
-                          <span style={{ color:zc, fontWeight:700, fontSize:12 }}>{zone}</span>
+                          <span style={{ color:zc, fontWeight:700, fontSize:12 }}>{admin?.zone}</span>
                         </div>
                       </td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f1f5f9", fontWeight:700, fontSize:12 }}>{zw.length}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#22c55e", fontWeight:600, fontSize:12 }}>{onTime}</span></td>
+                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f1f5f9", fontWeight:700, fontSize:12 }}>{zoneData.length}</span></td>
+                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#22c55e", fontWeight:600, fontSize:12 }}>{running}</span></td>
+                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#3b82f6", fontWeight:600, fontSize:12 }}>{loading}</span></td>
+                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#06b6d4", fontWeight:600, fontSize:12 }}>{unloading}</span></td>
                       <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f59e0b", fontWeight:600, fontSize:12 }}>{delayed}</span></td>
                       <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f97316", fontWeight:600, fontSize:12 }}>{maint}</span></td>
+                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#64748b", fontWeight:600, fontSize:12 }}>{idle}</span></td>
                     </tr>
                   );
-                })}
+                })()}
               </tbody>
             </table>
           </div>
