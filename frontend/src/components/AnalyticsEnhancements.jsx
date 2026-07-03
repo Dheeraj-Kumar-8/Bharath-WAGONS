@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
-import { exportReportPDF, exportReportExcel, exportReportCSV, REPORT_DEFINITIONS } from "../utils/reportExportService";
+import useZoneWagons from "../hooks/useZoneWagons";
+import { buildReportData, exportReportPDF, exportReportExcel, exportReportCSV, REPORT_DEFINITIONS } from "../utils/reportExportService";
 import {
   AreaChart, Area, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,

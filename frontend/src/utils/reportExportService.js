@@ -1,276 +1,951 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import {
+  buildStationActivityRows,
+  buildStatusTrendRows,
+  buildMonthlyTrendRows,
+  buildWagonSummary,
+  buildWagonExportRows,
+  filterWagonsByDateRange,
+  formatDateLabel,
+  formatDateTimeLabel,
+  formatDuration,
+  getZoneName,
+  WAGON_REPORT_COLUMNS,
+} from "./wagonUtils";
 
-// ── Role-based report permissions ─────────────────────────────────────────────
 export const ROLE_REPORTS = {
-  admin:    ["wagon_stats","movement_trends","alert_summary","monthly_performance","zone_performance","maintenance_analytics"],
-  operator: ["wagon_stats","movement_trends","alert_summary"],
-  analyst:  ["movement_trends","alert_summary","monthly_performance","zone_performance","maintenance_analytics"],
+  admin: [
+    "daily_operations_summary",
+    "daily_cargo_report",
+    "daily_delay_analysis",
+    "daily_maintenance_log",
+    "daily_gps_status_report",
+    "weekly_operations_summary",
+    "weekly_performance_report",
+    "weekly_alert_analysis",
+    "weekly_maintenance_summary",
+    "monthly_fleet_report",
+    "monthly_ai_analytics_report",
+    "monthly_cargo_summary",
+    "monthly_maintenance_report",
+  ],
+  analyst: [
+    "daily_operations_summary",
+    "daily_cargo_report",
+    "daily_delay_analysis",
+    "daily_maintenance_log",
+    "daily_gps_status_report",
+    "weekly_operations_summary",
+    "weekly_performance_report",
+    "weekly_alert_analysis",
+    "weekly_maintenance_summary",
+    "monthly_fleet_report",
+    "monthly_ai_analytics_report",
+    "monthly_cargo_summary",
+    "monthly_maintenance_report",
+  ],
+  operator: [
+    "daily_operations_summary",
+    "daily_cargo_report",
+    "daily_delay_analysis",
+    "daily_maintenance_log",
+    "daily_gps_status_report",
+  ],
 };
 
 export function canAccessReport(role, key) {
   return (ROLE_REPORTS[role] || []).includes(key);
 }
 
-// ── File naming: ReportType_YYYY_MM_DD ────────────────────────────────────────
 export function buildFileName(label, ext) {
-  const d = new Date();
-  const ymd = `${d.getFullYear()}_${String(d.getMonth()+1).padStart(2,"0")}_${String(d.getDate()).padStart(2,"0")}`;
-  return `${label.replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_-]/g,"")}_${ymd}.${ext}`;
+  const now = new Date();
+  const ymd = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}_${String(now.getDate()).padStart(2, "0")}`;
+  return `${label.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_-]/g, "")}_${ymd}.${ext}`;
 }
 
-// ── Report data definitions ───────────────────────────────────────────────────
+const todayLabel = () => formatDateLabel(new Date());
+
+const currentWeekLabel = () => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 6);
+  return `${formatDateLabel(start, { day: "2-digit", month: "short" })} - ${formatDateLabel(end, { day: "2-digit", month: "short", year: "numeric" })}`;
+};
+
+const currentMonthLabel = () =>
+  new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+const createReport = (definition, zone, date, wagons, alerts, tableTitle, columns, rows, summaryTitle, summaryRows) => ({
+  ...definition,
+  title: definition.label,
+  zone,
+  zoneName: getZoneName(zone),
+  date,
+  wagons,
+  alerts,
+  status: "Ready",
+  tableTitle,
+  columns,
+  rows,
+  summaryTitle,
+  summaryRows,
+});
+
+const percent = (value) => `${value}%`;
+
+const safeRows = (rows, columnsLength) =>
+  rows.length ? rows : [Array.from({ length: columnsLength }, (_, index) => (index === 0 ? "No data available" : ""))];
+
+const sortByLastUpdated = (wagons) =>
+  [...wagons].sort((left, right) => new Date(right.lastUpdated || 0) - new Date(left.lastUpdated || 0));
+
+const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN");
+
+const buildDailyOperationsSummary = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    sortByLastUpdated(wagons).slice(0, 10).map((wagon) => ([
+      wagon.wagonId,
+      wagon.wagonNumber,
+      wagon.currentLocation,
+      wagon.destination,
+      `${wagon.speed} km/h`,
+      wagon.status,
+      wagon.gpsStatus,
+    ])),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    summary.total,
+    summary.alerts,
+    "Wagon Operations Overview",
+    ["Wagon ID", "Wagon Number", "Current Location", "Destination", "Speed", "Status", "GPS"],
+    rows,
+    "Daily Operations Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Total Wagons", formatNumber(summary.total)],
+      ["Active Wagons", formatNumber(summary.active)],
+      ["Delayed Wagons", formatNumber(summary.delayed)],
+      ["Maintenance", formatNumber(summary.maintenance)],
+      ["GPS Active", formatNumber(summary.gpsActive)],
+      ["AI Alerts", formatNumber(summary.alerts)],
+      ["Average Speed", `${summary.avgSpeed} km/h`],
+    ]
+  );
+};
+
+const buildDailyCargoReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const cargoWagons = sortByLastUpdated(wagons.filter((wagon) => wagon.isLoaded)).slice(0, 10);
+  const rows = safeRows(
+    cargoWagons.map((wagon) => ([
+      wagon.wagonId,
+      wagon.wagonNumber,
+      wagon.cargoType,
+      `${wagon.currentLoad} T`,
+      `${wagon.capacity} T`,
+      wagon.loadStatus,
+      wagon.destination,
+    ])),
+    7
+  );
+  const cargoAlerts = wagons.filter((wagon) => wagon.alertReasons.some((reason) => ["Overload", "Temperature"].includes(reason))).length;
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    summary.loaded + summary.partial,
+    cargoAlerts,
+    "Cargo Load Details",
+    ["Wagon ID", "Wagon Number", "Cargo Type", "Current Load", "Capacity", "Load Status", "Destination"],
+    rows,
+    "Cargo Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Loaded Wagons", formatNumber(summary.loaded)],
+      ["Partially Loaded", formatNumber(summary.partial)],
+      ["Empty Wagons", formatNumber(summary.empty)],
+      ["Total Cargo Load", `${formatNumber(summary.totalLoad)} T`],
+      ["Load Efficiency", percent(summary.loadEfficiency)],
+      ["Top Cargo Type", summary.topCargoTypes[0]?.[0] || "N/A"],
+      ["Cargo Alerts", formatNumber(cargoAlerts)],
+    ]
+  );
+};
+
+const buildDailyDelayAnalysis = (definition, wagons, zone) => {
+  const delayedWagons = sortByLastUpdated(wagons.filter((wagon) => wagon.delayStatus === "Delayed"));
+  const rows = safeRows(
+    delayedWagons.slice(0, 10).map((wagon) => ([
+      wagon.wagonId,
+      wagon.route,
+      wagon.delayTime,
+      wagon.alertReasons.join(", ") || "Delay",
+      wagon.currentLocation,
+      `${wagon.speed} km/h`,
+    ])),
+    6
+  );
+  const averageDelay = delayedWagons.length
+    ? Math.round(delayedWagons.reduce((total, wagon) => total + wagon.delayMinutes, 0) / delayedWagons.length)
+    : 0;
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    delayedWagons.length,
+    delayedWagons.reduce((total, wagon) => total + wagon.alertCount, 0),
+    "Delayed Wagons and Root Causes",
+    ["Wagon ID", "Route", "Delay", "Alert Reasons", "Current Location", "Speed"],
+    rows,
+    "Delay Statistics",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Delayed Wagons", formatNumber(delayedWagons.length)],
+      ["Average Delay", formatDuration(averageDelay)],
+      ["Critical Health", formatNumber(delayedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length)],
+      ["Weak / Inactive GPS", formatNumber(delayedWagons.filter((wagon) => wagon.gpsStatus !== "Active").length)],
+      ["Maintenance Flags", formatNumber(delayedWagons.filter((wagon) => wagon.maintenanceStatus !== "Clear").length)],
+      ["Top Affected Station", delayedWagons[0]?.station || "N/A"],
+    ]
+  );
+};
+
+const buildDailyMaintenanceLog = (definition, wagons, zone) => {
+  const flaggedWagons = sortByLastUpdated(wagons.filter((wagon) => wagon.maintenanceStatus !== "Clear"));
+  const rows = safeRows(
+    flaggedWagons.slice(0, 10).map((wagon) => ([
+      wagon.wagonId,
+      wagon.station,
+      wagon.status,
+      wagon.maintenanceStatus,
+      wagon.wagonHealth,
+      `${wagon.temperature} C`,
+      formatDateTimeLabel(wagon.lastUpdated),
+    ])),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    flaggedWagons.length,
+    flaggedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length,
+    "Maintenance Activity Log",
+    ["Wagon ID", "Station", "Status", "Maintenance Status", "Health", "Temperature", "Last Updated"],
+    rows,
+    "Maintenance Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Pending Maintenance", formatNumber(flaggedWagons.filter((wagon) => wagon.maintenanceStatus === "Pending").length)],
+      ["Inspection Due", formatNumber(flaggedWagons.filter((wagon) => wagon.maintenanceStatus === "Inspection Due").length)],
+      ["Recommended", formatNumber(flaggedWagons.filter((wagon) => wagon.maintenanceStatus === "Recommended").length)],
+      ["Critical Wagons", formatNumber(flaggedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length)],
+      ["Warning Health", formatNumber(flaggedWagons.filter((wagon) => wagon.wagonHealth === "Warning").length)],
+      ["Average Temperature", `${buildWagonSummary(flaggedWagons).avgTemperature || 0} C`],
+    ]
+  );
+};
+
+const buildDailyGpsStatusReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    sortByLastUpdated(wagons).slice(0, 10).map((wagon) => ([
+      wagon.wagonId,
+      wagon.gpsStatus,
+      wagon.gpsLatitude ?? "N/A",
+      wagon.gpsLongitude ?? "N/A",
+      wagon.station,
+      `${wagon.speed} km/h`,
+      formatDateTimeLabel(wagon.lastUpdated),
+    ])),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    summary.gpsActive,
+    summary.gpsWeak + summary.gpsInactive,
+    "GPS Device Status",
+    ["Wagon ID", "GPS Status", "Latitude", "Longitude", "Station", "Speed", "Last Updated"],
+    rows,
+    "GPS Coverage Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["GPS Active", formatNumber(summary.gpsActive)],
+      ["GPS Weak", formatNumber(summary.gpsWeak)],
+      ["GPS Inactive", formatNumber(summary.gpsInactive)],
+      ["Coverage", percent(summary.gpsCoverage)],
+      ["Tracked Wagons", formatNumber(summary.total)],
+      ["Last Synchronised", summary.latestUpdated ? formatDateTimeLabel(summary.latestUpdated) : "N/A"],
+    ]
+  );
+};
+
+const buildWeeklyOperationsSummary = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    buildStationActivityRows(wagons).map((station) => {
+      const stationWagons = wagons.filter((wagon) => wagon.station === station.station);
+      const stationSummary = buildWagonSummary(stationWagons);
+      return [
+        station.station,
+        stationWagons.length,
+        stationSummary.active,
+        stationSummary.delayed,
+        stationSummary.maintenance,
+        stationSummary.alerts,
+        `${stationSummary.avgSpeed} km/h`,
+      ];
+    }),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentWeekLabel(),
+    summary.total,
+    summary.alerts,
+    "Weekly Station Operations",
+    ["Station", "Wagons", "Active", "Delayed", "Maintenance", "Alerts", "Avg Speed"],
+    rows,
+    "Weekly Operations KPIs",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Total Wagons", formatNumber(summary.total)],
+      ["On-Time Rate", percent(summary.onTimeRate)],
+      ["GPS Coverage", percent(summary.gpsCoverage)],
+      ["Active Stations", formatNumber(summary.topStations.length)],
+      ["Average Speed", `${summary.avgSpeed} km/h`],
+      ["AI Alerts", formatNumber(summary.alerts)],
+    ]
+  );
+};
+
+const buildWeeklyPerformanceReport = (definition, wagons, zone) => {
+  const rows = safeRows(
+    buildWagonSummary(wagons).topLocations.map(([location, count]) => {
+      const locationWagons = wagons.filter((wagon) => wagon.currentLocation === location);
+      const locationSummary = buildWagonSummary(locationWagons);
+      return [
+        location,
+        count,
+        percent(locationSummary.onTimeRate),
+        `${locationSummary.avgSpeed} km/h`,
+        formatNumber(locationSummary.gpsActive),
+        percent(locationSummary.avgHealthScore),
+        formatNumber(locationSummary.alerts),
+      ];
+    }),
+    7
+  );
+  const summary = buildWagonSummary(wagons);
+
+  return createReport(
+    definition,
+    zone,
+    currentWeekLabel(),
+    summary.total,
+    summary.alerts,
+    "Weekly Performance by Current Location",
+    ["Current Location", "Wagons", "On-Time %", "Avg Speed", "GPS Active", "Health Score", "Alerts"],
+    rows,
+    "Weekly Performance Highlights",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Average Health Score", percent(summary.avgHealthScore)],
+      ["Healthy Wagons", formatNumber(summary.healthy)],
+      ["Warning Wagons", formatNumber(summary.warning)],
+      ["Critical Wagons", formatNumber(summary.critical)],
+      ["Top Location", summary.topLocations[0]?.[0] || "N/A"],
+      ["Average Temperature", `${summary.avgTemperature} C`],
+    ]
+  );
+};
+
+const buildWeeklyAlertAnalysis = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    summary.topAlerts.map(([alertType, count]) => {
+      const affectedWagons = wagons.filter((wagon) => wagon.alertReasons.includes(alertType));
+      return [
+        alertType,
+        count,
+        affectedWagons.length,
+        affectedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length,
+        affectedWagons.filter((wagon) => wagon.wagonHealth === "Warning").length,
+        affectedWagons.filter((wagon) => wagon.wagonHealth === "Healthy").length,
+        percent(summary.alerts ? Math.round((count / summary.alerts) * 100) : 0),
+      ];
+    }),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentWeekLabel(),
+    summary.total,
+    summary.alerts,
+    "Weekly Alert Breakdown",
+    ["Alert Type", "Count", "Affected Wagons", "Critical", "Warning", "Healthy", "Share"],
+    rows,
+    "Alert Resolution Stats",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Total Alert Signals", formatNumber(summary.alerts)],
+      ["Critical Wagons", formatNumber(summary.critical)],
+      ["Top Alert", summary.topAlerts[0]?.[0] || "N/A"],
+      ["Delayed Wagons", formatNumber(summary.delayed)],
+      ["Maintenance Flags", formatNumber(summary.maintenance)],
+      ["GPS Weak / Inactive", formatNumber(summary.gpsWeak + summary.gpsInactive)],
+    ]
+  );
+};
+
+const buildWeeklyMaintenanceSummary = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    Object.entries(summary.maintenanceDistribution).map(([maintenanceStatus, count]) => {
+      const filtered = wagons.filter((wagon) => wagon.maintenanceStatus === maintenanceStatus);
+      const filteredSummary = buildWagonSummary(filtered);
+      return [
+        maintenanceStatus,
+        count,
+        filteredSummary.critical,
+        filteredSummary.warning,
+        filtered.filter((wagon) => wagon.status === "Maintenance").length,
+        `${filteredSummary.avgTemperature} C`,
+        percent(summary.total ? Math.round((count / summary.total) * 100) : 0),
+      ];
+    }),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentWeekLabel(),
+    summary.maintenance + summary.warning + summary.critical,
+    summary.critical,
+    "Weekly Maintenance Distribution",
+    ["Maintenance Status", "Wagons", "Critical", "Warning", "In Maintenance", "Avg Temp", "Share"],
+    rows,
+    "Weekly Maintenance KPIs",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Pending", formatNumber(wagons.filter((wagon) => wagon.maintenanceStatus === "Pending").length)],
+      ["Recommended", formatNumber(wagons.filter((wagon) => wagon.maintenanceStatus === "Recommended").length)],
+      ["Inspection Due", formatNumber(wagons.filter((wagon) => wagon.maintenanceStatus === "Inspection Due").length)],
+      ["Maintenance Status Clear", formatNumber(wagons.filter((wagon) => wagon.maintenanceStatus === "Clear").length)],
+      ["Critical Health", formatNumber(summary.critical)],
+      ["Average Health", percent(summary.avgHealthScore)],
+    ]
+  );
+};
+
+const buildMonthlyFleetReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    Object.entries(summary.statusDistribution).map(([status, count]) => {
+      const filtered = wagons.filter((wagon) => wagon.status === status);
+      const filteredSummary = buildWagonSummary(filtered);
+      return [
+        status,
+        count,
+        percent(summary.total ? Math.round((count / summary.total) * 100) : 0),
+        `${filteredSummary.avgSpeed} km/h`,
+        `${filteredSummary.avgTemperature} C`,
+        filteredSummary.gpsActive,
+        percent(filteredSummary.avgHealthScore),
+      ];
+    }),
+    7
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentMonthLabel(),
+    summary.total,
+    summary.alerts,
+    "Monthly Fleet Status",
+    ["Status", "Wagons", "Share", "Avg Speed", "Avg Temp", "GPS Active", "Health Score"],
+    rows,
+    "Monthly Fleet KPIs",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Total Fleet", formatNumber(summary.total)],
+      ["On-Time Rate", percent(summary.onTimeRate)],
+      ["GPS Coverage", percent(summary.gpsCoverage)],
+      ["Average Health", percent(summary.avgHealthScore)],
+      ["Total Cargo Load", `${formatNumber(summary.totalLoad)} T`],
+      ["Last Updated", summary.latestUpdated ? formatDateTimeLabel(summary.latestUpdated) : "N/A"],
+    ]
+  );
+};
+
+const buildMonthlyAiAnalyticsReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    summary.topAlerts.map(([alertType, count]) => {
+      const affected = wagons.filter((wagon) => wagon.alertReasons.includes(alertType));
+      const averageDelay = affected.length
+        ? Math.round(affected.reduce((total, wagon) => total + wagon.delayMinutes, 0) / affected.length)
+        : 0;
+      return [
+        alertType,
+        count,
+        percent(summary.total ? Math.round((affected.length / summary.total) * 100) : 0),
+        averageDelay ? formatDuration(averageDelay) : "0m",
+        percent(buildWagonSummary(affected).avgHealthScore),
+        affected[0]?.station || "N/A",
+      ];
+    }),
+    6
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentMonthLabel(),
+    summary.total,
+    summary.alerts,
+    "Monthly AI Alert Insights",
+    ["Signal", "Count", "Affected Share", "Avg Delay", "Avg Health", "Top Station"],
+    rows,
+    "AI Engine Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Alert Signals", formatNumber(summary.alerts)],
+      ["Top Signal", summary.topAlerts[0]?.[0] || "N/A"],
+      ["Healthy Wagons", formatNumber(summary.healthy)],
+      ["Critical Wagons", formatNumber(summary.critical)],
+      ["Average Temperature", `${summary.avgTemperature} C`],
+      ["Average Health Score", percent(summary.avgHealthScore)],
+    ]
+  );
+};
+
+const buildMonthlyCargoSummary = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    summary.topCargoTypes.map(([cargoType, count]) => {
+      const filtered = wagons.filter((wagon) => wagon.cargoType === cargoType);
+      const filteredSummary = buildWagonSummary(filtered);
+      return [
+        cargoType,
+        count,
+        `${formatNumber(filteredSummary.totalLoad)} T`,
+        percent(filteredSummary.loadEfficiency),
+        formatNumber(filtered.filter((wagon) => wagon.delayStatus === "Delayed").length),
+        formatNumber(filtered.filter((wagon) => wagon.aiAlert === "Yes").length),
+      ];
+    }),
+    6
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentMonthLabel(),
+    summary.loaded + summary.partial,
+    wagons.filter((wagon) => wagon.aiAlert === "Yes" && ["Overload", "Temperature"].some((reason) => wagon.alertReasons.includes(reason))).length,
+    "Monthly Cargo Type Summary",
+    ["Cargo Type", "Wagons", "Total Load", "Load Efficiency", "Delayed", "AI Alerts"],
+    rows,
+    "Cargo KPIs",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Loaded Wagons", formatNumber(summary.loaded)],
+      ["Partial Wagons", formatNumber(summary.partial)],
+      ["Total Load", `${formatNumber(summary.totalLoad)} T`],
+      ["Load Efficiency", percent(summary.loadEfficiency)],
+      ["Top Cargo", summary.topCargoTypes[0]?.[0] || "N/A"],
+      ["Cargo Alerts", formatNumber(wagons.filter((wagon) => wagon.alertReasons.some((reason) => ["Overload", "Temperature"].includes(reason))).length)],
+    ]
+  );
+};
+
+const buildMonthlyMaintenanceReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const groups = {
+    Pending: wagons.filter((wagon) => wagon.maintenanceStatus === "Pending"),
+    Recommended: wagons.filter((wagon) => wagon.maintenanceStatus === "Recommended"),
+    "Inspection Due": wagons.filter((wagon) => wagon.maintenanceStatus === "Inspection Due"),
+    Clear: wagons.filter((wagon) => wagon.maintenanceStatus === "Clear"),
+  };
+
+  const rows = safeRows(
+    Object.entries(groups).map(([group, items]) => {
+      const groupSummary = buildWagonSummary(items);
+      return [
+        group,
+        items.length,
+        percent(summary.total ? Math.round((items.length / summary.total) * 100) : 0),
+        percent(groupSummary.avgHealthScore),
+        `${groupSummary.avgTemperature} C`,
+        formatNumber(items.filter((wagon) => wagon.aiAlert === "Yes").length),
+      ];
+    }),
+    6
+  );
+
+  return createReport(
+    definition,
+    zone,
+    currentMonthLabel(),
+    summary.maintenance + summary.warning + summary.critical,
+    summary.critical,
+    "Monthly Maintenance Categories",
+    ["Maintenance Group", "Wagons", "Share", "Health Score", "Avg Temp", "AI Alerts"],
+    rows,
+    "Maintenance KPIs",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Pending Maintenance", formatNumber(groups.Pending.length)],
+      ["Recommended Action", formatNumber(groups.Recommended.length)],
+      ["Inspection Due", formatNumber(groups["Inspection Due"].length)],
+      ["Clear", formatNumber(groups.Clear.length)],
+      ["Critical Health", formatNumber(summary.critical)],
+      ["Average Health Score", percent(summary.avgHealthScore)],
+    ]
+  );
+};
+
+const REPORT_BUILDERS = {
+  RPT_D001: buildDailyOperationsSummary,
+  RPT_D002: buildDailyCargoReport,
+  RPT_D003: buildDailyDelayAnalysis,
+  RPT_D004: buildDailyMaintenanceLog,
+  RPT_D005: buildDailyGpsStatusReport,
+  RPT_W001: buildWeeklyOperationsSummary,
+  RPT_W002: buildWeeklyPerformanceReport,
+  RPT_W003: buildWeeklyAlertAnalysis,
+  RPT_W004: buildWeeklyMaintenanceSummary,
+  RPT_M001: buildMonthlyFleetReport,
+  RPT_M002: buildMonthlyAiAnalyticsReport,
+  RPT_M003: buildMonthlyCargoSummary,
+  RPT_M004: buildMonthlyMaintenanceReport,
+};
+
 export const REPORT_DEFINITIONS = [
-  {
-    key:"wagon_stats", label:"Wagon_Statistics", color:"#3b82f6",
-    getData:() => ({
-      title:"Wagon Statistics",
-      columns:["Zone","Total","Active","Delayed","Maintenance","GPS Active","Health %"],
-      rows:[
-        ["NR (North)","312","298","9","5","291","95.8%"],
-        ["SR (South)","198","189","6","3","186","95.5%"],
-        ["ER (East)","224","214","7","3","210","95.5%"],
-        ["CR (Central)","187","178","6","3","175","95.2%"],
-        ["WR (West)","156","149","4","3","146","95.5%"],
-        ["SCR","143","136","5","2","133","95.1%"],
-        ["SWR","127","125","4","2","100","98.4%"],
-      ],
-      summary:[
-        ["Total Fleet","1,247"],["Active","1,089 (87.3%)"],
-        ["GPS Active","1,041"],["Avg Health","95.6%"],
-        ["Zones","12"],["New This Month","6"],
-      ],
-    }),
-  },
-  {
-    key:"movement_trends", label:"Movement_Trends", color:"#22c55e",
-    getData:() => ({
-      title:"Movement Trends",
-      columns:["Day","Active","Movements","Avg Speed","On-Time %","Alerts"],
-      rows:[
-        ["Monday","1,021","3,180","74 km/h","94.9%","22"],
-        ["Tuesday","1,045","3,246","77 km/h","95.8%","19"],
-        ["Wednesday","1,032","3,207","75 km/h","95.3%","21"],
-        ["Thursday","1,067","3,318","78 km/h","96.2%","16"],
-        ["Friday","1,055","3,280","76 km/h","95.6%","18"],
-        ["Saturday","1,078","3,351","79 km/h","96.0%","15"],
-        ["Sunday","1,089","3,387","76 km/h","95.7%","18"],
-      ],
-      summary:[
-        ["Total Movements","22,274"],["Best Day","Thursday (96.2%)"],
-        ["Avg Daily Active","1,055"],["Total Alerts","124"],
-        ["Avg Speed","76 km/h"],["On-Time Rate","95.6%"],
-      ],
-    }),
-  },
-  {
-    key:"alert_summary", label:"Alert_Summary", color:"#f59e0b",
-    getData:() => ({
-      title:"Alert Summaries",
-      columns:["Alert Type","Total","Critical","High","Medium","Low","Resolved %"],
-      rows:[
-        ["GPS Signal Lost","18","8","6","3","1","89%"],
-        ["Route Deviation","22","4","10","6","2","77%"],
-        ["Door Open","15","2","8","4","1","93%"],
-        ["Speed Limit Exceed","31","0","5","18","8","100%"],
-        ["Cargo Overweight","12","1","4","5","2","83%"],
-        ["Engine Anomaly","9","3","4","2","0","67%"],
-        ["Brake Warning","17","5","7","4","1","76%"],
-      ],
-      summary:[
-        ["Total Alerts","124"],["Critical","23"],
-        ["Resolved","96 (77%)"],["Pending","28"],
-        ["Avg Resolution","1h 42min"],["Most Common","Speed Exceed (31)"],
-      ],
-    }),
-  },
-  {
-    key:"monthly_performance", label:"Monthly_Performance", color:"#8b5cf6",
-    getData:() => ({
-      title:"Monthly Performance",
-      columns:["Month","Wagons","Movements","On-Time %","Alerts","Maintenance","Health %"],
-      rows:[
-        ["January","1,180","88,200","94.1%","512","198","94.2%"],
-        ["February","1,195","89,400","94.8%","489","185","94.7%"],
-        ["March","1,210","90,600","95.1%","467","176","95.0%"],
-        ["April","1,220","91,400","95.3%","451","168","95.2%"],
-        ["May","1,230","92,100","95.5%","438","162","95.4%"],
-        ["June","1,247","94,800","95.6%","478","228","95.6%"],
-        ["July*","1,089","22,274","95.7%","124","42","95.8%"],
-      ],
-      summary:[
-        ["YTD Movements","5,68,774"],["Best Month","June 2025"],
-        ["Avg Fleet Size","1,196"],["Avg On-Time","95.1%"],
-        ["Total Alerts YTD","2,959"],["Total Maintenance","1,159"],
-      ],
-    }),
-  },
-  {
-    key:"zone_performance", label:"Zone_Performance", color:"#06b6d4",
-    getData:() => ({
-      title:"Zone Performance",
-      columns:["Zone","Wagons","On-Time %","Avg Speed","Alerts","Maintenance","Score"],
-      rows:[
-        ["NR (North)","312","96.2%","79 km/h","28","12","A+"],
-        ["SR (South)","198","95.4%","74 km/h","18","8","A"],
-        ["ER (East)","224","95.5%","76 km/h","22","10","A"],
-        ["CR (Central)","187","94.9%","73 km/h","19","9","B+"],
-        ["WR (West)","156","95.5%","77 km/h","14","6","A"],
-        ["SCR","143","95.1%","75 km/h","12","5","A-"],
-        ["SWR","127","98.4%","81 km/h","8","4","A+"],
-        ["NWR","100","93.8%","71 km/h","15","7","B+"],
-      ],
-      summary:[
-        ["Best Zone","SWR (98.4%)"],["Needs Attention","NWR (93.8%)"],
-        ["Total Zones","12"],["Avg On-Time","95.6%"],
-        ["Avg Speed","75.8 km/h"],["Total Wagons","1,247"],
-      ],
-    }),
-  },
-  {
-    key:"maintenance_analytics", label:"Maintenance_Analytics", color:"#ef4444",
-    getData:() => ({
-      title:"Maintenance Analytics",
-      columns:["Type","Jobs","Avg Duration","Pass Rate","Critical","Overdue","Cost Level"],
-      rows:[
-        ["Routine Check","68","1.8h","100%","0","0","Low"],
-        ["Wheel Inspection","42","2.5h","100%","2","1","Medium"],
-        ["Brake Inspection","38","2.2h","100%","3","0","Medium"],
-        ["GPS Calibration","24","1.2h","100%","0","0","Low"],
-        ["Engine Service","18","4.5h","100%","4","2","High"],
-        ["Axle Lubrication","31","1.5h","100%","0","0","Low"],
-        ["Full Overhaul","7","8h","100%","7","0","Critical"],
-      ],
-      summary:[
-        ["Total Jobs","228"],["Completed","168 (74%)"],
-        ["Overdue","3"],["Pass Rate","100%"],
-        ["Total Hours","686h"],["Next Due (7d)","12 jobs"],
-      ],
-    }),
-  },
+  { id: "RPT_D001", key: "daily_operations_summary", label: "Daily Operations Summary", period: "Daily", color: "#3b82f6" },
+  { id: "RPT_D002", key: "daily_cargo_report", label: "Daily Cargo Report", period: "Daily", color: "#22c55e" },
+  { id: "RPT_D003", key: "daily_delay_analysis", label: "Daily Delay Analysis", period: "Daily", color: "#f59e0b" },
+  { id: "RPT_D004", key: "daily_maintenance_log", label: "Daily Maintenance Log", period: "Daily", color: "#ef4444" },
+  { id: "RPT_D005", key: "daily_gps_status_report", label: "Daily GPS Status Report", period: "Daily", color: "#06b6d4" },
+  { id: "RPT_W001", key: "weekly_operations_summary", label: "Weekly Operations Summary", period: "Weekly", color: "#3b82f6" },
+  { id: "RPT_W002", key: "weekly_performance_report", label: "Weekly Performance Report", period: "Weekly", color: "#22c55e" },
+  { id: "RPT_W003", key: "weekly_alert_analysis", label: "Weekly Alert Analysis", period: "Weekly", color: "#f59e0b" },
+  { id: "RPT_W004", key: "weekly_maintenance_summary", label: "Weekly Maintenance Summary", period: "Weekly", color: "#ef4444" },
+  { id: "RPT_M001", key: "monthly_fleet_report", label: "Monthly Fleet Report", period: "Monthly", color: "#3b82f6" },
+  { id: "RPT_M002", key: "monthly_ai_analytics_report", label: "Monthly AI Analytics Report", period: "Monthly", color: "#8b5cf6" },
+  { id: "RPT_M003", key: "monthly_cargo_summary", label: "Monthly Cargo Summary", period: "Monthly", color: "#22c55e" },
+  { id: "RPT_M004", key: "monthly_maintenance_report", label: "Monthly Maintenance Report", period: "Monthly", color: "#ef4444" },
 ];
 
-// ── PDF ───────────────────────────────────────────────────────────────────────
-export function exportReportPDF(def, dateFrom, dateTo) {
-  const data = def.getData();
-  const doc  = new jsPDF({ orientation: data.columns.length > 6 ? "landscape" : "portrait" });
-  const rgb  = hexToRgb(def.color);
-  const period = dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : new Date().toLocaleDateString("en-IN");
+export function buildReportData(definition, wagons, options = {}) {
+  const filteredWagons = filterWagonsByDateRange(wagons, options.dateFrom, options.dateTo);
+  const zone = options.zone || filteredWagons[0]?.zone || wagons[0]?.zone || "NR";
+  const builder = REPORT_BUILDERS[definition.id];
 
-  doc.setFillColor(13,31,60);
-  doc.rect(0,0,doc.internal.pageSize.width,32,"F");
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(14); doc.setFont("helvetica","bold");
-  doc.text("Indian Railways — Command Center",14,13);
-  doc.setFontSize(10); doc.setFont("helvetica","normal");
-  doc.text(data.title,14,23);
+  if (!builder) {
+    return createReport(
+      definition,
+      zone,
+      todayLabel(),
+      filteredWagons.length,
+      buildWagonSummary(filteredWagons).alerts,
+      "Report Data",
+      ["Message"],
+      [["No report builder configured"]],
+      "Summary",
+      [["Zone", getZoneName(zone)]]
+    );
+  }
 
-  doc.setDrawColor(...rgb); doc.setLineWidth(0.8);
-  doc.line(14,34,doc.internal.pageSize.width-14,34);
-  doc.setTextColor(100,116,139); doc.setFontSize(8);
-  doc.text(`Period: ${period}   |   Generated: ${new Date().toLocaleString("en-IN")}`,14,40);
+  return builder(definition, filteredWagons, zone);
+}
 
-  autoTable(doc,{
-    startY:46, head:[data.columns], body:data.rows,
-    headStyles:{ fillColor:[13,31,60], textColor:[...rgb], fontStyle:"bold", fontSize:8 },
-    bodyStyles:{ textColor:[203,213,225], fontSize:8, fillColor:[7,22,40] },
-    alternateRowStyles:{ fillColor:[13,31,60] },
-    styles:{ cellPadding:2.5 },
-    columnStyles:{ 0:{ textColor:[96,165,250], fontStyle:"bold" } },
+export function buildReportCollection(wagons, options = {}) {
+  return REPORT_DEFINITIONS.reduce(
+    (collection, definition) => {
+      const report = buildReportData(definition, wagons, options);
+      collection[definition.period].push(report);
+      collection.byId[definition.id] = report;
+      return collection;
+    },
+    { Daily: [], Weekly: [], Monthly: [], byId: {} }
+  );
+}
+
+const hexToRgb = (hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+];
+
+const exportDatasetPDF = ({ title, subtitle, fileLabel, columns, rows, summaryTitle, summaryRows, accent = "#3b82f6" }) => {
+  const doc = new jsPDF({ orientation: columns.length > 6 ? "landscape" : "portrait" });
+  const rgb = hexToRgb(accent);
+
+  doc.setFillColor(13, 31, 60);
+  doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
+  doc.setFont("helvetica", "bold");
+  doc.text("Indian Railways Command Center", 14, 12);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text(title, 14, 22);
+
+  doc.setTextColor(100, 116, 139);
+  doc.setFontSize(9);
+  doc.text(subtitle, 14, 36);
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(241, 245, 249);
+  doc.text("Report Table", 14, 46);
+
+  autoTable(doc, {
+    startY: 50,
+    head: [columns],
+    body: safeRows(rows, columns.length),
+    headStyles: { fillColor: [13, 31, 60], textColor: rgb, fontStyle: "bold", fontSize: 8 },
+    bodyStyles: { textColor: [203, 213, 225], fontSize: 8, fillColor: [7, 22, 40] },
+    alternateRowStyles: { fillColor: [13, 31, 60] },
+    styles: { cellPadding: 2.5 },
   });
 
-  const y1 = doc.lastAutoTable.finalY+10;
-  doc.setFontSize(10); doc.setFont("helvetica","bold");
-  doc.setTextColor(241,245,249); doc.text("Summary",14,y1);
-  autoTable(doc,{
-    startY:y1+4, head:[["Metric","Value"]], body:data.summary,
-    headStyles:{ fillColor:[...rgb], textColor:[255,255,255], fontSize:9 },
-    bodyStyles:{ textColor:[203,213,225], fontSize:9, fillColor:[7,22,40] },
-    alternateRowStyles:{ fillColor:[13,31,60] },
-    columnStyles:{ 1:{ textColor:[96,165,250], fontStyle:"bold" } },
+  const nextY = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(241, 245, 249);
+  doc.text(summaryTitle || "Summary", 14, nextY);
+
+  autoTable(doc, {
+    startY: nextY + 4,
+    head: [["Metric", "Value"]],
+    body: summaryRows,
+    headStyles: { fillColor: rgb, textColor: [255, 255, 255], fontSize: 9 },
+    bodyStyles: { textColor: [203, 213, 225], fontSize: 9, fillColor: [7, 22, 40] },
+    alternateRowStyles: { fillColor: [13, 31, 60] },
   });
 
   const pages = doc.internal.getNumberOfPages();
-  for(let i=1;i<=pages;i++){
-    doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(74,111,165);
-    doc.text(`Ministry of Railways · Command Center · Confidential · Page ${i}/${pages}`,14,doc.internal.pageSize.height-8);
+  for (let page = 1; page <= pages; page += 1) {
+    doc.setPage(page);
+    doc.setFontSize(8);
+    doc.setTextColor(74, 111, 165);
+    doc.text(`Ministry of Railways · Command Center · Page ${page} of ${pages}`, 14, doc.internal.pageSize.height - 8);
   }
-  doc.save(buildFileName(def.label,"pdf"));
-}
 
-// ── Excel ─────────────────────────────────────────────────────────────────────
-export function exportReportExcel(def, dateFrom, dateTo) {
-  const data   = def.getData();
-  const period = dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : new Date().toLocaleDateString("en-IN");
-  const wb     = XLSX.utils.book_new();
+  doc.save(buildFileName(fileLabel, "pdf"));
+};
 
-  const ws1 = XLSX.utils.aoa_to_sheet([
-    [data.title],
-    [`Period: ${period}`,`Generated: ${new Date().toLocaleString("en-IN")}`],
-    [], data.columns, ...data.rows,
+const exportDatasetExcel = ({ title, subtitle, fileLabel, columns, rows, summaryRows }) => {
+  const workbook = XLSX.utils.book_new();
+  const tableSheet = XLSX.utils.aoa_to_sheet([
+    [title],
+    [subtitle],
+    [],
+    columns,
+    ...safeRows(rows, columns.length),
   ]);
-  ws1["!cols"] = data.columns.map(()=>({wch:20}));
-  XLSX.utils.book_append_sheet(wb, ws1, data.title.slice(0,31));
+  tableSheet["!cols"] = columns.map(() => ({ wch: 20 }));
+  XLSX.utils.book_append_sheet(workbook, tableSheet, "Report");
 
-  const ws2 = XLSX.utils.aoa_to_sheet([["Metric","Value"], ...data.summary]);
-  ws2["!cols"] = [{wch:32},{wch:22}];
-  XLSX.utils.book_append_sheet(wb, ws2, "Summary");
+  const summarySheet = XLSX.utils.aoa_to_sheet([
+    ["Metric", "Value"],
+    ...summaryRows,
+  ]);
+  summarySheet["!cols"] = [{ wch: 28 }, { wch: 24 }];
+  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 
-  XLSX.writeFile(wb, buildFileName(def.label,"xlsx"));
-}
+  XLSX.writeFile(workbook, buildFileName(fileLabel, "xlsx"));
+};
 
-// ── CSV ───────────────────────────────────────────────────────────────────────
-export function exportReportCSV(def, dateFrom, dateTo) {
-  const data   = def.getData();
-  const period = dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : new Date().toLocaleDateString("en-IN");
-  const esc    = v => `"${String(v).replace(/"/g,'""')}"`;
-  const lines  = [
-    `# ${data.title}`,
-    `# Period: ${period} | Generated: ${new Date().toLocaleString("en-IN")}`,
-    "", data.columns.map(esc).join(","),
-    ...data.rows.map(r=>r.map(esc).join(",")),
-    "","# Summary","Metric,Value",
-    ...data.summary.map(r=>r.map(esc).join(",")),
+const exportDatasetCSV = ({ title, subtitle, fileLabel, columns, rows, summaryRows }) => {
+  const escape = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const lines = [
+    `# ${title}`,
+    `# ${subtitle}`,
+    "",
+    columns.map(escape).join(","),
+    ...safeRows(rows, columns.length).map((row) => row.map(escape).join(",")),
+    "",
+    "# Summary",
+    "Metric,Value",
+    ...summaryRows.map((row) => row.map(escape).join(",")),
   ];
-  const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8;"});
-  const url  = URL.createObjectURL(blob);
-  Object.assign(document.createElement("a"),{href:url,download:buildFileName(def.label,"csv")}).click();
+
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = buildFileName(fileLabel, "csv");
+  anchor.click();
   URL.revokeObjectURL(url);
+};
+
+export function exportReportPDF(reportData) {
+  exportDatasetPDF({
+    title: reportData.title,
+    subtitle: `${reportData.id} | Zone: ${reportData.zone} | Period: ${reportData.date} | Generated: ${new Date().toLocaleString("en-IN")}`,
+    fileLabel: reportData.label,
+    columns: reportData.columns,
+    rows: reportData.rows,
+    summaryTitle: reportData.summaryTitle,
+    summaryRows: reportData.summaryRows,
+    accent: reportData.color,
+  });
 }
 
-// ── Bulk export ───────────────────────────────────────────────────────────────
-export function bulkExportAll(format, role, dateFrom, dateTo) {
+export function exportReportExcel(reportData) {
+  exportDatasetExcel({
+    title: reportData.title,
+    subtitle: `${reportData.id} | Zone: ${reportData.zone} | Period: ${reportData.date} | Generated: ${new Date().toLocaleString("en-IN")}`,
+    fileLabel: reportData.label,
+    columns: reportData.columns,
+    rows: reportData.rows,
+    summaryRows: reportData.summaryRows,
+  });
+}
+
+export function exportReportCSV(reportData) {
+  exportDatasetCSV({
+    title: reportData.title,
+    subtitle: `${reportData.id} | Zone: ${reportData.zone} | Period: ${reportData.date} | Generated: ${new Date().toLocaleString("en-IN")}`,
+    fileLabel: reportData.label,
+    columns: reportData.columns,
+    rows: reportData.rows,
+    summaryRows: reportData.summaryRows,
+  });
+}
+
+export function exportWagonReportPDF({ wagons, zone, filters = {}, title = "Wagon Report", columns = WAGON_REPORT_COLUMNS }) {
+  const rows = buildWagonExportRows(wagons, columns);
+  const appliedFilters = Object.entries(filters).filter(([, value]) => value && value !== "All");
+  exportDatasetPDF({
+    title,
+    subtitle: `Zone: ${zone} | Generated: ${new Date().toLocaleString("en-IN")} | Rows: ${wagons.length}`,
+    fileLabel: `${title}_${zone}`,
+    columns: columns.map((column) => column.label),
+    rows,
+    summaryTitle: "Applied Filters",
+    summaryRows: [
+      ["Zone", getZoneName(zone)],
+      ["Visible Rows", formatNumber(wagons.length)],
+      ...appliedFilters.map(([key, value]) => [key, String(value)]),
+    ],
+    accent: "#3b82f6",
+  });
+}
+
+export function exportWagonReportExcel({ wagons, zone, filters = {}, title = "Wagon Report", columns = WAGON_REPORT_COLUMNS }) {
+  const rows = buildWagonExportRows(wagons, columns);
+  const appliedFilters = Object.entries(filters).filter(([, value]) => value && value !== "All");
+  exportDatasetExcel({
+    title,
+    subtitle: `Zone: ${zone} | Generated: ${new Date().toLocaleString("en-IN")} | Rows: ${wagons.length}`,
+    fileLabel: `${title}_${zone}`,
+    columns: columns.map((column) => column.label),
+    rows,
+    summaryRows: [
+      ["Zone", getZoneName(zone)],
+      ["Visible Rows", formatNumber(wagons.length)],
+      ...appliedFilters.map(([key, value]) => [key, String(value)]),
+    ],
+  });
+}
+
+export function exportWagonReportCSV({ wagons, zone, filters = {}, title = "Wagon Report", columns = WAGON_REPORT_COLUMNS }) {
+  const rows = buildWagonExportRows(wagons, columns);
+  const appliedFilters = Object.entries(filters).filter(([, value]) => value && value !== "All");
+  exportDatasetCSV({
+    title,
+    subtitle: `Zone: ${zone} | Generated: ${new Date().toLocaleString("en-IN")} | Rows: ${wagons.length}`,
+    fileLabel: `${title}_${zone}`,
+    columns: columns.map((column) => column.label),
+    rows,
+    summaryRows: [
+      ["Zone", getZoneName(zone)],
+      ["Visible Rows", formatNumber(wagons.length)],
+      ...appliedFilters.map(([key, value]) => [key, String(value)]),
+    ],
+  });
+}
+
+export function bulkExportAll(format, role, wagons, options = {}) {
   REPORT_DEFINITIONS
-    .filter(d => canAccessReport(role, d.key))
-    .forEach(def => {
-      if(format==="pdf")   exportReportPDF(def,dateFrom,dateTo);
-      if(format==="excel") exportReportExcel(def,dateFrom,dateTo);
-      if(format==="csv")   exportReportCSV(def,dateFrom,dateTo);
+    .filter((definition) => canAccessReport(role, definition.key))
+    .forEach((definition) => {
+      const report = buildReportData(definition, wagons, options);
+      if (format === "pdf") exportReportPDF(report);
+      if (format === "excel") exportReportExcel(report);
+      if (format === "csv") exportReportCSV(report);
     });
 }
 
-// ── Scheduled daily reports ───────────────────────────────────────────────────
 const SCHEDULE_KEY = "rcc_scheduled_report";
 
-export function getSchedule()         { try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY))||null; } catch { return null; } }
-export function saveSchedule(cfg)     { localStorage.setItem(SCHEDULE_KEY,JSON.stringify({...cfg,savedAt:Date.now()})); }
-export function clearSchedule()       { localStorage.removeItem(SCHEDULE_KEY); }
+export function getSchedule() {
+  try {
+    return JSON.parse(localStorage.getItem(SCHEDULE_KEY)) || null;
+  } catch {
+    return null;
+  }
+}
 
-export function checkAndRunSchedule(role) {
-  const s = getSchedule();
-  if(!s||!s.enabled||s.role!==role) return false;
-  const [h,m]  = (s.time||"06:00").split(":").map(Number);
-  const target = new Date(); target.setHours(h,m,0,0);
-  if(Date.now()>=target.getTime()&&(s.lastRun||0)<target.getTime()){
-    const today = new Date().toISOString().slice(0,10);
-    bulkExportAll(s.format||"pdf",role,today,today);
-    saveSchedule({...s,lastRun:Date.now()});
+export function saveSchedule(config) {
+  localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ ...config, savedAt: Date.now() }));
+}
+
+export function clearSchedule() {
+  localStorage.removeItem(SCHEDULE_KEY);
+}
+
+export function checkAndRunSchedule(role, wagons, options = {}) {
+  const schedule = getSchedule();
+  if (!schedule || !schedule.enabled || schedule.role !== role || !wagons.length) return false;
+
+  const [hours, minutes] = (schedule.time || "06:00").split(":").map(Number);
+  const target = new Date();
+  target.setHours(hours, minutes, 0, 0);
+
+  if (Date.now() >= target.getTime() && (schedule.lastRun || 0) < target.getTime()) {
+    bulkExportAll(schedule.format || "pdf", role, wagons, options);
+    saveSchedule({ ...schedule, lastRun: Date.now() });
     return true;
   }
+
   return false;
 }
 
-function hexToRgb(hex){
-  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
-}
+export const buildAnalyticsSnapshot = (wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  return {
+    zone,
+    zoneName: getZoneName(zone),
+    summary,
+    weekly: buildStatusTrendRows(wagons),
+    monthly: buildMonthlyTrendRows(wagons),
+    stations: buildStationActivityRows(wagons),
+    alerts: summary.topAlerts.map(([name, value]) => ({ name, value })),
+  };
+};

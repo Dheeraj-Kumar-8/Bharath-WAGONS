@@ -346,37 +346,17 @@ export function AuthProvider({ children }) {
   const persistReqs     = (data) => { setRequests(data);     saveStore(STORE_KEY_REQS,     data); };
   const persistAnalysts = (data) => { setAnalystUsers(data); saveStore(STORE_KEY_ANALYSTS, data); };
 
-  // Analytics login — calls backend API
-  const loginAnalyst = useCallback(async (email, password) => {
+  // Analytics login — local credential check
+  const loginAnalyst = useCallback((email, password) => {
     const e = email.trim().toLowerCase();
-    console.log("[AuthContext] loginAnalyst called:", e);
-    try {
-      console.log("[AuthContext] Sending fetch to /api/auth/login (analyst)");
-      const res  = await fetch("http://localhost:5000/api/auth/login", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: e, password: password.trim() }),
-      });
-      const data = await res.json();
-      console.log("[AuthContext] loginAnalyst response:", res.status, data);
-      if (res.status === 404) return { success:false, reason:"invalid_credentials" };
-      if (res.status === 401) return { success:false, reason:"invalid_credentials" };
-      if (!data.success)     return { success:false, reason:"invalid_credentials" };
-      if (data.role?.toLowerCase() !== "analyst") {
-        console.warn("[AuthContext] Role mismatch — expected analyst, got:", data.role);
-        return { success:false, reason:"invalid_credentials" };
-      }
-      const session = { name:data.name, email:e, zone:data.zone, role:"analyst" };
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user",  JSON.stringify(session));
-      sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
-      setAnalyst(session);
-      console.log("[AuthContext] loginAnalyst success:", session);
-      return { success:true };
-    } catch (err) {
-      console.error("[AuthContext] loginAnalyst fetch error:", err.message);
-      return { success:false, reason:"invalid_credentials" };
-    }
+    const p = password.trim();
+    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
+    const found = ANALYTICS_CREDENTIALS.find(a => a.email.toLowerCase() === e);
+    if (!found || found.password !== p) return { success:false, reason:"invalid_credentials" };
+    const session = { name:found.name, email:e, zone:found.zone, role:"analyst" };
+    sessionStorage.setItem("rcc_analyst", JSON.stringify(session));
+    setAnalyst(session);
+    return { success:true };
   }, []);
 
   const logoutAnalyst = () => {
@@ -386,37 +366,17 @@ export function AuthProvider({ children }) {
     setAnalyst(null);
   };
 
-  // Admin login — calls backend API
-  const login = async (email, password) => {
+  // Admin login — local credential check
+  const login = (email, password) => {
     const e = email.trim().toLowerCase();
-    console.log("[AuthContext] login called:", e);
-    try {
-      console.log("[AuthContext] Sending fetch to /api/auth/login (admin)");
-      const res  = await fetch("http://localhost:5000/api/auth/login", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: e, password: password.trim() }),
-      });
-      const data = await res.json();
-      console.log("[AuthContext] login response:", res.status, data);
-      if (res.status === 404) return { success:false, reason:"invalid_domain" };
-      if (res.status === 401) return { success:false };
-      if (!data.success)     return { success:false };
-      if (data.role?.toLowerCase() !== "admin") {
-        console.warn("[AuthContext] Role mismatch — expected admin, got:", data.role);
-        return { success:false };
-      }
-      const session = { name:data.name, email:e, zone:data.zone, role:"admin" };
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user",  JSON.stringify(session));
-      sessionStorage.setItem("rcc_admin", JSON.stringify(session));
-      setAdmin(session);
-      console.log("[AuthContext] login success:", session);
-      return { success:true, admin:session };
-    } catch (err) {
-      console.error("[AuthContext] login fetch error:", err.message);
-      return { success:false };
-    }
+    const p = password.trim();
+    if (!isValidRailwayEmail(e)) return { success:false, reason:"invalid_domain" };
+    const found = ADMIN_CREDENTIALS.find(a => a.email.toLowerCase() === e);
+    if (!found || found.password !== p) return { success:false };
+    const session = { name:found.name, email:e, zone:found.zone, role:"admin" };
+    sessionStorage.setItem("rcc_admin", JSON.stringify(session));
+    setAdmin(session);
+    return { success:true, admin:session };
   };
 
   // Operator login

@@ -6,7 +6,6 @@ import {
 } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
 import { useOperatorData } from "../context/OperatorDataContext";
-import GoogleRailwayMap from "../components/GoogleRailwayMap";
 
 const MAP_LAT_MIN = 8,  MAP_LAT_MAX = 37;
 const MAP_LNG_MIN = 68, MAP_LNG_MAX = 97;
@@ -118,21 +117,6 @@ function getStationCoords(name) {
   const key = Object.keys(ALL_STATIONS).find(k => k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase()));
   if (key) return geo2svg(ALL_STATIONS[key].lat, ALL_STATIONS[key].lng);
   return null;
-}
-
-// ── Railway Map ──────────────────────────────────────────────────────────────
-function RailwayMap({ wagons, selected, onSelectWagon, searchStation }) {
-  return (
-    <GoogleRailwayMap
-      wagons={wagons}
-      selected={selected}
-      onSelectWagon={onSelectWagon}
-      searchStation={searchStation}
-      getStationCoords={getStationCoords}
-      zoneColors={{}}
-      statusColors={STATUS_COLOR}
-    />
-  );
 }
 
 const STATUS_COLOR = { "On Time":"#22c55e", Delayed:"#f59e0b", Halted:"#ef4444", Maintenance:"#f97316" };
