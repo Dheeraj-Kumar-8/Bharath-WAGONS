@@ -30,6 +30,7 @@ export const ROLE_REPORTS = {
     "monthly_ai_analytics_report",
     "monthly_cargo_summary",
     "monthly_maintenance_report",
+    "wagons_report",
   ],
   analyst: [
     "daily_operations_summary",
@@ -45,6 +46,7 @@ export const ROLE_REPORTS = {
     "monthly_ai_analytics_report",
     "monthly_cargo_summary",
     "monthly_maintenance_report",
+    "wagons_report",
   ],
   operator: [
     "daily_operations_summary",
@@ -52,6 +54,7 @@ export const ROLE_REPORTS = {
     "daily_delay_analysis",
     "daily_maintenance_log",
     "daily_gps_status_report",
+    "wagons_report",
   ],
 };
 
@@ -182,6 +185,7 @@ const buildDailyCargoReport = (definition, wagons, zone) => {
 };
 
 const buildDailyDelayAnalysis = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
   const delayedWagons = sortByLastUpdated(wagons.filter((wagon) => wagon.delayStatus === "Delayed"));
   const rows = safeRows(
     delayedWagons.slice(0, 10).map((wagon) => ([
@@ -202,20 +206,19 @@ const buildDailyDelayAnalysis = (definition, wagons, zone) => {
     definition,
     zone,
     todayLabel(),
-    delayedWagons.length,
-    delayedWagons.reduce((total, wagon) => total + wagon.alertCount, 0),
-    "Delayed Wagons and Root Causes",
-    ["Wagon ID", "Route", "Delay", "Alert Reasons", "Current Location", "Speed"],
+    summary.delayed,
+    summary.alerts,
+    "Daily Delay Analysis",
+    ["Wagon ID", "Route", "Delay Time", "Reason", "Current Location", "Speed"],
     rows,
     "Delay Statistics",
     [
       ["Zone", getZoneName(zone)],
-      ["Delayed Wagons", formatNumber(delayedWagons.length)],
+      ["Total Delayed", formatNumber(summary.delayed)],
       ["Average Delay", formatDuration(averageDelay)],
-      ["Critical Health", formatNumber(delayedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length)],
-      ["Weak / Inactive GPS", formatNumber(delayedWagons.filter((wagon) => wagon.gpsStatus !== "Active").length)],
-      ["Maintenance Flags", formatNumber(delayedWagons.filter((wagon) => wagon.maintenanceStatus !== "Clear").length)],
-      ["Top Affected Station", delayedWagons[0]?.station || "N/A"],
+      ["Critical Delays", formatNumber(delayedWagons.filter((wagon) => wagon.wagonHealth === "Critical").length)],
+      ["High Priority", formatNumber(delayedWagons.filter((wagon) => wagon.alertReasons.includes("GPS") || wagon.alertReasons.includes("Temperature")).length)],
+      ["Most Affected Location", summary.topLocations[0]?.[0] || "N/A"],
     ]
   );
 };
@@ -626,6 +629,59 @@ const buildMonthlyMaintenanceReport = (definition, wagons, zone) => {
   );
 };
 
+const buildWagonsReport = (definition, wagons, zone) => {
+  const summary = buildWagonSummary(wagons);
+  const rows = safeRows(
+    sortByLastUpdated(wagons).map((wagon) => [
+      wagon.wagonId,
+      wagon.wagonNumber,
+      wagon.zone,
+      wagon.division,
+      wagon.station,
+      wagon.destination,
+      wagon.gpsLatitude ?? "N/A",
+      wagon.gpsLongitude ?? "N/A",
+      wagon.gpsStatus,
+      wagon.speed,
+      wagon.cargoType,
+      wagon.currentLoad,
+      wagon.wagonHealth,
+      wagon.temperature,
+      wagon.aiAlert,
+      formatDateTimeLabel(wagon.lastUpdated),
+    ]),
+    16
+  );
+
+  return createReport(
+    definition,
+    zone,
+    todayLabel(),
+    summary.total,
+    summary.alerts,
+    "Wagon Report",
+    ["Wagon ID", "Wagon Number", "Zone", "Division", "Current Station", "Destination", "Latitude", "Longitude", "GPS Status", "Current Speed", "Cargo Type", "Cargo Weight", "Health Status", "Temperature", "Alert Status", "Last Updated"],
+    rows,
+    "Wagon Report Summary",
+    [
+      ["Zone", getZoneName(zone)],
+      ["Total Wagons", formatNumber(summary.total)],
+      ["Active Wagons", formatNumber(summary.active)],
+      ["Delayed Wagons", formatNumber(summary.delayed)],
+      ["Maintenance Wagons", formatNumber(summary.maintenance)],
+      ["GPS Active", formatNumber(summary.gpsActive)],
+      ["GPS Weak", formatNumber(summary.gpsWeak)],
+      ["GPS Inactive", formatNumber(summary.gpsInactive)],
+      ["Healthy Wagons", formatNumber(summary.healthy)],
+      ["Warning Wagons", formatNumber(summary.warning)],
+      ["Critical Wagons", formatNumber(summary.critical)],
+      ["Total Cargo Load", `${formatNumber(summary.totalLoad)} T`],
+      ["Average Temperature", `${summary.avgTemperature} C`],
+      ["Last Updated", summary.latestUpdated ? formatDateTimeLabel(summary.latestUpdated) : "N/A"],
+    ]
+  );
+};
+
 const REPORT_BUILDERS = {
   RPT_D001: buildDailyOperationsSummary,
   RPT_D002: buildDailyCargoReport,
@@ -640,6 +696,7 @@ const REPORT_BUILDERS = {
   RPT_M002: buildMonthlyAiAnalyticsReport,
   RPT_M003: buildMonthlyCargoSummary,
   RPT_M004: buildMonthlyMaintenanceReport,
+  RPT_WAGON: buildWagonsReport,
 };
 
 export const REPORT_DEFINITIONS = [
@@ -656,6 +713,7 @@ export const REPORT_DEFINITIONS = [
   { id: "RPT_M002", key: "monthly_ai_analytics_report", label: "Monthly AI Analytics Report", period: "Monthly", color: "#8b5cf6" },
   { id: "RPT_M003", key: "monthly_cargo_summary", label: "Monthly Cargo Summary", period: "Monthly", color: "#22c55e" },
   { id: "RPT_M004", key: "monthly_maintenance_report", label: "Monthly Maintenance Report", period: "Monthly", color: "#ef4444" },
+  { id: "RPT_WAGON", key: "wagons_report", label: "Wagons Report", period: "Wagons", color: "#6366f1" },
 ];
 
 export function buildReportData(definition, wagons, options = {}) {
@@ -685,11 +743,12 @@ export function buildReportCollection(wagons, options = {}) {
   return REPORT_DEFINITIONS.reduce(
     (collection, definition) => {
       const report = buildReportData(definition, wagons, options);
+      if (!collection[definition.period]) collection[definition.period] = [];
       collection[definition.period].push(report);
       collection.byId[definition.id] = report;
       return collection;
     },
-    { Daily: [], Weekly: [], Monthly: [], byId: {} }
+    { Daily: [], Weekly: [], Monthly: [], Wagons: [], byId: {} }
   );
 }
 

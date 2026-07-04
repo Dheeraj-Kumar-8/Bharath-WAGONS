@@ -11,6 +11,7 @@ import OperatorLayout from "../components/OperatorLayout";
 import StatCard from "../components/StatCard";
 import { useOperatorData } from "../context/OperatorDataContext";
 import ReportExportPanel from "../components/ReportExportPanel";
+import { WAGON_REPORT_COLUMNS, buildWagonExportRows, getZoneName } from "../utils/wagonUtils";
 
 const OPERATOR_ACTIVITY = [
   { action:"Logged in",                 at:"08:30 AM", module:"Portal",      wagon:"—"       },
@@ -32,6 +33,7 @@ const REPORT_TYPES_DEF = [
   { key:"cargo",    label:"Cargo Report",           icon:FiActivity,      color:"#8b5cf6",  desc:"Cargo types, load efficiency and transit data"   },
   { key:"maint",    label:"Maintenance Report",     icon:FiTool,          color:"#ef4444",  desc:"Scheduled, completed and overdue maintenance"    },
   { key:"operator", label:"Operator Activity",      icon:FiUser,          color:"#22c55e",  desc:"Operator actions, module usage and audit log"    },
+  { key:"wagons",   label:"Wagons Report",          icon:FiTruck,         color:"#6366f1",  desc:"Complete wagon data with all fields and filters"   },
 ];
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -137,6 +139,27 @@ function buildReportData(type, fromDate, toDate, operatorName, WAGONS, MAINTENAN
         ["Reports Downloaded", OPERATOR_ACTIVITY.filter(a=>a.action.includes("Downloaded")).length],
         ["Maintenance Actions", OPERATOR_ACTIVITY.filter(a=>a.module==="Maintenance").length],
         ["Session Start",   OPERATOR_ACTIVITY[0]?.at || "—"],
+      ],
+    };
+  }
+
+  if (type === "wagons") {
+    return {
+      title:   "Wagons Report",
+      period,
+      columns: ["Wagon ID","Wagon Number","Zone","Division","Current Station","Destination","Latitude","Longitude","GPS Status","Current Speed","Cargo Type","Cargo Weight","Health Status","Temperature","Alert Status","Last Updated"],
+      rows:    WAGONS.map(w => [w.id, w.wagonNumber || w.id, w.zone, w.division || "—", w.location || w.station || "—", w.destination || "—", w.gpsLatitude || "—", w.gpsLongitude || "—", w.gpsStatus || "—", w.speed || 0, w.cargoType || "—", w.currentLoad || 0, w.wagonHealth || "—", w.aiAlert || "—", w.lastUpdated || "—"]),
+      summary: [
+        ["Total Wagons",       WAGONS.length],
+        ["Active Wagons",      WAGONS.filter(w => w.status !== "Maintenance").length],
+        ["Delayed Wagons",     WAGONS.filter(w => w.status === "Delayed").length],
+        ["Maintenance Wagons", WAGONS.filter(w => w.status === "Maintenance").length],
+        ["GPS Active",         WAGONS.filter(w => w.gpsStatus === "Active").length],
+        ["GPS Weak",           WAGONS.filter(w => w.gpsStatus === "Weak").length],
+        ["GPS Inactive",       WAGONS.filter(w => w.gpsStatus === "Inactive").length],
+        ["Healthy Wagons",     WAGONS.filter(w => w.wagonHealth === "Healthy").length],
+        ["Warning Wagons",     WAGONS.filter(w => w.wagonHealth === "Warning").length],
+        ["Critical Wagons",    WAGONS.filter(w => w.wagonHealth === "Critical").length],
       ],
     };
   }
@@ -268,10 +291,45 @@ const cellColor = v => {
 };
 
 // ── Preview Modal ─────────────────────────────────────────────────────────────
-function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES }) {
+function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES, wagons }) {
   const meta = REPORT_TYPES.find(r => r.key === rtype);
   const col  = meta?.color || "#3b82f6";
   const MetaIcon = meta?.icon || FiFileText;
+  const [selectedColumns, setSelectedColumns] = useState(WAGON_REPORT_COLUMNS.map(c => c.key));
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  const handleColumnToggle = (key) => {
+    setSelectedColumns(prev => {
+      if (prev.includes(key)) {
+        return prev.length === 1 ? prev : prev.filter(k => k !== key);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedColumns(WAGON_REPORT_COLUMNS.map(c => c.key));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedColumns(WAGON_REPORT_COLUMNS.slice(0, 1).map(c => c.key));
+  };
+
+  const handleExportWithColumns = (format) => {
+    if (rtype === "wagons" && wagons) {
+      const columns = WAGON_REPORT_COLUMNS.filter(c => selectedColumns.includes(c.key));
+      const rows = buildWagonExportRows(wagons, columns);
+      const exportData = {
+        title: data.title,
+        columns: columns.map(c => c.label),
+        rows,
+        summary: data.summary,
+      };
+      onDownload(format, exportData);
+    } else {
+      onDownload(format);
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -290,8 +348,21 @@ function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES }) {
             <span style={{ color:"#4a6fa5", fontSize:12 }}>Period: {data.period} · Generated {new Date().toLocaleTimeString("en-IN")}</span>
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            {rtype === "wagons" && (
+              <button
+                onClick={() => setShowColumnSelector(true)}
+                style={{
+                  padding:"5px 12px", border:"1px solid #6366f144",
+                  borderRadius:8, background:"rgba(99,102,241,.12)",
+                  color:"#6366f1", cursor:"pointer", fontSize:11, fontWeight:700,
+                  display:"flex", alignItems:"center", gap:4,
+                }}
+              >
+                <FiFilter size={10}/> Columns ({selectedColumns.length})
+              </button>
+            )}
             {[["PDF","#ef4444"],["Excel","#22c55e"],["CSV","#f59e0b"]].map(([fmt, c]) => (
-              <button key={fmt} onClick={() => onDownload(fmt)} style={{
+              <button key={fmt} onClick={() => handleExportWithColumns(fmt)} style={{
                 padding:"5px 12px", border:`1px solid ${c}44`, borderRadius:8,
                 background:`${c}18`, color:c, cursor:"pointer", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:5,
               }}>
@@ -303,6 +374,81 @@ function PreviewModal({ data, rtype, onClose, onDownload, REPORT_TYPES }) {
             </button>
           </div>
         </div>
+
+        {/* Column Selector Modal for Wagons Report */}
+        {showColumnSelector && rtype === "wagons" && (
+          <div style={{
+            position:"fixed", top:0, left:0, right:0, bottom:0,
+            background:"rgba(0,0,0,.7)", zIndex:9999,
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+            <div style={{
+              background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:16,
+              width:"90vw", maxWidth:"700px", maxHeight:"80vh",
+              display:"flex", flexDirection:"column", overflow:"hidden",
+            }}>
+              <div style={{
+                padding:"14px 20px", borderBottom:"1px solid #1a3356",
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+                background:"linear-gradient(135deg,#0d1f3c,#071628)",
+              }}>
+                <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:15 }}>Select Columns to Export</div>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  background:"rgba(255,255,255,.08)", border:"none", borderRadius:8,
+                  padding:"4px 8px", cursor:"pointer", color:"#94a3b8", display:"flex"
+                }}>
+                  <FiX size={16}/>
+                </button>
+              </div>
+              <div style={{ flex:1, overflowY:"auto", padding:"16px 20px" }}>
+                <div style={{ display:"flex", gap:12, marginBottom:12 }}>
+                  <button onClick={handleSelectAll} style={{
+                    padding:"6px 12px", borderRadius:8, border:"1px solid #22c55e44",
+                    background:"rgba(34,197,94,.12)", color:"#22c55e", cursor:"pointer",
+                    fontSize:12, fontWeight:600
+                  }}>Select All</button>
+                  <button onClick={handleDeselectAll} style={{
+                    padding:"6px 12px", borderRadius:8, border:"1px solid #ef444444",
+                    background:"rgba(239,68,68,.12)", color:"#ef4444", cursor:"pointer",
+                    fontSize:12, fontWeight:600
+                  }}>Deselect All</button>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                  {WAGON_REPORT_COLUMNS.map(col => (
+                    <label key={col.key} style={{
+                      display:"flex", alignItems:"center", gap:8,
+                      padding:"8px 12px", background:"rgba(255,255,255,.03)",
+                      border:"1px solid #1a3356", borderRadius:8, cursor:"pointer",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedColumns.includes(col.key)}
+                        onChange={() => handleColumnToggle(col.key)}
+                        style={{ width:16, height:16, cursor:"pointer" }}
+                      />
+                      <span style={{ color:"#cbd5e1", fontSize:13 }}>{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div style={{
+                padding:"12px 20px", borderTop:"1px solid #1a3356",
+                display:"flex", justifyContent:"flex-end", gap:10
+              }}>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  padding:"6px 14px", borderRadius:8, border:"1px solid #1a3356",
+                  background:"rgba(255,255,255,.05)", color:"#94a3b8", cursor:"pointer",
+                  fontSize:12, fontWeight:600
+                }}>Cancel</button>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  padding:"6px 14px", borderRadius:8, border:"none",
+                  background:"#3b82f6", color:"#fff", cursor:"pointer",
+                  fontSize:12, fontWeight:600
+                }}>Apply</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* KPI strip */}
         <div style={{ display:"flex", borderBottom:"1px solid #1a3356", flexShrink:0 }}>
@@ -408,11 +554,21 @@ export default function OperatorReports() {
 
   const handleDownload = (format, rtype, data) => {
     try {
-      if (format === "PDF")   exportPDF(data, rtype, REPORT_TYPES);
-      if (format === "Excel") exportExcel(data);
-      if (format === "CSV")   exportCSV(data);
-      addHistory(rtype, format);
-      showToast(`${data.title} downloaded as ${format}`);
+      // Handle custom export data (for wagons report with column selection)
+      if (typeof format === "object" && format !== null) {
+        const exportData = format;
+        if (rtype === "PDF")   exportPDF(exportData, "wagons", REPORT_TYPES);
+        if (rtype === "Excel") exportExcel(exportData);
+        if (rtype === "CSV")   exportCSV(exportData);
+        addHistory("wagons", rtype);
+        showToast(`Wagons Report downloaded as ${rtype}`);
+      } else {
+        if (format === "PDF")   exportPDF(data, rtype, REPORT_TYPES);
+        if (format === "Excel") exportExcel(data);
+        if (format === "CSV")   exportCSV(data);
+        addHistory(rtype, format);
+        showToast(`${data.title} downloaded as ${format}`);
+      }
     } catch {
       showToast("Download failed — try again", false);
     }
@@ -564,6 +720,7 @@ export default function OperatorReports() {
                 {key === "cargo"    && [["Loads",WAGONS.filter(w=>w.load>0).length,"#8b5cf6"],["Avg Load",`${Math.round(WAGONS.filter(w=>w.load>0).reduce((s,w)=>s+w.load,0)/(WAGONS.filter(w=>w.load>0).length||1))}%`,"#06b6d4"],["Overloaded",0,"#22c55e"]].map(([l,v,c])=>miniStat(l,v,c))}
                 {key === "maint"    && [["Total",MAINTENANCE.length,"#ef4444"],["Overdue",MAINTENANCE.filter(m=>m.status==="Overdue").length,"#f97316"],["Done",MAINTENANCE.filter(m=>m.status==="Completed").length,"#22c55e"]].map(([l,v,c])=>miniStat(l,v,c))}
                 {key === "operator" && [["Actions",OPERATOR_ACTIVITY.length,"#22c55e"],["Modules",[...new Set(OPERATOR_ACTIVITY.map(a=>a.module))].length,"#3b82f6"],["Resolved",OPERATOR_ACTIVITY.filter(a=>a.action.includes("Resolved")).length,"#f59e0b"]].map(([l,v,c])=>miniStat(l,v,c))}
+                {key === "wagons"   && [["Total",WAGONS.length,"#6366f1"],["Active",WAGONS.filter(w=>w.status!=="Maintenance").length,"#22c55e"],["Delayed",WAGONS.filter(w=>w.status==="Delayed").length,"#f59e0b"],["Alerts",WAGONS.filter(w=>w.aiAlert==="Yes").length,"#ef4444"]].map(([l,v,c])=>miniStat(l,v,c))}
               </div>
 
               {/* Actions */}
@@ -597,7 +754,7 @@ export default function OperatorReports() {
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
           <div>
             <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:13 }}>Bulk Export — All Reports</div>
-            <div style={{ color:"#4a6fa5", fontSize:12 }}>Download all 5 report types at once for period: {fmtDate(fromDate)} – {fmtDate(toDate)}</div>
+            <div style={{ color:"#4a6fa5", fontSize:12 }}>Download all 6 report types at once for period: {fmtDate(fromDate)} – {fmtDate(toDate)}</div>
           </div>
           <div style={{ display:"flex", gap:10 }}>
             {[["PDF","#ef4444"],["Excel","#22c55e"],["CSV","#f59e0b"]].map(([fmt, c]) => (
@@ -622,8 +779,15 @@ export default function OperatorReports() {
           data={preview.data}
           rtype={preview.rtype}
           REPORT_TYPES={REPORT_TYPES}
+          wagons={WAGONS}
           onClose={() => setPreview(null)}
-          onDownload={(fmt) => handleDownload(fmt, preview.rtype, preview.data)}
+          onDownload={(fmt, exportData) => {
+            if (exportData) {
+              handleDownload(exportData, fmt);
+            } else {
+              handleDownload(fmt, preview.rtype, preview.data);
+            }
+          }}
         />
       )}
 

@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import {
   FiFileText, FiDownload, FiBarChart2, FiActivity,
-  FiCalendar, FiCheckCircle, FiX, FiEye,
+  FiCalendar, FiCheckCircle, FiX, FiEye, FiSearch, FiFilter,
 } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import ReportExportPanel from "../components/ReportExportPanel";
+import { useAuth } from "../context/AuthContext";
+import { useWagonData } from "../context/WagonDataContext";
+import {
+  buildWagonSummary,
+  sortWagons,
+  getWagonFilterOptions,
+  getZoneName,
+  WAGON_REPORT_COLUMNS,
+  buildWagonExportRows,
+  formatDateTimeLabel,
+} from "../utils/wagonUtils";
 
 const REPORTS = {
   Daily: [
@@ -588,13 +599,353 @@ function ReportModal({ report, onClose }) {
   );
 }
 
+// ── Wagons Report Modal ───────────────────────────────────────────────────────
+function WagonsReportModal({ wagons, zone, filters, onClose, onExport }) {
+  const [sortConfig, setSortConfig] = useState({ key: "wagonId", direction: "asc" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedColumns, setSelectedColumns] = useState(WAGON_REPORT_COLUMNS.map(col => col.key));
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  const sortedWagons = useMemo(() => sortWagons(wagons, sortConfig), [wagons, sortConfig]);
+  
+  const paginatedWagons = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return sortedWagons.slice(start, start + rowsPerPage);
+  }, [sortedWagons, currentPage, rowsPerPage]);
+
+  const totalPages = Math.ceil(sortedWagons.length / rowsPerPage) || 1;
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleColumnToggle = (key) => {
+    setSelectedColumns(prev => {
+      if (prev.includes(key)) {
+        return prev.length === 1 ? prev : prev.filter(k => k !== key);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedColumns(WAGON_REPORT_COLUMNS.map(col => col.key));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedColumns(WAGON_REPORT_COLUMNS.slice(0, 1).map(col => col.key));
+  };
+
+  const handleExport = (format) => {
+    const columns = WAGON_REPORT_COLUMNS.filter(col => selectedColumns.includes(col.key));
+    onExport(format, sortedWagons, zone, filters, columns);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:"20px",
+        width:"96vw", maxWidth:"1400px", maxHeight:"92vh",
+        display:"flex", flexDirection:"column", overflow:"hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding:"16px 22px", borderBottom:"1px solid #1a3356", flexShrink:0,
+          display:"flex", justifyContent:"space-between", alignItems:"center",
+          background:"linear-gradient(135deg,#0d1f3c,#071628)",
+        }}>
+          <div>
+            <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:"16px" }}>Wagons Report — {getZoneName(zone)}</div>
+            <div style={{ color:"#4a6fa5", fontSize:"12px", marginTop:3 }}>
+              {wagons.length} wagons found · Generated {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <button
+              onClick={() => setShowColumnSelector(true)}
+              style={{
+                padding:"5px 12px", border:"1px solid #6366f144",
+                borderRadius:8, background:"rgba(99,102,241,.12)",
+                color:"#6366f1", cursor:"pointer", fontSize:11, fontWeight:700,
+                display:"flex", alignItems:"center", gap:4,
+              }}
+            >
+              <FiFilter size={10}/> Columns ({selectedColumns.length})
+            </button>
+            {["PDF", "Excel", "CSV"].map(fmt => (
+              <button key={fmt} onClick={() => handleExport(fmt)} style={{
+                padding:"5px 12px", border:`1px solid ${fmt === "PDF" ? "#ef4444" : fmt === "Excel" ? "#22c55e" : "#f59e0b"}44`,
+                borderRadius:8, background:`${fmt === "PDF" ? "#ef4444" : fmt === "Excel" ? "#22c55e" : "#f59e0b"}12`,
+                color: fmt === "PDF" ? "#ef4444" : fmt === "Excel" ? "#22c55e" : "#f59e0b",
+                cursor:"pointer", fontSize:11, fontWeight:700, display:"flex", alignItems:"center", gap:4,
+              }}>
+                <FiDownload size={10}/> {fmt}
+              </button>
+            ))}
+            <button onClick={onClose} style={{ background:"rgba(255,255,255,.08)", border:"none", borderRadius:8, padding:"6px 8px", cursor:"pointer", color:"#94a3b8", display:"flex" }}>
+              <FiX size={16}/>
+            </button>
+          </div>
+        </div>
+
+        {/* Column Selector Modal */}
+        {showColumnSelector && (
+          <div style={{
+            position:"fixed", top:0, left:0, right:0, bottom:0,
+            background:"rgba(0,0,0,.7)", zIndex:9999,
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+            <div style={{
+              background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:16,
+              width:"90vw", maxWidth:"700px", maxHeight:"80vh",
+              display:"flex", flexDirection:"column", overflow:"hidden",
+            }}>
+              <div style={{
+                padding:"14px 20px", borderBottom:"1px solid #1a3356",
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+                background:"linear-gradient(135deg,#0d1f3c,#071628)",
+              }}>
+                <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:15 }}>Select Columns to Export</div>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  background:"rgba(255,255,255,.08)", border:"none", borderRadius:8,
+                  padding:"4px 8px", cursor:"pointer", color:"#94a3b8", display:"flex"
+                }}>
+                  <FiX size={16}/>
+                </button>
+              </div>
+              <div style={{ flex:1, overflowY:"auto", padding:"16px 20px" }}>
+                <div style={{ display:"flex", gap:12, marginBottom:12 }}>
+                  <button onClick={handleSelectAll} style={{
+                    padding:"6px 12px", borderRadius:8, border:"1px solid #22c55e44",
+                    background:"rgba(34,197,94,.12)", color:"#22c55e", cursor:"pointer",
+                    fontSize:12, fontWeight:600
+                  }}>Select All</button>
+                  <button onClick={handleDeselectAll} style={{
+                    padding:"6px 12px", borderRadius:8, border:"1px solid #ef444444",
+                    background:"rgba(239,68,68,.12)", color:"#ef4444", cursor:"pointer",
+                    fontSize:12, fontWeight:600
+                  }}>Deselect All</button>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                  {WAGON_REPORT_COLUMNS.map(col => (
+                    <label key={col.key} style={{
+                      display:"flex", alignItems:"center", gap:8,
+                      padding:"8px 12px", background:"rgba(255,255,255,.03)",
+                      border:"1px solid #1a3356", borderRadius:8, cursor:"pointer",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedColumns.includes(col.key)}
+                        onChange={() => handleColumnToggle(col.key)}
+                        style={{ width:16, height:16, cursor:"pointer" }}
+                      />
+                      <span style={{ color:"#cbd5e1", fontSize:13 }}>{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div style={{
+                padding:"12px 20px", borderTop:"1px solid #1a3356",
+                display:"flex", justifyContent:"flex-end", gap:10
+              }}>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  padding:"6px 14px", borderRadius:8, border:"1px solid #1a3356",
+                  background:"rgba(255,255,255,.05)", color:"#94a3b8", cursor:"pointer",
+                  fontSize:12, fontWeight:600
+                }}>Cancel</button>
+                <button onClick={() => setShowColumnSelector(false)} style={{
+                  padding:"6px 14px", borderRadius:8, border:"none",
+                  background:"#3b82f6", color:"#fff", cursor:"pointer",
+                  fontSize:12, fontWeight:600
+                }}>Apply</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* KPI strip */}
+        <div style={{ display:"flex", borderBottom:"1px solid #1a3356", flexShrink:0 }}>
+          {(() => {
+            const summary = buildWagonSummary(wagons);
+            return [
+              { label:"Total Wagons", val:wagons.length, color:"#3b82f6" },
+              { label:"Active", val:summary.active, color:"#22c55e" },
+              { label:"Delayed", val:summary.delayed, color:"#f59e0b" },
+              { label:"Maintenance", val:summary.maintenance, color:"#ef4444" },
+            ].map((k, i) => (
+              <div key={i} style={{ flex:1, padding:"10px 18px", borderRight: i < 3 ? "1px solid #1a3356" : "none" }}>
+                <div style={{ color:"#4a6fa5", fontSize:"10px", marginBottom:2, textTransform:"uppercase" }}>{k.label}</div>
+                <div style={{ color:k.color, fontWeight:800, fontSize:"15px" }}>{k.val}</div>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {/* Body - Table */}
+        <div style={{ flex:1, overflowY:"auto", padding:"18px 22px" }}>
+          <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:"13px", marginBottom:10 }}>
+            Wagon Data ({wagons.length} records)
+          </div>
+          <div className="table-wrap" style={{ marginBottom:16 }}>
+            <table>
+              <thead>
+                <tr>
+                  {WAGON_REPORT_COLUMNS.map(col => (
+                    <th key={col.key} style={{ cursor:"pointer", userSelect:"none" }} onClick={() => handleSort(col.key)}>
+                      {col.label}
+                      {sortConfig.key === col.key && <span style={{ marginLeft:4 }}>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedWagons.map((wagon, i) => (
+                  <tr key={wagon.wagonId || i}>
+                    {WAGON_REPORT_COLUMNS.map((col, j) => {
+                      const val = col.exportValue(wagon);
+                      return (
+                        <td key={col.key} style={{ 
+                          color: j === 0 ? "#60a5fa" : "#cbd5e1", 
+                          fontWeight: j === 0 ? 700 : 400,
+                          fontSize: "12px"
+                        }}>
+                          {val}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                {paginatedWagons.length === 0 && (
+                  <tr><td colSpan={WAGON_REPORT_COLUMNS.length} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>No wagons match your filters</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12 }}>
+            <div style={{ color:"#4a6fa5", fontSize:"12px" }}>
+              Page {currentPage} of {totalPages} · {wagons.length} total records
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <select 
+                value={rowsPerPage} 
+                onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="form-select"
+                style={{ width:"auto", padding:"4px 8px", fontSize:"12px" }}
+              >
+                {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n} rows</option>)}
+              </select>
+              <div style={{ display:"flex", gap:4 }}>
+                <button 
+                  className="btn btn-sm btn-outline" 
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                >Previous</button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button 
+                      key={page}
+                      className={`btn btn-sm ${currentPage === page ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setCurrentPage(page)}
+                      style={{ minWidth:"32px", padding:"4px 8px" }}
+                    >{page}</button>
+                  );
+                })}
+                <button 
+                  className="btn btn-sm btn-outline" 
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                >Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding:"10px 22px", borderTop:"1px solid #1a3356", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
+          <span style={{ color:"#2a4a6e", fontSize:"11px" }}>Ministry of Railways · Indian Railways Command Center · Wagons Report</span>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const Reports = () => {
-  const [tab, setTab]       = useState("Daily");
+  const { admin, analyst } = useAuth();
+  const { wagons: allWagons, loading, error } = useWagonData();
+  const zone = admin?.zone || analyst?.zone || "NR";
+  
+  const [tab, setTab] = useState("Daily");
   const [preview, setPreview] = useState(null);
-  const [generating, setGen]  = useState(null);
-  const [toast, setToast]     = useState("");
+  const [generating, setGen] = useState(null);
+  const [toast, setToast] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  
+  // Wagons tab state
+  const [wagonsSearch, setWagonsSearch] = useState("");
+  const [wagonsFilters, setWagonsFilters] = useState({
+    zone: "All",
+    division: "All",
+    gpsStatus: "All",
+    healthStatus: "All",
+    alertStatus: "All",
+    cargoType: "All",
+    currentStation: "All",
+  });
+  const [wagonsModalOpen, setWagonsModalOpen] = useState(false);
+
+  // Filter wagons based on search and filters
+  const filteredWagons = useMemo(() => {
+    return allWagons.filter(wagon => {
+      // Zone filter - only show wagons from user's zone
+      if (wagon.zone !== zone) return false;
+      
+      // Search filter
+      if (wagonsSearch) {
+        const searchLower = wagonsSearch.toLowerCase();
+        const matchesSearch = 
+          wagon.wagonId?.toLowerCase().includes(searchLower) ||
+          wagon.wagonNumber?.toLowerCase().includes(searchLower) ||
+          wagon.cargoType?.toLowerCase().includes(searchLower) ||
+          wagon.station?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      
+      // Additional filters
+      if (wagonsFilters.division !== "All" && wagon.division !== wagonsFilters.division) return false;
+      if (wagonsFilters.gpsStatus !== "All" && wagon.gpsStatus !== wagonsFilters.gpsStatus) return false;
+      if (wagonsFilters.healthStatus !== "All" && wagon.wagonHealth !== wagonsFilters.healthStatus) return false;
+      if (wagonsFilters.alertStatus !== "All") {
+        const expectedAlert = wagonsFilters.alertStatus === "Active" ? "Yes" : "No";
+        if (wagon.aiAlert !== expectedAlert) return false;
+      }
+      if (wagonsFilters.cargoType !== "All" && wagon.cargoType !== wagonsFilters.cargoType) return false;
+      if (wagonsFilters.currentStation !== "All" && wagon.station !== wagonsFilters.currentStation) return false;
+      
+      return true;
+    });
+  }, [allWagons, zone, wagonsSearch, wagonsFilters]);
+
+  // Get filter options from zone wagons
+  const filterOptions = useMemo(() => {
+    const zoneWagons = allWagons.filter(w => w.zone === zone);
+    return {
+      divisions: Array.from(new Set(zoneWagons.map(w => w.division).filter(Boolean))).sort(),
+      gpsStatuses: Array.from(new Set(zoneWagons.map(w => w.gpsStatus).filter(Boolean))).sort(),
+      healthStatuses: Array.from(new Set(zoneWagons.map(w => w.wagonHealth).filter(Boolean))).sort(),
+      cargoTypes: Array.from(new Set(zoneWagons.map(w => w.cargoType).filter(Boolean))).sort(),
+      stations: Array.from(new Set(zoneWagons.map(w => w.station).filter(Boolean))).sort(),
+    };
+  }, [allWagons, zone]);
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
@@ -603,9 +954,74 @@ const Reports = () => {
     setTimeout(() => { setGen(null); setPreview(r); }, 900);
   };
 
+  const handleWagonsExport = (format, wagons, zone, filters, columns) => {
+    const cols = columns || WAGON_REPORT_COLUMNS;
+    const rows = buildWagonExportRows(wagons, cols);
+    const appliedFilters = Object.entries(filters).filter(([, value]) => value && value !== "All");
+    
+    const title = "Wagons Report";
+    const subtitle = `Zone: ${zone} | Generated: ${new Date().toLocaleString("en-IN")} | Rows: ${wagons.length}`;
+    
+    if (format === "PDF") {
+      const doc = new jsPDF({ orientation: "landscape" });
+      const rgb = [59, 130, 246];
+      
+      doc.setFillColor(13, 31, 60);
+      doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(15);
+      doc.setFont("helvetica", "bold");
+      doc.text("Indian Railways Command Center", 14, 12);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(title, 14, 22);
+      
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(9);
+      doc.text(subtitle, 14, 36);
+      
+      autoTable(doc, {
+        startY: 42,
+        head: [cols.map(c => c.label)],
+        body: rows,
+        headStyles: { fillColor: [13, 31, 60], textColor: rgb, fontStyle: "bold", fontSize: 7 },
+        bodyStyles: { textColor: [203, 213, 225], fontSize: 7, fillColor: [7, 22, 40] },
+        alternateRowStyles: { fillColor: [13, 31, 60] },
+        styles: { cellPadding: 2 },
+      });
+      
+      const pages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(74, 111, 165);
+        doc.text(`Ministry of Railways · Command Center · Page ${i} of ${pages}`, 14, doc.internal.pageSize.height - 8);
+      }
+      
+      doc.save(`Wagons_Report_${zone}.pdf`);
+    } else if (format === "Excel") {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([[title], [subtitle], [], cols.map(c => c.label), ...rows]);
+      ws["!cols"] = cols.map(() => ({ wch: 18 }));
+      XLSX.utils.book_append_sheet(wb, ws, "Wagons");
+      XLSX.writeFile(wb, `Wagons_Report_${zone}.xlsx`);
+    } else {
+      const escape = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const lines = [`# ${title}`, `# ${subtitle}`, "", cols.map(c => c.label).map(escape).join(","), ...rows.map(r => r.map(escape).join(","))];
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Wagons_Report_${zone}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <DashboardLayout title="Reports" sub="Generate and export operational reports for all time periods">
       <ReportExportPanel role="admin" isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+      
       <div style={{ display:"flex", gap:14, marginBottom:20, flexWrap:"wrap" }}>
         <StatCard title="Daily Reports"   value={REPORTS.Daily.length}                 color="#3b82f6" icon={FiFileText} />
         <StatCard title="Weekly Reports"  value={REPORTS.Weekly.length}                color="#22c55e" icon={FiBarChart2} />
@@ -621,59 +1037,148 @@ const Reports = () => {
 
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
         <div style={{ display:"flex", gap:6 }}>
-          {["Daily","Weekly","Monthly"].map(t => (
+          {["Daily","Weekly","Monthly","Wagons"].map(t => (
             <button key={t} onClick={() => setTab(t)} className={`btn btn-sm ${tab===t?"btn-primary":"btn-outline"}`}>
               <FiCalendar size={12} /> {t}
             </button>
           ))}
         </div>
         <div style={{ display:"flex", gap:8 }}>
-          {["PDF","Excel","CSV"].map(fmt => (
+          {tab !== "Wagons" && ["PDF","Excel","CSV"].map(fmt => (
             <button key={fmt} className="btn btn-ghost btn-sm" onClick={() => { bulkExport(fmt, tab); showToast(`All ${tab} reports exported as ${fmt}`); }}>
               <FiDownload size={12} /> Export All {fmt}
             </button>
           ))}
+          {tab === "Wagons" && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setWagonsModalOpen(true)}>
+              <FiEye size={12} /> View Full Report
+            </button>
+          )}
           <button className="btn btn-primary btn-sm" onClick={() => setExportOpen(true)}>
             <FiDownload size={12} /> Export Centre
           </button>
         </div>
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, marginBottom:24 }}>
-        {REPORTS[tab].map(r => (
-          <div key={r.id} className="card" style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <div>
-                <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:"14px", marginBottom:4 }}>{r.title}</div>
-                <div style={{ color:"#4a6fa5", fontSize:"12px" }}>{r.id} · {r.date}</div>
-              </div>
-              <span className="badge badge-active">{r.status}</span>
+      {tab === "Wagons" && (
+        <div className="card" style={{ marginBottom:24 }}>
+          <div style={{ display:"flex", gap:"12px", marginBottom:"16px", flexWrap:"wrap", alignItems:"center" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:"8px", background:"#060e1e", border:"1px solid #1a3356", borderRadius:"10px", padding:"8px 14px", flex:1, minWidth:"200px" }}>
+              <FiSearch color="#3a5a7c" size={14} />
+              <input
+                value={wagonsSearch}
+                onChange={e => setWagonsSearch(e.target.value)}
+                placeholder="Search by Wagon Number, Train Number, Cargo Type, Station..."
+                style={{ background:"transparent", border:"none", outline:"none", color:"#f1f5f9", fontSize:"13px", width:"100%" }}
+              />
             </div>
-            <div style={{ display:"flex", gap:20 }}>
-              <div>
-                <div style={{ color:"#64748b", fontSize:"11px" }}>Wagons</div>
-                <div style={{ color:"#3b82f6", fontWeight:700, fontSize:"16px" }}>{r.wagons.toLocaleString()}</div>
-              </div>
-              <div>
-                <div style={{ color:"#64748b", fontSize:"11px" }}>Alerts</div>
-                <div style={{ color:"#f59e0b", fontWeight:700, fontSize:"16px" }}>{r.alerts}</div>
-              </div>
-            </div>
-            <div style={{ display:"flex", gap:8 }}>
-              <button className="btn btn-primary btn-sm" style={{ flex:1, justifyContent:"center" }} onClick={() => handleGenerate(r)}>
-                {generating === r.id
-                  ? <><span style={{ display:"inline-block", width:10, height:10, border:"2px solid #fff", borderTopColor:"transparent", borderRadius:"50%", animation:"spin .7s linear infinite", marginRight:6 }} />Generating…</>
-                  : <><FiEye size={11} /> Generate & View</>}
-              </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => { downloadPDF(r);   showToast(`${r.id} saved as PDF`);   }}><FiDownload size={11} /> PDF</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => { downloadExcel(r); showToast(`${r.id} saved as Excel`); }}><FiDownload size={11} /> XLS</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => { downloadCSV(r);   showToast(`${r.id} saved as CSV`);   }}><FiDownload size={11} /> CSV</button>
+            <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+              <FiFilter color="#3a5a7c" size={14} />
+              <select className="form-select" value={wagonsFilters.division} onChange={e => setWagonsFilters(f => ({...f, division: e.target.value}))} style={{ width:"auto", padding:"8px 12px" }}>
+                <option value="All">All Divisions</option>
+                {filterOptions.divisions.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <select className="form-select" value={wagonsFilters.gpsStatus} onChange={e => setWagonsFilters(f => ({...f, gpsStatus: e.target.value}))} style={{ width:"auto", padding:"8px 12px" }}>
+                <option value="All">All GPS Status</option>
+                {filterOptions.gpsStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select className="form-select" value={wagonsFilters.healthStatus} onChange={e => setWagonsFilters(f => ({...f, healthStatus: e.target.value}))} style={{ width:"auto", padding:"8px 12px" }}>
+                <option value="All">All Health</option>
+                {filterOptions.healthStatuses.map(h => <option key={h} value={h}>{h}</option>)}
+              </select>
+              <select className="form-select" value={wagonsFilters.cargoType} onChange={e => setWagonsFilters(f => ({...f, cargoType: e.target.value}))} style={{ width:"auto", padding:"8px 12px" }}>
+                <option value="All">All Cargo</option>
+                {filterOptions.cargoTypes.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
-        ))}
-      </div>
+
+          <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:"14px", marginBottom:12 }}>
+            Wagons in {getZoneName(zone)} ({filteredWagons.length} records)
+          </div>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  {WAGON_REPORT_COLUMNS.slice(0, 8).map(col => (
+                    <th key={col.key}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={8} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>Loading wagons...</td></tr>
+                ) : (
+                  filteredWagons.slice(0, 10).map((wagon, i) => (
+                    <tr key={wagon.wagonId || i}>
+                      {WAGON_REPORT_COLUMNS.slice(0, 8).map((col, j) => (
+                        <td key={col.key} style={{ 
+                          color: j === 0 ? "#60a5fa" : "#cbd5e1", 
+                          fontWeight: j === 0 ? 700 : 400,
+                          fontSize: "12px"
+                        }}>
+                          {col.exportValue(wagon)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+                {!loading && filteredWagons.length === 0 && (
+                  <tr><td colSpan={8} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>No wagons found for your zone</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab !== "Wagons" && (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, marginBottom:24 }}>
+          {REPORTS[tab].map(r => (
+            <div key={r.id} className="card" style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                <div>
+                  <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:"14px", marginBottom:4 }}>{r.title}</div>
+                  <div style={{ color:"#4a6fa5", fontSize:"12px" }}>{r.id} · {r.date}</div>
+                </div>
+                <span className="badge badge-active">{r.status}</span>
+              </div>
+              <div style={{ display:"flex", gap:20 }}>
+                <div>
+                  <div style={{ color:"#64748b", fontSize:"11px" }}>Wagons</div>
+                  <div style={{ color:"#3b82f6", fontWeight:700, fontSize:"16px" }}>{r.wagons.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ color:"#64748b", fontSize:"11px" }}>Alerts</div>
+                  <div style={{ color:"#f59e0b", fontWeight:700, fontSize:"16px" }}>{r.alerts}</div>
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button className="btn btn-primary btn-sm" style={{ flex:1, justifyContent:"center" }} onClick={() => handleGenerate(r)}>
+                  {generating === r.id
+                    ? <><span style={{ display:"inline-block", width:10, height:10, border:"2px solid #fff", borderTopColor:"transparent", borderRadius:"50%", animation:"spin .7s linear infinite", marginRight:6 }} />Generating…</>
+                    : <><FiEye size={11} /> Generate & View</>}
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { downloadPDF(r);   showToast(`${r.id} saved as PDF`);   }}><FiDownload size={11} /> PDF</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { downloadExcel(r); showToast(`${r.id} saved as Excel`); }}><FiDownload size={11} /> XLS</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { downloadCSV(r);   showToast(`${r.id} saved as CSV`);   }}><FiDownload size={11} /> CSV</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {preview && <ReportModal report={preview} onClose={() => setPreview(null)} />}
+      {wagonsModalOpen && (
+        <WagonsReportModal 
+          wagons={filteredWagons} 
+          zone={zone} 
+          filters={wagonsFilters}
+          onClose={() => setWagonsModalOpen(false)} 
+          onExport={handleWagonsExport}
+        />
+      )}
       <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </DashboardLayout>
   );
