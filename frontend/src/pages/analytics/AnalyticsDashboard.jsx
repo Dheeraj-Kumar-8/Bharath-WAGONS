@@ -10,153 +10,88 @@ import { useState, useMemo } from "react";
 import AnalyticsLayout from "../../components/AnalyticsLayout";
 import StatCard from "../../components/StatCard";
 import { useAuth } from "../../context/AuthContext";
+import { useWagonData } from "../../context/WagonDataContext";
 import {
   AnalyticsToolbar, ChartCard, DrillDownAnalytics,
   TrendComparison, PredictiveAnalytics, AIInsights, ReportGenerationPanel,
 } from "../../components/AnalyticsEnhancements";
-
-// ── Raw data per zone ─────────────────────────────────────────────────────────
-const ZONE_DATA = {
-  NR:  { total:312, active:300, delayed:7,  maint:5,  onTimePct:96.1, gps:94, fleet:91, cargo:88, maintRate:98 },
-  SR:  { total:198, active:188, delayed:6,  maint:4,  onTimePct:95.2, gps:91, fleet:87, cargo:83, maintRate:97 },
-  ER:  { total:224, active:212, delayed:8,  maint:4,  onTimePct:94.8, gps:89, fleet:85, cargo:80, maintRate:96 },
-  WR:  { total:178, active:166, delayed:8,  maint:4,  onTimePct:93.4, gps:87, fleet:82, cargo:79, maintRate:95 },
-  NER: { total:156, active:149, delayed:5,  maint:2,  onTimePct:95.5, gps:85, fleet:80, cargo:76, maintRate:97 },
-  NWR: { total:143, active:136, delayed:4,  maint:3,  onTimePct:95.1, gps:84, fleet:79, cargo:75, maintRate:96 },
-  SER: { total:127, active:122, delayed:4,  maint:1,  onTimePct:96.1, gps:88, fleet:83, cargo:80, maintRate:98 },
-  SWR: { total:100, active: 97, delayed:2,  maint:1,  onTimePct:97.0, gps:92, fleet:88, cargo:85, maintRate:99 },
-};
-
-// Movement data per period
-const MOVEMENT = {
-  Today: [
-    { day:"06:00", active:210, delayed:9 }, { day:"09:00", active:580, delayed:22 },
-    { day:"12:00", active:820, delayed:38 }, { day:"15:00", active:940, delayed:41 },
-    { day:"18:00", active:870, delayed:35 }, { day:"21:00", active:650, delayed:24 },
-  ],
-  "This Week": [
-    { day:"Mon", active:820, delayed:38 }, { day:"Tue", active:940, delayed:55 },
-    { day:"Wed", active:870, delayed:42 }, { day:"Thu", active:1020, delayed:60 },
-    { day:"Fri", active:980, delayed:47 }, { day:"Sat", active:1089, delayed:47 },
-    { day:"Sun", active:950, delayed:39 },
-  ],
-  "This Month": [
-    { day:"W1", active:5820, delayed:240 }, { day:"W2", active:6100, delayed:270 },
-    { day:"W3", active:5980, delayed:255 }, { day:"W4", active:6400, delayed:290 },
-  ],
-};
-
-const MONTHLY = {
-  All: [
-    { month:"Feb", wagons:3450, onTime:3190 }, { month:"Mar", wagons:3700, onTime:3440 },
-    { month:"Apr", wagons:3550, onTime:3290 }, { month:"May", wagons:3900, onTime:3640 },
-    { month:"Jun", wagons:4100, onTime:3820 }, { month:"Jul", wagons:4300, onTime:4020 },
-  ],
-  Active: [
-    { month:"Feb", wagons:3190, onTime:3100 }, { month:"Mar", wagons:3440, onTime:3320 },
-    { month:"Apr", wagons:3290, onTime:3180 }, { month:"May", wagons:3640, onTime:3500 },
-    { month:"Jun", wagons:3820, onTime:3700 }, { month:"Jul", wagons:4020, onTime:3890 },
-  ],
-  Delayed: [
-    { month:"Feb", wagons:260, onTime:0 }, { month:"Mar", wagons:260, onTime:0 },
-    { month:"Apr", wagons:260, onTime:0 }, { month:"May", wagons:260, onTime:0 },
-    { month:"Jun", wagons:280, onTime:0 }, { month:"Jul", wagons:280, onTime:0 },
-  ],
-  Maintenance: [
-    { month:"Feb", wagons:28, onTime:0 }, { month:"Mar", wagons:30, onTime:0 },
-    { month:"Apr", wagons:27, onTime:0 }, { month:"May", wagons:25, onTime:0 },
-    { month:"Jun", wagons:24, onTime:0 }, { month:"Jul", wagons:22, onTime:0 },
-  ],
-};
-
-const ALERT_DATA = {
-  All:         [{ name:"Critical", value:23 }, { name:"Warning", value:54 }, { name:"Resolved", value:156 }],
-  Critical:    [{ name:"Critical", value:23 }, { name:"Warning", value:0  }, { name:"Resolved", value:0   }],
-  Warning:     [{ name:"Critical", value:0  }, { name:"Warning", value:54 }, { name:"Resolved", value:0   }],
-};
+import {
+  buildWagonSummary, buildStatusTrendRows, buildMonthlyTrendRows,
+} from "../../utils/wagonUtils";
 
 const PIE_C = ["#ef4444", "#f59e0b", "#22c55e"];
 const TT = { contentStyle: { background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:10, color:"#f1f5f9" } };
+const ZONE_KEYS = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 
 const AnalyticsDashboard = () => {
   const { analyst } = useAuth();
+  const { wagons } = useWagonData();
   const analystZone = analyst?.zone || "All";
 
   const [filters,   setFilters]   = useState({ zone: analystZone, status:"All", severity:"All", period:"All" });
   const [dateRange, setDateRange] = useState({ from:"", to:"" });
 
-  // Always keep zone locked to analyst's zone
   const handleFiltersChange = (next) => setFilters({ ...next, zone: analystZone });
 
-  // ── Derived KPI values ────────────────────────────────────────────────────
-  const kpi = useMemo(() => {
-    const zones = filters.zone === "All" ? Object.values(ZONE_DATA) : [ZONE_DATA[filters.zone]].filter(Boolean);
-    const total   = zones.reduce((s,z) => s + z.total,   0);
-    const active  = zones.reduce((s,z) => s + z.active,  0);
-    const delayed = zones.reduce((s,z) => s + z.delayed, 0);
-    const maint   = zones.reduce((s,z) => s + z.maint,   0);
-    const onTimePct = zones.length ? (zones.reduce((s,z) => s + z.onTimePct, 0) / zones.length).toFixed(1) : "—";
-    const gps     = zones.length ? Math.round(zones.reduce((s,z) => s + z.gps,     0) / zones.length) : 0;
-    const fleet   = zones.length ? Math.round(zones.reduce((s,z) => s + z.fleet,   0) / zones.length) : 0;
-    const cargo   = zones.length ? Math.round(zones.reduce((s,z) => s + z.cargo,   0) / zones.length) : 0;
-    const maintR  = zones.length ? (zones.reduce((s,z) => s + z.maintRate, 0) / zones.length).toFixed(1) : 0;
+  // Filter wagons by zone
+  const filteredWagons = useMemo(() =>
+    filters.zone === "All" ? wagons : wagons.filter(w => w.zone === filters.zone),
+  [wagons, filters.zone]);
 
-    // Apply status filter to active/delayed/maint
-    let dispActive  = active;
-    let dispDelayed = delayed;
-    let dispMaint   = maint;
+  // ── Derived KPI values from real data ─────────────────────────────────────
+  const kpi = useMemo(() => {
+    const summary = buildWagonSummary(filteredWagons);
+    let dispActive  = summary.active;
+    let dispDelayed = summary.delayed;
+    let dispMaint   = summary.maintenance;
     if (filters.status === "Active")      { dispDelayed = 0; dispMaint = 0; }
     if (filters.status === "Delayed")     { dispActive  = 0; dispMaint = 0; }
     if (filters.status === "Maintenance") { dispActive  = 0; dispDelayed = 0; }
+    return {
+      total: summary.total,
+      active: dispActive,
+      delayed: dispDelayed,
+      maint: dispMaint,
+      onTimePct: summary.onTimeRate,
+      gps: summary.gpsCoverage,
+      fleet: summary.total ? Math.round((summary.active / summary.total) * 100) : 0,
+      cargo: summary.totalCapacity ? Math.round((summary.totalLoad / summary.totalCapacity) * 100) : 0,
+      maintR: summary.total ? ((summary.maintenance / summary.total) * 100).toFixed(1) : 0,
+    };
+  }, [filteredWagons, filters.status]);
 
-    return { total, active:dispActive, delayed:dispDelayed, maint:dispMaint, onTimePct, gps, fleet, cargo, maintR };
-  }, [filters]);
+  // ── Movement chart data from real data ────────────────────────────────────
+  const movementData = useMemo(() =>
+    buildStatusTrendRows(filteredWagons).map(d => ({ day: d.day, active: d.active, delayed: d.delayed })),
+  [filteredWagons]);
 
-  // ── Movement chart data ───────────────────────────────────────────────────
-  const movementData = useMemo(() => {
-    const period = filters.period !== "All" ? filters.period : "This Week";
-    const base = MOVEMENT[period] || MOVEMENT["This Week"];
-    if (filters.zone === "All") return base;
-    const z = ZONE_DATA[filters.zone];
-    if (!z) return base;
-    const scale = z.total / 1247;
-    return base.map(d => ({ ...d, active: Math.round(d.active * scale), delayed: Math.round(d.delayed * scale) }));
-  }, [filters]);
+  // ── Monthly chart data from real data ─────────────────────────────────────
+  const monthlyData = useMemo(() =>
+    buildMonthlyTrendRows(filteredWagons).map(d => ({ month: d.month, wagons: d.wagons, onTime: Math.max(0, d.wagons - d.alerts) })),
+  [filteredWagons]);
 
-  // ── Monthly chart data ────────────────────────────────────────────────────
-  const monthlyData = useMemo(() => {
-    const base = MONTHLY[filters.status] || MONTHLY.All;
-    if (filters.zone === "All") return base;
-    const z = ZONE_DATA[filters.zone];
-    if (!z) return base;
-    const scale = z.total / 1247;
-    return base.map(d => ({ ...d, wagons: Math.round(d.wagons * scale), onTime: Math.round(d.onTime * scale) }));
-  }, [filters]);
-
-  // ── Alert pie data ────────────────────────────────────────────────────────
+  // ── Alert pie data from real data ─────────────────────────────────────────
   const alertPie = useMemo(() => {
-    const base = ALERT_DATA[filters.severity] || ALERT_DATA.All;
-    if (filters.zone === "All") return base;
-    const z = ZONE_DATA[filters.zone];
-    if (!z) return base;
-    const scale = z.total / 1247;
-    return base.map(d => ({ ...d, value: Math.round(d.value * scale) }));
-  }, [filters]);
+    const summary = buildWagonSummary(filteredWagons);
+    const critical = summary.critical;
+    const warning  = summary.warning;
+    const healthy  = summary.healthy;
+    if (filters.severity === "Critical") return [{ name:"Critical", value:critical }, { name:"Warning", value:0 }, { name:"Resolved", value:0 }];
+    if (filters.severity === "Warning")  return [{ name:"Critical", value:0 }, { name:"Warning", value:warning }, { name:"Resolved", value:0 }];
+    return [{ name:"Critical", value:critical }, { name:"Warning", value:warning }, { name:"Resolved", value:healthy }];
+  }, [filteredWagons, filters.severity]);
 
-  // ── Zone on-time performance bars ─────────────────────────────────────────
+  // ── Zone on-time performance bars from real data ───────────────────────────
   const zonePerf = useMemo(() => {
-    const all = [
-      { label:"NR",  val:"96.1%", pct:"96%", c: undefined },
-      { label:"SR",  val:"95.2%", pct:"95%", c: undefined },
-      { label:"ER",  val:"94.8%", pct:"95%", c:"#f59e0b"  },
-      { label:"WR",  val:"93.4%", pct:"93%", c:"#f59e0b"  },
-      { label:"NER", val:"95.5%", pct:"96%", c: undefined },
-      { label:"NWR", val:"95.1%", pct:"95%", c: undefined },
-      { label:"SER", val:"96.1%", pct:"96%", c: undefined },
-      { label:"SWR", val:"97.0%", pct:"97%", c: undefined },
-    ];
+    const all = ZONE_KEYS.map(zk => {
+      const zWagons = wagons.filter(w => w.zone === zk);
+      if (!zWagons.length) return null;
+      const s = buildWagonSummary(zWagons);
+      const pct = s.onTimeRate;
+      return { label: zk, val: `${pct}%`, pct: `${pct}%`, c: pct < 95 ? "#f59e0b" : undefined };
+    }).filter(Boolean);
     return filters.zone === "All" ? all : all.filter(z => z.label === filters.zone);
-  }, [filters.zone]);
+  }, [wagons, filters.zone]);
 
   return (
     <AnalyticsLayout title="Analytics Overview" sub="Real-time KPIs, performance trends and operational insights">

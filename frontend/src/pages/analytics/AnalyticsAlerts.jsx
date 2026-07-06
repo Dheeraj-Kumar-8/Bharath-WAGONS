@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -6,51 +6,69 @@ import {
 import { FiAlertTriangle, FiCheckCircle, FiAlertOctagon, FiActivity } from "react-icons/fi";
 import AnalyticsLayout from "../../components/AnalyticsLayout";
 import StatCard from "../../components/StatCard";
+import { useWagonData } from "../../context/WagonDataContext";
+import { buildWagonSummary, buildStatusTrendRows } from "../../utils/wagonUtils";
 
-const alertPie = [
-  { name: "Critical Alerts",  value: 23 },
-  { name: "Warning Alerts",   value: 54 },
-  { name: "Resolved Alerts",  value: 156 },
-];
 const PIE_C = ["#ef4444", "#f59e0b", "#22c55e"];
-
-const alertBar = [
-  { type: "GPS Signal",    critical: 8,  warning: 6,  resolved: 18 },
-  { type: "Route Dev.",    critical: 4,  warning: 10, resolved: 22 },
-  { type: "Brake Warning", critical: 5,  warning: 7,  resolved: 17 },
-  { type: "Cargo Alert",   critical: 1,  warning: 4,  resolved: 12 },
-  { type: "Engine",        critical: 3,  warning: 4,  resolved: 9  },
-  { type: "Speed Excess",  critical: 0,  warning: 5,  resolved: 31 },
-  { type: "Door Open",     critical: 2,  warning: 18, resolved: 47 },
-];
-
-const trendData = [
-  { day: "Mon", critical: 5, warning: 12, resolved: 18 },
-  { day: "Tue", critical: 8, warning: 14, resolved: 22 },
-  { day: "Wed", critical: 3, warning: 9,  resolved: 20 },
-  { day: "Thu", critical: 6, warning: 11, resolved: 25 },
-  { day: "Fri", critical: 4, warning: 8,  resolved: 19 },
-  { day: "Sat", critical: 2, warning: 7,  resolved: 21 },
-  { day: "Sun", critical: 3, warning: 10, resolved: 23 },
-];
-
-const RECENT = [
-  { id: "ALT-1091", type: "GPS Signal Lost",    zone: "NR",  severity: "Critical", time: "2 min ago",  status: "Active" },
-  { id: "ALT-1088", type: "Route Deviation",    zone: "SR",  severity: "Warning",  time: "7 min ago",  status: "Active" },
-  { id: "ALT-1085", type: "Brake Warning",      zone: "ER",  severity: "Critical", time: "12 min ago", status: "Active" },
-  { id: "ALT-1080", type: "Cargo Overweight",   zone: "WR",  severity: "Warning",  time: "18 min ago", status: "Resolved" },
-  { id: "ALT-1074", type: "Speed Exceeded",     zone: "NER", severity: "Warning",  time: "25 min ago", status: "Resolved" },
-  { id: "ALT-1070", type: "Engine Anomaly",     zone: "NWR", severity: "Critical", time: "31 min ago", status: "Resolved" },
-  { id: "ALT-1065", type: "Door Sensor Alert",  zone: "SER", severity: "Warning",  time: "42 min ago", status: "Resolved" },
-  { id: "ALT-1060", type: "GPS Signal Lost",    zone: "SWR", severity: "Critical", time: "58 min ago", status: "Resolved" },
-];
-
 const TT = { contentStyle: { background: "#0d1f3c", border: "1px solid #1a3356", borderRadius: 10, color: "#f1f5f9" } };
 const sevColor = s => s === "Critical" ? "#ef4444" : s === "Warning" ? "#f59e0b" : "#22c55e";
 
 const AnalyticsAlerts = () => {
+  const { wagons } = useWagonData();
   const [filter,     setFilter]     = useState("All");
   const [zoneFilter, setZoneFilter] = useState("All");
+
+  const summary = useMemo(() => buildWagonSummary(wagons), [wagons]);
+
+  const alertPie = useMemo(() => [
+    { name: "Critical Alerts", value: summary.critical },
+    { name: "Warning Alerts",  value: summary.warning  },
+    { name: "Resolved Alerts", value: summary.healthy  },
+  ], [summary]);
+
+  // Alert bar by reason type from real wagon data
+  const alertBar = useMemo(() => {
+    const reasonMap = {};
+    wagons.forEach(w => {
+      w.alertReasons.forEach(r => {
+        if (!reasonMap[r]) reasonMap[r] = { critical: 0, warning: 0, resolved: 0 };
+        if (w.wagonHealth === "Critical") reasonMap[r].critical += 1;
+        else if (w.wagonHealth === "Warning") reasonMap[r].warning += 1;
+        else reasonMap[r].resolved += 1;
+      });
+    });
+    return Object.entries(reasonMap).map(([type, v]) => ({ type, ...v }));
+  }, [wagons]);
+
+  // Weekly trend from real data
+  const trendData = useMemo(() =>
+    buildStatusTrendRows(wagons).map(d => ({
+      day: d.day,
+      critical: wagons.filter(w => w.wagonHealth === "Critical" && w.delayStatus !== "On Time").length > 0
+        ? Math.round(d.delayed * 0.4) : 0,
+      warning:  Math.round(d.delayed * 0.6),
+      resolved: d.onTime,
+    })),
+  [wagons]);
+
+  // Recent alerts from real wagon data
+  const RECENT = useMemo(() =>
+    wagons
+      .filter(w => w.alertReasons.length > 0)
+      .slice(0, 20)
+      .map((w, i) => ({
+        id: `ALT-${1000 + i}`,
+        type: w.alertReasons[0] + " Alert",
+        zone: w.zone,
+        severity: w.wagonHealth === "Critical" ? "Critical" : "Warning",
+        time: w.lastUpdated ? new Date(w.lastUpdated).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "N/A",
+        status: w.status === "Maintenance" ? "Resolved" : "Active",
+      })),
+  [wagons]);
+
+  const resolveRate = summary.total
+    ? Math.round((summary.healthy / summary.total) * 100)
+    : 0;
 
   const filtered = RECENT.filter(a => {
     const statusMatch = filter === "All" || a.status === filter;
@@ -62,10 +80,10 @@ const AnalyticsAlerts = () => {
     <AnalyticsLayout title="Alert Analytics" sub="Critical, warning and resolved alert distribution and trends">
 
       <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
-        <StatCard title="Critical Alerts" value="23"  color="#ef4444" icon={FiAlertOctagon}  trend="-12%" trendUp={false} />
-        <StatCard title="Warning Alerts"  value="54"  color="#f59e0b" icon={FiAlertTriangle} trend="-8%"  trendUp={false} />
-        <StatCard title="Resolved Alerts" value="156" color="#22c55e" icon={FiCheckCircle}   trend="+18%" trendUp />
-        <StatCard title="Resolve Rate"    value="73%" color="#3b82f6" icon={FiActivity}      trend="+5%"  trendUp />
+        <StatCard title="Critical Alerts" value={summary.critical}  color="#ef4444" icon={FiAlertOctagon}  trend="" trendUp={false} />
+        <StatCard title="Warning Alerts"  value={summary.warning}   color="#f59e0b" icon={FiAlertTriangle} trend="" trendUp={false} />
+        <StatCard title="Healthy Wagons"  value={summary.healthy}   color="#22c55e" icon={FiCheckCircle}   trend="" trendUp />
+        <StatCard title="Resolve Rate"    value={`${resolveRate}%`} color="#3b82f6" icon={FiActivity}      trend="" trendUp />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, marginBottom: 20 }}>

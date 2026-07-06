@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -6,61 +7,41 @@ import {
 import { FiBarChart2, FiTrendingUp, FiActivity, FiAlertTriangle } from "react-icons/fi";
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
+import { useWagonData } from "../context/WagonDataContext";
+import {
+  buildWagonSummary, buildStatusTrendRows, buildMonthlyTrendRows,
+  buildAlertDistribution, buildStationActivityRows, buildZonePerformanceRow,
+} from "../utils/wagonUtils";
 
-const weekly = [
-  { day:"Mon", active:820, delayed:38, onTime:782 },
-  { day:"Tue", active:940, delayed:55, onTime:885 },
-  { day:"Wed", active:870, delayed:42, onTime:828 },
-  { day:"Thu", active:1020,delayed:60, onTime:960 },
-  { day:"Fri", active:980, delayed:47, onTime:933 },
-  { day:"Sat", active:1089,delayed:47, onTime:1042},
-  { day:"Sun", active:950, delayed:39, onTime:911 },
-];
-
-const monthly = [
-  { month:"Jan",wagons:3200,cargo:8400,alerts:142},
-  { month:"Feb",wagons:3450,cargo:8900,alerts:128},
-  { month:"Mar",wagons:3700,cargo:9200,alerts:156},
-  { month:"Apr",wagons:3550,cargo:8700,alerts:134},
-  { month:"May",wagons:3900,cargo:9800,alerts:119},
-  { month:"Jun",wagons:4100,cargo:10200,alerts:108},
-];
-
-const stationBar = [
-  { station:"Delhi",   arrivals:142, departures:138 },
-  { station:"Mumbai",  arrivals:128, departures:131 },
-  { station:"Chennai", arrivals:96,  departures:99  },
-  { station:"Kolkata", arrivals:112, departures:108 },
-  { station:"Hyd",     arrivals:87,  departures:90  },
-  { station:"Blr",     arrivals:78,  departures:74  },
-];
-
-const alertPie = [
-  { name:"GPS Alert",   value:34 },
-  { name:"Route Dev.",  value:27 },
-  { name:"Maintenance", value:22 },
-  { name:"Cargo Alert", value:17 },
-];
 const PIE = ["#ef4444","#f59e0b","#3b82f6","#22c55e"];
-
-const ZONES = [
-  { zone:"NR",  wagons:312, onTime:289, delayed:18, maint:5,  perf:93 },
-  { zone:"CR",  wagons:248, onTime:228, delayed:14, maint:6,  perf:92 },
-  { zone:"SR",  wagons:196, onTime:179, delayed:11, maint:6,  perf:91 },
-  { zone:"ER",  wagons:224, onTime:206, delayed:13, maint:5,  perf:92 },
-  { zone:"WR",  wagons:178, onTime:162, delayed:10, maint:6,  perf:91 },
-  { zone:"SCR", wagons:156, onTime:142, delayed:9,  maint:5,  perf:91 },
-];
-
 const TT = { contentStyle:{ background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:10, color:"#f1f5f9" } };
+const ZONE_KEYS = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 
-const Analytics = () => (
+const Analytics = () => {
+  const { wagons } = useWagonData();
+
+  const summary  = useMemo(() => buildWagonSummary(wagons), [wagons]);
+  const weekly   = useMemo(() => buildStatusTrendRows(wagons), [wagons]);
+  const monthly  = useMemo(() => buildMonthlyTrendRows(wagons), [wagons]);
+  const stationBar = useMemo(() => buildStationActivityRows(wagons), [wagons]);
+  const alertPie = useMemo(() => {
+    const dist = buildAlertDistribution(wagons);
+    return dist.length ? dist : [
+      { name: "GPS Alert", value: 0 }, { name: "Maintenance", value: 0 },
+    ];
+  }, [wagons]);
+  const ZONES = useMemo(() =>
+    ZONE_KEYS.map(z => buildZonePerformanceRow(z, wagons.filter(w => w.zone === z)))
+      .filter(z => z.wagons > 0),
+  [wagons]);
+
+  return (
   <DashboardLayout title="Analytics" sub="Performance metrics, trends, and operational insights">
     <div style={{ display:"flex", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
-      <StatCard title="Total Movements"  value="28,432"  color="#3b82f6" icon={FiActivity}      trend="+8.4%"  trendUp />
-      <StatCard title="Avg On-Time Rate" value="92.4%"   color="#22c55e" icon={FiTrendingUp}     trend="+1.2%"  trendUp />
-      <StatCard title="Monthly Cargo"    value="1,02,400T" color="#8b5cf6" icon={FiBarChart2}    trend="+6.8%"  trendUp />
-      <StatCard title="Alert Reduction"  value="24%"     color="#f59e0b" icon={FiAlertTriangle}  trend="-24%"   trendUp />
+      <StatCard title="Total Wagons"     value={summary.total.toLocaleString()} color="#3b82f6" icon={FiActivity}     trend="" trendUp />
+      <StatCard title="Avg On-Time Rate" value={`${summary.onTimeRate}%`}       color="#22c55e" icon={FiTrendingUp}   trend="" trendUp />
+      <StatCard title="Total Cargo (T)"  value={summary.totalLoad.toLocaleString()} color="#8b5cf6" icon={FiBarChart2} trend="" trendUp />
+      <StatCard title="Active Alerts"    value={summary.alerts.toLocaleString()} color="#f59e0b" icon={FiAlertTriangle} trend="" trendUp={false} />
     </div>
 
     {/* Row 1 */}
@@ -151,7 +132,9 @@ const Analytics = () => (
             <tr><th>Zone</th><th>Total Wagons</th><th>On Time</th><th>Delayed</th><th>Maintenance</th><th>Performance</th></tr>
           </thead>
           <tbody>
-            {ZONES.map(z => (
+            {ZONES.length === 0 ? (
+              <tr><td colSpan={6} style={{ color:"#64748b", textAlign:"center" }}>No zone data available</td></tr>
+            ) : ZONES.map(z => (
               <tr key={z.zone}>
                 <td><span className="badge badge-info" style={{ fontSize:13, padding:"4px 14px" }}>{z.zone}</span></td>
                 <td style={{ color:"#f1f5f9", fontWeight:600 }}>{z.wagons}</td>
@@ -174,5 +157,7 @@ const Analytics = () => (
     </div>
   </DashboardLayout>
 );
+
+};
 
 export default Analytics;
