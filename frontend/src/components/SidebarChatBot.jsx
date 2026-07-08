@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { FiX, FiSend, FiCpu, FiMinus } from "react-icons/fi";
 import { useSearch } from "../context/SearchContext";
 import { useOperatorData } from "../context/OperatorDataContext";
@@ -97,7 +97,7 @@ const RouteCard = ({ r }) => (
     </div>
     <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
       <span style={{ color:"#64748b", fontSize:11 }}>📏 {r.dist}</span>
-      <span style={{ color:"#64748b", fontSize:11 }}>🚆 {r.wagons.join(", ")}</span>
+      <span style={{ color:"#64748b", fontSize:11 }}><img src="/BW-iconic.png" style={{width:14,height:14,objectFit:"contain",verticalAlign:"middle",marginRight:4}}/> {r.wagons.join(", ")}</span>
       {r.delay !== "-" && r.delay !== "--" && <span style={{ color:"#f59e0b", fontSize:11 }}>⏱ Delay: {r.delay}</span>}
     </div>
   </div>
@@ -313,7 +313,7 @@ function getAIResponse(input, WAGONS, CARGO, ALERTS, MAINTENANCE) {
         <div key={s.city} style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:10, padding:"10px 12px", marginBottom:6 }}>
           <div style={{ color:"#60a5fa", fontWeight:700, fontSize:12 }}>📍 {s.city}</div>
           <div style={{ display:"flex", gap:12, marginTop:3 }}>
-            <span style={{ color:"#64748b", fontSize:11 }}>🚆 {s.wagons} wagon(s) present</span>
+            <span style={{ color:"#64748b", fontSize:11 }}><img src="/BW-iconic.png" style={{width:14,height:14,objectFit:"contain",verticalAlign:"middle",marginRight:4}}/> {s.wagons} wagon(s) present</span>
             <span style={{ color:"#64748b", fontSize:11 }}>🛤 {s.routes} route(s)</span>
           </div>
         </div>
@@ -378,7 +378,7 @@ function getAIResponse(input, WAGONS, CARGO, ALERTS, MAINTENANCE) {
         <div key="summary" style={{ background:"rgba(37,99,235,.06)", border:"1px solid rgba(59,130,246,.2)", borderRadius:10, padding:"12px" }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
             {[
-              ["🚆 Total Wagons",      WAGONS.length,  "#3b82f6"],
+              [<><img key="tw" src="/BW-iconic.png" style={{width:14,height:14,objectFit:"contain",verticalAlign:"middle",marginRight:4}}/> Total Wagons</>,      WAGONS.length,  "#3b82f6"],
               ["✅ On Time",           WAGONS.filter(w=>w.status==="On Time").length, "#22c55e"],
               ["⚠️ Delayed",          delayed,         "#f59e0b"],
               ["🔧 In Maintenance",   maint,           "#ef4444"],
@@ -407,7 +407,7 @@ function getAIResponse(input, WAGONS, CARGO, ALERTS, MAINTENANCE) {
         <div key="help" style={{ background:"rgba(37,99,235,.06)", border:"1px solid rgba(59,130,246,.2)", borderRadius:10, padding:"12px" }}>
           {[
             ["🔍","Global Search","\"search WGN-1042\" or \"find delayed\""],
-            ["🚆","Wagon lookup","\"Show WGN-1042\" or \"all wagons\""],
+            [<img key="wl-icon" src="/BW-iconic.png" style={{width:14,height:14,objectFit:"contain",verticalAlign:"middle",marginRight:4}}/>,"Wagon lookup","\"Show WGN-1042\" or \"all wagons\""],
             ["⚠️","Delay info","\"Which wagons are delayed?\""],
             ["🚨","Alerts","\"Show active alerts\" or \"critical alerts\""],
             ["🔧","Maintenance","\"Maintenance due today\" or \"pending tasks\""],

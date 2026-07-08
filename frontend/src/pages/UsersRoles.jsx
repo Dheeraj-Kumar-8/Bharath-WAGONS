@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   FiUsers, FiShield, FiPlus, FiEdit2, FiTrash2, FiX,
   FiSearch, FiLock, FiUnlock, FiCheck,
@@ -1036,7 +1036,7 @@ const UsersRoles = () => {
                       <td style={{ color:"#94a3b8", fontSize:12 }}>{req.employeeId||"—"}</td>
                       <td>
                         <span className={`badge ${req.role === "Analyst" ? "badge-info" : "badge-medium"}`} style={{ fontSize:11 }}>
-                          {req.role === "Analyst" ? "📊 Analyst" : "🚆 Operator"}
+                          {req.role === "Analyst" ? "📊 Analyst" : <><img src="/BW-iconic.png" style={{width:13,height:13,objectFit:"contain",verticalAlign:"middle",marginRight:3}}/> Operator</>}
                         </span>
                       </td>
                       <td>

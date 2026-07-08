@@ -34,6 +34,9 @@ export const api = {
   createAnalytic: (data) => request("POST",   "/analytics", data),
   deleteAnalytic: (id)   => request("DELETE", `/analytics/${id}`),
 
+  // Wagon Health
+  getWagonHealth: () => request("GET", "/wagon-health", null, true),
+
   // Debug
   dbStatus: () => request("GET",  "/debug/db-status"),
   testSave: () => request("POST", "/debug/test-save"),

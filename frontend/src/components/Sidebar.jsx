@@ -34,7 +34,7 @@ const Sidebar = () => (
         background: "linear-gradient(135deg,var(--accent-dark),var(--accent))",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: "20px", flexShrink: 0, boxShadow: "0 0 16px var(--accent-glow)",
-      }}>🚆</div>
+      }}><img src="/BW-iconic.png" style={{ width:"100%", height:"100%", objectFit:"contain" }} alt="BW" /></div>
       <div>
         <div style={{ color: "var(--text-strong,#f1f5f9)", fontWeight: 700, fontSize: "14px", lineHeight: 1.3 }}>Indian Railways</div>
         <div style={{ color: "var(--accent)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase" }}>Command Center</div>

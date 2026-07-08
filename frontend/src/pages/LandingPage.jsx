@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 
@@ -190,7 +190,7 @@ function PlatformVideoSection({ FM, FI }) {
 
         <div className="stats-g" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
           {[
-            { v: 2400, suf: "+", label: "Wagons Tracked",  c: "#3b82f6", ic: "🚆" },
+            { v: 2400, suf: "+", label: "Wagons Tracked",  c: "#3b82f6", ic: <img src="/BW-iconic.png" alt="" style={{width:30,height:30,objectFit:"contain",display:"block",margin:"0 auto"}}/> },
             { v: 8,    suf: "",  label: "Railway Zones",   c: "#a855f7", ic: "🗺" },
             { v: 99.9, suf: "%", label: "Uptime SLA",      c: "#22c55e", ic: "⚡", dec: 1 },
             { v: 2,    suf: "s", label: "Alert Response",  c: "#f59e0b", ic: "🔔", pre: "< " },
@@ -623,7 +623,7 @@ const LandingPage = () => {
         {/* ── NAVBAR ───────────────────────────────────────── */}
         <nav style={{ position: "sticky", top: 0, zIndex: 200, height: 62, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px,5vw,60px)", background: scrollY > 30 ? "rgba(2,8,22,.93)" : "transparent", backdropFilter: scrollY > 30 ? "blur(22px)" : "none", borderBottom: scrollY > 30 ? "1px solid rgba(30,58,100,.5)" : "1px solid transparent", transition: "all .3s" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#1d4ed8,#3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, boxShadow: "0 0 14px rgba(59,130,246,.4)", animation: "lp-glow 3s ease infinite" }}>🚆</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, animation: "lp-glow 3s ease infinite", overflow:"hidden" }}><img src="/BW-iconic.png" alt="Bharath Wagons" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/></div>
             <div>
               <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 13, fontFamily: FM, lineHeight: 1.2 }}>Bharath WAGONS</div>
               <div style={{ color: "#3b82f6", fontSize: 9, fontWeight: 700, letterSpacing: "1.8px" }}>OPERATIONS PLATFORM</div>
@@ -737,7 +737,7 @@ const LandingPage = () => {
           <div className="mq-wrap">
             <div className="mq-inner">
               {[...Array(2)].map((_, ri) =>
-                ["🚆 2,400+ Wagons", "📍 NavIC GPS", "🤖 AI Alerts", "🔒 RBAC Auth", "📊 8 Zones", "⚡ Real-Time", "🛡 Secure", "📦 Cargo AI", "🔧 Maintenance", "📈 Analytics"].map((t, i) => (
+                [<span key="bw" style={{display:"flex",alignItems:"center",gap:4}}><img src="/BW-iconic.png" alt="" style={{width:14,height:14,objectFit:"contain",verticalAlign:"middle"}}/> 2,400+ Wagons</span>, "📍 NavIC GPS", "🤖 AI Alerts", "🔒 RBAC Auth", "📊 8 Zones", "⚡ Real-Time", "🛡 Secure", "📦 Cargo AI", "🔧 Maintenance", "📈 Analytics"].map((t, i) => (
                   <span key={`${ri}-${i}`} style={{ color: "#1e3a5f", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8 }}>
                     {t} <span style={{ color: "#111e3a" }}>◆</span>
                   </span>
@@ -763,7 +763,7 @@ const LandingPage = () => {
             {[
               { ic: "🏛", role: "Admin",    c: "#3b82f6", bg: "linear-gradient(145deg,rgba(6,16,36,.96),rgba(4,12,28,.92))", border: "rgba(59,130,246,.2)", btnBg: "linear-gradient(135deg,#1d4ed8,#3b82f6)", btnShadow: "rgba(37,99,235,.4)" },
               { ic: "📊", role: "Analyst",  c: "#a855f7", bg: "linear-gradient(145deg,rgba(10,6,36,.96),rgba(8,4,26,.92))",  border: "rgba(139,92,246,.2)",  btnBg: "linear-gradient(135deg,#7c3aed,#a855f7)", btnShadow: "rgba(124,58,237,.4)" },
-              { ic: "🚆", role: "Operator", c: "#22c55e", bg: "linear-gradient(145deg,rgba(3,16,10,.96),rgba(2,12,8,.92))",   border: "rgba(34,197,94,.2)",   btnBg: "linear-gradient(135deg,#15803d,#22c55e)", btnShadow: "rgba(34,197,94,.35)" },
+              { ic: <img src="/BW-iconic.png" alt="" style={{width:32,height:32,objectFit:"contain",display:"block"}}/>, role: "Operator", c: "#22c55e", bg: "linear-gradient(145deg,rgba(3,16,10,.96),rgba(2,12,8,.92))",   border: "rgba(34,197,94,.2)",   btnBg: "linear-gradient(135deg,#15803d,#22c55e)", btnShadow: "rgba(34,197,94,.35)" },
             ].map((r, i) => (
               <Fade key={r.role} delay={i * .12}>
                 <div style={{
@@ -915,7 +915,7 @@ const LandingPage = () => {
         {/* FOOTER */}
         <footer style={{ borderTop: "1px solid rgba(20,45,80,.5)", padding: "32px clamp(20px,6vw,76px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg,#1d4ed8,#3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🚆</div>
+            <div style={{ width: 30, height: 30, borderRadius: 8, overflow:"hidden" }}><img src="/BW-iconic.png" alt="Bharath Wagons" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/></div>
             <div>
               <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 12, fontFamily: FM }}>Bharath WAGONS</div>
               <div style={{ color: "#1e3a5f", fontSize: 10 }}>Ministry of Railways, Government of India</div>

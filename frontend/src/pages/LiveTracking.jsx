@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   FiMapPin, FiWifi, FiWifiOff, FiRefreshCw, FiNavigation,
   FiSearch, FiX,
@@ -143,7 +143,7 @@ function DetailPanel({ wagon, onClose }) {
       {/* Header */}
       <div style={{ padding:"14px 16px", borderBottom:"1px solid #1a3356", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:`${statusCol}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🚆</div>
+          <div style={{ width:36, height:36, borderRadius:10, overflow:"hidden", flexShrink:0 }}><img src="/BW-iconic.png" alt="" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/></div>
           <div>
             <div style={{ color:"#60a5fa", fontWeight:800, fontSize:15 }}>{wagon.id}</div>
             <div style={{ display:"flex", gap:6, alignItems:"center", marginTop:2 }}>

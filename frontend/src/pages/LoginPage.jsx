@@ -359,7 +359,7 @@ const LoginPage = () => {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 26, marginBottom: 28,
             boxShadow: "0 0 32px rgba(59,130,246,.4)",
-          }}>🚆</div>
+          }}><img src="/BW-iconic.png" style={{ width:"100%", height:"100%", objectFit:"contain" }} alt="BW" /></div>
 
           <div style={{
             fontSize: "clamp(28px,3.5vw,42px)", fontWeight: 900, lineHeight: 1.15,
@@ -418,7 +418,7 @@ const LoginPage = () => {
           borderRadius: 14, padding: 4, marginBottom: 26,
           border: "1px solid rgba(255,255,255,.05)",
         }}>
-          {[["admin","🏛 Admin"],["operator","🚆 Operator"],["analytics","📊 Analytics"]].map(([key, label]) => (
+          {[["admin","🏛 Admin"],["operator","🚂 Operator"],["analytics","📊 Analytics"]].map(([key, label]) => (
             <button key={key} onClick={() => switchTab(key)} style={{
               flex: 1, padding: "9px 0", border: "none", borderRadius: 10,
               cursor: "pointer", fontSize: 12, fontWeight: 700,
@@ -451,7 +451,7 @@ const LoginPage = () => {
               ? "0 0 30px rgba(14,165,233,.45)"
               : "0 0 30px rgba(59,130,246,.45)",
           }}>
-            {isAnl ? "📊" : isOp ? "🚆" : "🏛"}
+            {isAnl ? "📊" : isOp ? "🚂" : "🏛"}
           </div>
           <h1 style={{ ...S.cardTitle, fontSize: 22, margin: 0 }}>
             {isAnl ? "Analytics Login" : isOp ? "Operator Login" : "Welcome Back"}

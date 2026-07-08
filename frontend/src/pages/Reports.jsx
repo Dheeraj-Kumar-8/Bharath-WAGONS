@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { drawPDFHeader, drawPDFFooter } from "../utils/pdfHeader";
 import {
   FiFileText, FiDownload, FiBarChart2, FiActivity,
   FiCalendar, FiCheckCircle, FiX, FiEye, FiSearch, FiFilter,
@@ -336,35 +337,19 @@ function getData(report) {
 }
 
 // ── Downloads ─────────────────────────────────────────────────────────────────
-function downloadPDF(report) {
+async function downloadPDF(report) {
   const d = getData(report);
   const doc = new jsPDF();
 
-  doc.setFillColor(13, 31, 60);
-  doc.rect(0, 0, 210, 30, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(15);
-  doc.setFont("helvetica", "bold");
-  doc.text("Indian Railways — Command Center", 14, 12);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text(report.title, 14, 22);
-
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(9);
-  doc.text(`ID: ${report.id}  |  Period: ${report.date}  |  Generated: ${new Date().toLocaleString()}`, 14, 36);
+  const subtitle = `${report.id}  ·  Period: ${report.date}  ·  Wagons: ${report.wagons.toLocaleString()}  ·  Alerts: ${report.alerts}`;
+  const startY = await drawPDFHeader(doc, subtitle);
 
   doc.setFontSize(10); doc.setFont("helvetica", "bold");
-  doc.setTextColor(59, 130, 246);  doc.text(`Wagons: ${report.wagons.toLocaleString()}`, 14, 46);
-  doc.setTextColor(245, 158, 11);  doc.text(`Alerts: ${report.alerts}`, 70, 46);
-  doc.setTextColor(34, 197, 94);   doc.text(`Status: ${report.status}`, 110, 46);
-
-  doc.setFontSize(11); doc.setFont("helvetica", "bold");
   doc.setTextColor(241, 245, 249);
-  doc.text(d.tableTitle, 14, 56);
+  doc.text(d.tableTitle, 14, startY + 2);
 
   autoTable(doc, {
-    startY: 60,
+    startY: startY + 6,
     head: [d.columns],
     body: d.rows,
     headStyles: { fillColor: [13,31,60], textColor: [96,165,250], fontStyle:"bold", fontSize:8 },
@@ -374,7 +359,7 @@ function downloadPDF(report) {
   });
 
   const y1 = doc.lastAutoTable.finalY + 10;
-  doc.setFontSize(11); doc.setFont("helvetica","bold");
+  doc.setFontSize(10); doc.setFont("helvetica","bold");
   doc.setTextColor(241, 245, 249);
   doc.text(d.summaryTitle, 14, y1);
 
@@ -387,13 +372,7 @@ function downloadPDF(report) {
     alternateRowStyles: { fillColor: [13,31,60] },
   });
 
-  const pages = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(74,111,165);
-    doc.text(`Ministry of Railways · Command Center · Page ${i} of ${pages}`, 14, 290);
-  }
-
+  drawPDFFooter(doc);
   doc.save(`${report.id}_${report.title.replace(/\s+/g,"_")}.pdf`);
 }
 
@@ -443,6 +422,49 @@ function downloadCSV(report) {
   a.download = `${report.id}_${report.title.replace(/\s+/g,"_")}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function downloadWagonPDF(wagon) {
+  const doc = new jsPDF();
+
+  const subtitle = `Wagon Detail Report  ·  ${wagon.wagonId}  ·  Zone: ${wagon.zone}  ·  Division: ${wagon.division || "N/A"}`;
+  const startY = await drawPDFHeader(doc, subtitle);
+
+  autoTable(doc, {
+    startY: startY + 4,
+    head: [["Field", "Value"]],
+    body: [
+      ["Wagon ID",        wagon.wagonId],
+      ["Wagon Number",    wagon.wagonNumber],
+      ["Zone",           wagon.zone],
+      ["Division",       wagon.division || "N/A"],
+      ["Train Number",   wagon.trainNumber || "N/A"],
+      ["Current Location", wagon.currentLocation],
+      ["Current Station", wagon.station],
+      ["Next Station",   wagon.nextStation || "N/A"],
+      ["Destination",    wagon.destination],
+      ["GPS Status",     wagon.gpsStatus],
+      ["Speed",          `${wagon.speed} km/h`],
+      ["Temperature",    `${wagon.temperature}°C`],
+      ["Cargo Type",     wagon.cargoType],
+      ["Cargo Weight",   `${wagon.currentLoad || 0} T`],
+      ["Load Status",    wagon.loadStatus],
+      ["Health Status",  wagon.wagonHealth],
+      ["Health Score",   `${wagon.healthScore}%`],
+      ["Maintenance",    wagon.maintenanceStatus],
+      ["Alert Status",   wagon.aiAlert === "Yes" ? "Active" : "Clear"],
+      ["Alert Reasons",  wagon.alertReasons.join(", ") || "None"],
+      ["Last Updated",   wagon.lastUpdated ? new Date(wagon.lastUpdated).toLocaleString("en-IN") : "N/A"],
+    ],
+    headStyles: { fillColor: [13, 31, 60], textColor: [96, 165, 250], fontStyle: "bold", fontSize: 9 },
+    bodyStyles: { textColor: [203, 213, 225], fontSize: 9, fillColor: [7, 22, 40] },
+    alternateRowStyles: { fillColor: [13, 31, 60] },
+    columnStyles: { 0: { fontStyle: "bold", textColor: [148, 163, 184], cellWidth: 55 } },
+    styles: { cellPadding: 3 },
+  });
+
+  drawPDFFooter(doc);
+  doc.save(`Wagon_${wagon.wagonId}.pdf`);
 }
 
 function bulkExport(format, tab) {
@@ -964,41 +986,20 @@ const Reports = () => {
     
     if (format === "PDF") {
       const doc = new jsPDF({ orientation: "landscape" });
-      const rgb = [59, 130, 246];
-      
-      doc.setFillColor(13, 31, 60);
-      doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(15);
-      doc.setFont("helvetica", "bold");
-      doc.text("Indian Railways Command Center", 14, 12);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.text(title, 14, 22);
-      
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(9);
-      doc.text(subtitle, 14, 36);
-      
-      autoTable(doc, {
-        startY: 42,
-        head: [cols.map(c => c.label)],
-        body: rows,
-        headStyles: { fillColor: [13, 31, 60], textColor: rgb, fontStyle: "bold", fontSize: 7 },
-        bodyStyles: { textColor: [203, 213, 225], fontSize: 7, fillColor: [7, 22, 40] },
-        alternateRowStyles: { fillColor: [13, 31, 60] },
-        styles: { cellPadding: 2 },
+      const headerSubtitle = `Wagons Report  ·  Zone: ${zone}  ·  ${wagons.length} records`;
+      drawPDFHeader(doc, headerSubtitle).then(startY => {
+        autoTable(doc, {
+          startY: startY + 4,
+          head: [cols.map(c => c.label)],
+          body: rows,
+          headStyles: { fillColor: [13, 31, 60], textColor: [59, 130, 246], fontStyle: "bold", fontSize: 7 },
+          bodyStyles: { textColor: [203, 213, 225], fontSize: 7, fillColor: [7, 22, 40] },
+          alternateRowStyles: { fillColor: [13, 31, 60] },
+          styles: { cellPadding: 2 },
+        });
+        drawPDFFooter(doc);
+        doc.save(`Wagons_Report_${zone}.pdf`);
       });
-      
-      const pages = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(74, 111, 165);
-        doc.text(`Ministry of Railways · Command Center · Page ${i} of ${pages}`, 14, doc.internal.pageSize.height - 8);
-      }
-      
-      doc.save(`Wagons_Report_${zone}.pdf`);
     } else if (format === "Excel") {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([[title], [subtitle], [], cols.map(c => c.label), ...rows]);
@@ -1104,11 +1105,12 @@ const Reports = () => {
                   {WAGON_REPORT_COLUMNS.slice(0, 8).map(col => (
                     <th key={col.key}>{col.label}</th>
                   ))}
+                  <th>Export</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={8} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>Loading wagons...</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>Loading wagons...</td></tr>
                 ) : (
                   filteredWagons.slice(0, 10).map((wagon, i) => (
                     <tr key={wagon.wagonId || i}>
@@ -1121,11 +1123,25 @@ const Reports = () => {
                           {col.exportValue(wagon)}
                         </td>
                       ))}
+                      <td>
+                        <button
+                          onClick={() => downloadWagonPDF(wagon)}
+                          title={`Download ${wagon.wagonId} as PDF`}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 5,
+                            padding: "4px 10px", borderRadius: 6, cursor: "pointer",
+                            background: "rgba(239,68,68,.12)", border: "1px solid rgba(239,68,68,.3)",
+                            color: "#ef4444", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+                          }}
+                        >
+                          <FiDownload size={11} /> PDF
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
                 {!loading && filteredWagons.length === 0 && (
-                  <tr><td colSpan={8} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>No wagons found for your zone</td></tr>
+                  <tr><td colSpan={9} style={{ textAlign:"center", color:"#4a6fa5", padding:"30px" }}>No wagons found for your zone</td></tr>
                 )}
               </tbody>
             </table>

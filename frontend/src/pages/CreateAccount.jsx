@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isValidRailwayEmail, DOMAIN_ERROR } from "../utils/emailValidator";
@@ -189,8 +189,8 @@ const CreateAccount = () => {
           </div>
         ) : (
           <>
-            <div style={{ width:56, height:56, margin:"0 auto 12px", borderRadius:16, background: form.role === "Analyst" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "linear-gradient(135deg,#1d4ed8,#3b82f6)", display:"flex", justifyContent:"center", alignItems:"center", fontSize:24, boxShadow: form.role === "Analyst" ? "0 0 28px rgba(168,85,247,0.5)" : "0 0 28px rgba(59,130,246,0.5)" }}>
-              {form.role === "Analyst" ? "📊" : "🚆"}
+            <div style={{ width:56, height:56, margin:"0 auto 12px", borderRadius:16, background: form.role === "Analyst" ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "transparent", display:"flex", justifyContent:"center", alignItems:"center", fontSize:24, overflow:"hidden", boxShadow: form.role === "Analyst" ? "0 0 28px rgba(168,85,247,0.5)" : "0 0 28px rgba(59,130,246,0.5)" }}>
+              {form.role === "Analyst" ? "📊" : <img src="/BW-iconic.png" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/>}
             </div>
             <h1 style={{ textAlign:"center", fontSize:22, margin:0, fontWeight:700 }}>Request Access</h1>
             <p style={{ textAlign:"center", color:"#94a3b8", fontSize:13, marginTop:6, marginBottom:12 }}>
@@ -199,7 +199,7 @@ const CreateAccount = () => {
 
             {/* Role selector */}
             <div style={{ display:"flex", background:"rgba(0,0,0,0.3)", borderRadius:12, padding:4, marginBottom:16, border:"1px solid rgba(255,255,255,0.06)" }}>
-              {[["Operator","🚆"],["Analyst","📊"]].map(([role, icon]) => (
+              {[["Operator",<img key="op-icon" src="/BW-iconic.png" style={{width:16,height:16,objectFit:"contain",verticalAlign:"middle",marginRight:4}}/>],["Analyst","📊"]].map(([role, icon]) => (
                 <button key={role} onClick={() => set("role", role)} style={{
                   flex:1, padding:"9px 0", border:"none", borderRadius:9, cursor:"pointer",
                   fontSize:13, fontWeight:700, transition:"all .2s",

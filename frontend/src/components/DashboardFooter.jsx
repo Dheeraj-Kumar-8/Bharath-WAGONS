@@ -1,7 +1,7 @@
 const COLS = [
   {
     heading: "Platform",
-    items: ["🚆 2,400+ Wagons Tracked", "🗺 8 Railway Zones", "📍 NavIC GPS Active", "⚡ Real-Time Updates"],
+    items: ["🚂 2,400+ Wagons Tracked", "🗺 8 Railway Zones", "📍 NavIC GPS Active", "⚡ Real-Time Updates"],
   },
   {
     heading: "Intelligence",
@@ -65,7 +65,7 @@ const DashboardFooter = () => (
           width: 26, height: 26, borderRadius: 7,
           background: "linear-gradient(135deg,#1d4ed8,#3b82f6)",
           display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13,
-        }}>🚆</div>
+        }}><img src="/BW-iconic.png" style={{ width:"100%", height:"100%", objectFit:"contain" }} alt="BW" /></div>
         <div>
           <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 12 }}>Bharath WAGONS</div>
           <div style={{ color: "#1e3a5f", fontSize: 10 }}>Ministry of Railways, Government of India</div>

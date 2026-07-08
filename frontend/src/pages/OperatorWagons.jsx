@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FiMapPin, FiEye, FiRefreshCw, FiX, FiTruck } from "react-icons/fi";
 import OperatorLayout from "../components/OperatorLayout";
 import { useOperatorData } from "../context/OperatorDataContext";
@@ -15,7 +15,7 @@ function DetailModal({ wagon, onClose }) {
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal-box" style={{maxWidth:"520px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}}>
-          <div className="modal-title" style={{margin:0}}>🚆 {wagon.id} — Details</div>
+          <div className="modal-title" style={{margin:0}}><img src="/BW-iconic.png" alt="" style={{width:18,height:18,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/> {wagon.id} — Details</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer"}}><FiX size={18}/></button>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>

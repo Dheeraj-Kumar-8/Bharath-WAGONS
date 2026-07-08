@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   FiUser, FiBell, FiSun, FiSave, FiCheck, FiLock, FiShield,
@@ -259,7 +259,7 @@ export default function OperatorSettings() {
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
                   {Object.entries(PRESET_THEMES).map(([name, preset]) => {
                     const isActive = theme.colorScheme === preset.colorScheme && theme.accentColor === preset.accentColor && theme.cardStyle === preset.cardStyle;
-                    const icons = { "Dark Mode":"🌙", "Light Mode":"☀️", "Railway Theme":"🚆", "Corporate Theme":"🏢" };
+                    const icons = { "Dark Mode":"🌙", "Light Mode":"☀️", "Railway Theme":<img src="/BW-iconic.png" style={{width:13,height:13,objectFit:"contain",verticalAlign:"middle",marginRight:3}}/>, "Corporate Theme":"🏢" };
                     return (
                       <button key={name} onClick={() => handleThemeChange(preset)} style={{
                         padding:"14px 10px", borderRadius:12, border:`2px solid ${isActive ? "var(--accent,#3b82f6)" : "#1a3356"}`,

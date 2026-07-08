@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   FiUser, FiBell, FiSun, FiSave, FiCheck, FiLock, FiShield,
@@ -42,7 +42,7 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
-const PRESET_ICONS = { "Dark Mode":"🌙", "Light Mode":"☀️", "Railway Theme":"🚆", "Corporate Theme":"🏢" };
+const PRESET_ICONS = { "Dark Mode":"🌙", "Light Mode":"☀️", "Railway Theme":<img src="/BW-iconic.png" style={{width:13,height:13,objectFit:"contain",verticalAlign:"middle",marginRight:3}}/>, "Corporate Theme":"🏢" };
 
 export default function AnalyticsSettings() {
   const { theme: savedTheme, saveTheme } = useTheme();

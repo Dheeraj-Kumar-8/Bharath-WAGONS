@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { drawPDFHeader, drawPDFFooter } from "./pdfHeader";
 import {
   buildStationActivityRows,
   buildStatusTrendRows,
@@ -758,31 +759,20 @@ const hexToRgb = (hex) => [
   parseInt(hex.slice(5, 7), 16),
 ];
 
-const exportDatasetPDF = ({ title, subtitle, fileLabel, columns, rows, summaryTitle, summaryRows, accent = "#3b82f6" }) => {
+const exportDatasetPDF = async ({ title, subtitle, fileLabel, columns, rows, summaryTitle, summaryRows, accent = "#3b82f6" }) => {
   const doc = new jsPDF({ orientation: columns.length > 6 ? "landscape" : "portrait" });
   const rgb = hexToRgb(accent);
 
-  doc.setFillColor(13, 31, 60);
-  doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(15);
-  doc.setFont("helvetica", "bold");
-  doc.text("Indian Railways Command Center", 14, 12);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text(title, 14, 22);
+  const headerSubtitle = `${title}  ·  ${subtitle}`;
+  const startY = await drawPDFHeader(doc, headerSubtitle);
 
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(9);
-  doc.text(subtitle, 14, 36);
-
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(241, 245, 249);
-  doc.text("Report Table", 14, 46);
+  doc.text("Report Table", 14, startY + 2);
 
   autoTable(doc, {
-    startY: 50,
+    startY: startY + 6,
     head: [columns],
     body: safeRows(rows, columns.length),
     headStyles: { fillColor: [13, 31, 60], textColor: rgb, fontStyle: "bold", fontSize: 8 },
@@ -792,7 +782,7 @@ const exportDatasetPDF = ({ title, subtitle, fileLabel, columns, rows, summaryTi
   });
 
   const nextY = doc.lastAutoTable.finalY + 10;
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(241, 245, 249);
   doc.text(summaryTitle || "Summary", 14, nextY);
@@ -806,14 +796,7 @@ const exportDatasetPDF = ({ title, subtitle, fileLabel, columns, rows, summaryTi
     alternateRowStyles: { fillColor: [13, 31, 60] },
   });
 
-  const pages = doc.internal.getNumberOfPages();
-  for (let page = 1; page <= pages; page += 1) {
-    doc.setPage(page);
-    doc.setFontSize(8);
-    doc.setTextColor(74, 111, 165);
-    doc.text(`Ministry of Railways · Command Center · Page ${page} of ${pages}`, 14, doc.internal.pageSize.height - 8);
-  }
-
+  drawPDFFooter(doc);
   doc.save(buildFileName(fileLabel, "pdf"));
 };
 
