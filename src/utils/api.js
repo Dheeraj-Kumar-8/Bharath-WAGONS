@@ -20,33 +20,28 @@ async function request(method, path, body, auth = false) {
 }
 
 export const api = {
-  // Users
-  getUsers:   ()         => request("GET",    "/users",        null, true),
-  createUser: (data)     => request("POST",   "/users",        data),
-  updateUser:      (id, data)   => request("PUT",   `/users/${id}`,        data, true),
-  patchUserStatus: (id, status) => request("PATCH", `/users/${id}/status`, { status }, true),
-  patchUserRole:   (id, role)   => request("PATCH", `/users/${id}/role`,   { role },   true),
-  deleteUser:      (id)         => request("DELETE", `/users/${id}`,        null, true),
+  getUsers:        ()         => request("GET",    "/users",        null, true),
+  createUser:      (data)     => request("POST",   "/users",        data),
+  updateUser:      (id, data) => request("PUT",    `/users/${id}`,  data, true),
+  patchUserStatus: (id, s)    => request("PATCH",  `/users/${id}/status`, { status: s }, true),
+  patchUserRole:   (id, r)    => request("PATCH",  `/users/${id}/role`,   { role: r },   true),
+  deleteUser:      (id)       => request("DELETE", `/users/${id}`,  null, true),
 
-  // Wagons
-  getWagons:   ()         => request("GET", "/wagons", null, true),
-  createWagon: (data)     => request("POST", "/wagons", data, true),
-  updateWagon: (id, data) => request("PUT", `/wagons/${id}`, data, true),
-  deleteWagon: (id)       => request("DELETE", `/wagons/${id}`, null, true),
+  getWagons:   ()         => request("GET",    "/wagons",        null, true),
+  createWagon: (data)     => request("POST",   "/wagons",        data, true),
+  updateWagon: (id, data) => request("PUT",    `/wagons/${id}`,  data, true),
+  deleteWagon: (id)       => request("DELETE", `/wagons/${id}`,  null, true),
 
-  // Alerts
   getAlerts:      (params = {}) => request("GET",    "/alerts" + toQuery(params),          null, true),
   getAlertStats:  (params = {}) => request("GET",    "/alerts/stats" + toQuery(params),    null, true),
   generateAlerts: (params = {}) => request("POST",   "/alerts/generate" + toQuery(params), null, true),
   resolveAlert:   (id)          => request("PATCH",  `/alerts/${id}/resolve`,              null, true),
   dismissAlert:   (id)          => request("DELETE", `/alerts/${id}`,                      null, true),
 
-  // Analytics
   getAnalytics:   ()     => request("GET",    "/analytics"),
   createAnalytic: (data) => request("POST",   "/analytics", data),
   deleteAnalytic: (id)   => request("DELETE", `/analytics/${id}`),
 
-  // Debug
   dbStatus: () => request("GET",  "/debug/db-status"),
   testSave: () => request("POST", "/debug/test-save"),
 };
