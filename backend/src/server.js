@@ -10,6 +10,7 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
 import wagonHealthRoutes from "./routes/wagonHealthRoutes.js";
+import alertRoutes from "./routes/alertRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -99,6 +100,7 @@ app.use("/api/wagons",    wagonRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/assistant",    assistantRoutes);
 app.use("/api/wagon-health", wagonHealthRoutes);
+app.use("/api/alerts",       alertRoutes);
 
 // --- Centralized error handler ---
 app.use(errorHandler);
