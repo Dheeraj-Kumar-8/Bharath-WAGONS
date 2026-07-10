@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import useZoneWagons from "../hooks/useZoneWagons";
 import { buildReportData, exportReportPDF, exportReportExcel, exportReportCSV, REPORT_DEFINITIONS } from "../utils/reportExportService";
@@ -207,22 +207,33 @@ export function DateRangePicker({ value, onChange }) {
 }
 
 // ── Drill-Down Analytics ──────────────────────────────────────────────────────
-const DRILL_DATA = {
-  NR:  { wagons: 312, onTime: 300, delayed: 7,  maint: 5, routes: ["DEL–LKO", "DEL–AMB", "LKO–BSB"],    topAlert: "GPS Signal Lost"  },
-  SR:  { wagons: 198, onTime: 188, delayed: 6,  maint: 4, routes: ["MAS–BLR", "MAS–HYD", "BLR–CBE"],    topAlert: "Route Deviation"  },
-  ER:  { wagons: 224, onTime: 212, delayed: 8,  maint: 4, routes: ["HWH–BBS", "HWH–RNC", "BBS–VSKP"],   topAlert: "Brake Warning"     },
-  WR:  { wagons: 178, onTime: 166, delayed: 8,  maint: 4, routes: ["MMCT–ADI", "ADI–RJT", "MMCT–BRC"],  topAlert: "Cargo Alert"       },
-  NER: { wagons: 156, onTime: 149, delayed: 5,  maint: 2, routes: ["GHY–DBRG", "GHY–KYQ", "DBRG–SCL"], topAlert: "GPS Signal Lost"  },
-  NWR: { wagons: 143, onTime: 136, delayed: 4,  maint: 3, routes: ["JP–AII", "JP–BKN", "AII–ADI"],      topAlert: "Speed Exceeded"   },
-  SER: { wagons: 127, onTime: 122, delayed: 4,  maint: 1, routes: ["KGP–VSKP", "KGP–BBS", "VSKP–BBS"], topAlert: "Route Deviation"  },
-  SWR: { wagons: 100, onTime:  97, delayed: 2,  maint: 1, routes: ["SBC–MYS", "SBC–UBL", "MYS–UBL"],   topAlert: "Cargo Alert"       },
-};
-
 export function DrillDownAnalytics() {
   const { analyst } = useAuth();
   const analystZone = analyst?.zone;
-  const [selected] = useState(analystZone || null);
-  const d = selected ? DRILL_DATA[selected] : null;
+  const { wagons } = useZoneWagons();
+
+  const d = useMemo(() => {
+    if (!wagons.length) return null;
+    const total    = wagons.length;
+    const delayed  = wagons.filter(w => w.status === "Delayed").length;
+    const maint    = wagons.filter(w => w.status === "Maintenance").length;
+    const onTime   = total - delayed - maint;
+
+    // top routes by frequency
+    const routeMap = {};
+    wagons.forEach(w => {
+      const r = w.route || `${w.station} → ${w.destination}`;
+      if (r && r !== "N/A → N/A") routeMap[r] = (routeMap[r] || 0) + 1;
+    });
+    const routes = Object.entries(routeMap).sort((a,b) => b[1]-a[1]).slice(0,3).map(([r]) => r);
+
+    // top alert type
+    const alertMap = {};
+    wagons.forEach(w => w.alertReasons.forEach(r => { alertMap[r] = (alertMap[r]||0)+1; }));
+    const topAlert = Object.entries(alertMap).sort((a,b)=>b[1]-a[1])[0]?.[0] || "None";
+
+    return { wagons: total, onTime, delayed, maint, routes, topAlert };
+  }, [wagons]);
 
   return (
     <div className="card" style={{ marginBottom: 20 }}>
@@ -232,24 +243,14 @@ export function DrillDownAnalytics() {
         </div>
       </div>
 
-      {/* Zone is locked — just show the assigned zone as a static badge */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        <span style={{
-          padding: "8px 18px", borderRadius: 10,
-          border: "2px solid #a855f7", background: "rgba(168,85,247,.15)",
-          color: "#a855f7", fontWeight: 700, fontSize: 13,
-        }}>Zone {analystZone}</span>
+        <span style={{ padding: "8px 18px", borderRadius: 10, border: "2px solid #a855f7", background: "rgba(168,85,247,.15)", color: "#a855f7", fontWeight: 700, fontSize: 13 }}>Zone {analystZone}</span>
       </div>
 
-      {!selected && (
-        <div style={{ color: "var(--text-muted,#64748b)", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
-          No zone data available
-        </div>
-      )}
-
-      {d && (
+      {!d ? (
+        <div style={{ color: "var(--text-muted,#64748b)", fontSize: 13, textAlign: "center", padding: "20px 0" }}>Loading zone data…</div>
+      ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr) 1fr", gap: 14, animation: "fadeIn .2s ease" }}>
-          {/* Stats */}
           <div style={{ gridColumn: "1 / 3", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
             {[
               { label: "Total Wagons", val: d.wagons,  color: "#3b82f6" },
@@ -263,21 +264,19 @@ export function DrillDownAnalytics() {
               </div>
             ))}
           </div>
-          {/* Routes */}
           <div style={{ background: "var(--surface-alt,#071628)", border: "1px solid var(--border-color,#1a3356)", borderRadius: 10, padding: 14 }}>
             <div style={{ color: "var(--text-strong,#f1f5f9)", fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Top Routes</div>
-            {d.routes.map(r => (
+            {d.routes.length ? d.routes.map(r => (
               <div key={r} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3b82f6", flexShrink: 0 }} />
                 <span style={{ color: "var(--text,#cbd5e1)", fontSize: 12 }}>{r}</span>
               </div>
-            ))}
+            )) : <div style={{ color: "#64748b", fontSize: 12 }}>No route data</div>}
           </div>
-          {/* Top alert */}
           <div style={{ background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 10, padding: 14 }}>
             <div style={{ color: "#ef4444", fontWeight: 700, fontSize: 12, marginBottom: 8 }}><FiAlertTriangle size={12} style={{ marginRight: 4 }} />Top Alert Type</div>
             <div style={{ color: "var(--text-strong,#f1f5f9)", fontSize: 14, fontWeight: 700 }}>{d.topAlert}</div>
-            <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, marginTop: 4 }}>Zone {selected} — last 24 hours</div>
+            <div style={{ color: "var(--text-muted,#64748b)", fontSize: 11, marginTop: 4 }}>Zone {analystZone} — live data</div>
           </div>
         </div>
       )}
@@ -603,14 +602,8 @@ export function AnalyticsToolbar({ filters, onFiltersChange, dateRange, onDateRa
   const { analyst } = useAuth();
   const analystZone = analyst?.zone;
 
-  // Always lock the zone filter to the analyst's zone
-  const handleFiltersChange = (next) => {
-    onFiltersChange({ ...next, zone: analystZone || "All" });
-  };
-
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-      {/* Zone locked badge */}
       {analystZone && (
         <div style={{
           display: "flex", alignItems: "center", gap: 6,
@@ -620,7 +613,7 @@ export function AnalyticsToolbar({ filters, onFiltersChange, dateRange, onDateRa
           <span style={{ color: "#a855f7", fontSize: 12, fontWeight: 700 }}>📍 Zone {analystZone}</span>
         </div>
       )}
-      <AdvancedFilters filters={filters} onChange={handleFiltersChange} />
+      <AdvancedFilters filters={filters} onChange={onFiltersChange} />
       <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
     </div>
   );

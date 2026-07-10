@@ -442,48 +442,73 @@ const LiveTracking = () => {
         </div>
 
         <div className="card" style={{ padding:0 }}>
-          <div style={{ padding:"12px 16px", borderBottom:"1px solid #1a3356" }}>
-            <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:13 }}>Zone Summary</div>
+          <div style={{ padding:"12px 16px", borderBottom:"1px solid #1a3356", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ color:"#f1f5f9", fontWeight:700, fontSize:13 }}>Live Tracking · Station Hubs by Zone</div>
+            <span style={{ color:"#4a6fa5", fontSize:11 }}>Zone {admin?.zone}</span>
           </div>
-          <div style={{ maxHeight:280, overflowY:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse" }}>
-              <thead>
-                <tr>
-                  {["Zone","Total","Running","Loading","Unloading","Delayed","Maint.","Idle"].map(h => (
-                    <th key={h} style={{ color:"#4a6fa5", fontSize:10, fontWeight:700, textTransform:"uppercase", padding:"8px 14px", textAlign:h==="Zone"?"left":"center", borderBottom:"1px solid #1a3356" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const zoneData  = allWagons.filter(w => w.zone === admin?.zone);
-                  const zc        = ZONE_COLORS[admin?.zone] || "#3b82f6";
-                  const running   = zoneData.filter(w => w.status === "Running").length;
-                  const loading   = zoneData.filter(w => w.status === "Loading").length;
-                  const unloading = zoneData.filter(w => w.status === "Unloading").length;
-                  const delayed   = zoneData.filter(w => w.status === "Delayed").length;
-                  const maint     = zoneData.filter(w => w.status === "Maintenance").length;
-                  const idle      = zoneData.filter(w => w.status === "Idle").length;
-                  return (
-                    <tr style={{ borderBottom:"1px solid rgba(26,51,86,.4)" }}>
-                      <td style={{ padding:"9px 14px" }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                          <div style={{ width:8, height:8, borderRadius:2, background:zc }}/>
-                          <span style={{ color:zc, fontWeight:700, fontSize:12 }}>{admin?.zone}</span>
+          <div style={{ maxHeight:280, overflowY:"auto", padding:"10px 12px" }}>
+            {(() => {
+              const zoneWagons = allWagons.filter(w => w.zone === admin?.zone);
+              const zc = ZONE_COLORS[admin?.zone] || "#3b82f6";
+
+              // group by station
+              const stationMap = {};
+              zoneWagons.forEach(w => {
+                const st = w.location || "Unknown";
+                if (!stationMap[st]) stationMap[st] = { total:0, running:0, delayed:0, offline:0 };
+                stationMap[st].total++;
+                if (w.status === "Running") stationMap[st].running++;
+                if (w.status === "Delayed") stationMap[st].delayed++;
+                if (w.gps === "Offline")   stationMap[st].offline++;
+              });
+
+              const stations = Object.entries(stationMap).sort((a,b) => b[1].total - a[1].total);
+
+              if (stations.length === 0) return (
+                <div style={{ textAlign:"center", padding:32, color:"#4a6fa5", fontSize:12 }}>No station data available</div>
+              );
+
+              return (
+                <div>
+                  {/* Zone header */}
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10, padding:"6px 10px", background:`${zc}12`, border:`1px solid ${zc}25`, borderRadius:8 }}>
+                    <div style={{ width:10, height:10, borderRadius:2, background:zc }} />
+                    <span style={{ color:zc, fontWeight:800, fontSize:12, letterSpacing:.5 }}>Zone {admin?.zone}</span>
+                    <span style={{ color:"#4a6fa5", fontSize:11, marginLeft:"auto" }}>{zoneWagons.length} wagons · {stations.length} stations</span>
+                  </div>
+
+                  {/* Station rows */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {stations.map(([name, s]) => (
+                      <div key={name} style={{ background:"#071628", border:"1px solid #1a3356", borderRadius:8, padding:"8px 12px", transition:"border-color .2s" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = zc}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "#1a3356"}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            <FiMapPin size={11} color={zc} />
+                            <span style={{ color:"#f1f5f9", fontWeight:700, fontSize:12 }}>{name}</span>
+                          </div>
+                          <span style={{ color:zc, fontWeight:800, fontSize:13 }}>{s.total}</span>
                         </div>
-                      </td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f1f5f9", fontWeight:700, fontSize:12 }}>{zoneData.length}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#22c55e", fontWeight:600, fontSize:12 }}>{running}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#3b82f6", fontWeight:600, fontSize:12 }}>{loading}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#06b6d4", fontWeight:600, fontSize:12 }}>{unloading}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f59e0b", fontWeight:600, fontSize:12 }}>{delayed}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#f97316", fontWeight:600, fontSize:12 }}>{maint}</span></td>
-                      <td style={{ padding:"9px 14px", textAlign:"center" }}><span style={{ color:"#64748b", fontWeight:600, fontSize:12 }}>{idle}</span></td>
-                    </tr>
-                  );
-                })()}
-              </tbody>
-            </table>
+                        <div style={{ display:"flex", gap:12 }}>
+                          {[{l:"Running",v:s.running,c:"#22c55e"},{l:"Delayed",v:s.delayed,c:"#f59e0b"},{l:"GPS Offline",v:s.offline,c:"#ef4444"}].map(({l,v,c}) => (
+                            <div key={l} style={{ display:"flex", alignItems:"center", gap:4 }}>
+                              <div style={{ width:6, height:6, borderRadius:"50%", background:c }} />
+                              <span style={{ color:"#4a6fa5", fontSize:10 }}>{l}</span>
+                              <span style={{ color:c, fontWeight:700, fontSize:11 }}>{v}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* mini bar */}
+                        <div style={{ marginTop:6, height:3, background:"#0d1f3c", borderRadius:2, overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:`${(s.running/s.total)*100}%`, background:"#22c55e", borderRadius:2, transition:"width .4s" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

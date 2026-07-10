@@ -7,49 +7,48 @@ import {
 import { FiMap, FiTruck, FiActivity, FiTrendingUp } from "react-icons/fi";
 import AnalyticsLayout from "../../components/AnalyticsLayout";
 import StatCard from "../../components/StatCard";
-import { useWagonData } from "../../context/WagonDataContext";
+import useZoneWagons from "../../hooks/useZoneWagons";
 import { buildWagonSummary, buildZonePerformanceRow, getZoneName } from "../../utils/wagonUtils";
 
 const ZONE_COLORS = {
   NR: "#3b82f6", SR: "#22c55e", ER: "#f59e0b", WR: "#a855f7",
   NER: "#06b6d4", NWR: "#f97316", SER: "#10b981", SWR: "#ec4899",
 };
-const ZONE_KEYS = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 const RADAR_METRICS = ["On-Time","GPS Coverage","Fleet Util.","Cargo Eff.","Health"];
 
 const TT = { contentStyle: { background: "#0d1f3c", border: "1px solid #1a3356", borderRadius: 10, color: "#f1f5f9" } };
 
 const AnalyticsZone = () => {
-  const { wagons } = useWagonData();
+  const { wagons, zone: analystZone } = useZoneWagons();
 
-  const ALL_ZONES = useMemo(() =>
-    ZONE_KEYS.map(zk => {
-      const zWagons = wagons.filter(w => w.zone === zk);
-      const row = buildZonePerformanceRow(zk, zWagons);
-      const s = buildWagonSummary(zWagons);
-      return {
-        zone: zk,
-        name: getZoneName(zk),
-        wagons: row.wagons,
-        onTime: row.onTime,
-        delayed: row.delayed,
-        maint: row.maint,
-        perf: row.perf,
-        speed: `${s.avgSpeed} km/h`,
-        color: ZONE_COLORS[zk] || "#3b82f6",
-        gpsCoverage: s.gpsCoverage,
-        fleetUtil: s.total ? Math.round((s.active / s.total) * 100) : 0,
-        cargoEff: s.totalCapacity ? Math.round((s.totalLoad / s.totalCapacity) * 100) : 0,
-        avgHealth: s.avgHealthScore,
-      };
-    }).filter(z => z.wagons > 0),
-  [wagons]);
+  // Only the analyst's own zone
+  const ALL_ZONES = useMemo(() => {
+    const zk = analystZone;
+    if (!zk || !wagons.length) return [];
+    const row = buildZonePerformanceRow(zk, wagons);
+    const s   = buildWagonSummary(wagons);
+    return [{
+      zone:        zk,
+      name:        getZoneName(zk),
+      wagons:      row.wagons,
+      onTime:      row.onTime,
+      delayed:     row.delayed,
+      maint:       row.maint,
+      perf:        row.perf,
+      speed:       `${s.avgSpeed} km/h`,
+      color:       ZONE_COLORS[zk] || "#3b82f6",
+      gpsCoverage: s.gpsCoverage,
+      fleetUtil:   s.total ? Math.round((s.active / s.total) * 100) : 0,
+      cargoEff:    s.totalCapacity ? Math.round((s.totalLoad / s.totalCapacity) * 100) : 0,
+      avgHealth:   s.avgHealthScore,
+    }];
+  }, [wagons, analystZone]);
 
   const radarData = useMemo(() =>
     RADAR_METRICS.map(metric => {
       const entry = { metric };
-      ALL_ZONES.slice(0, 4).forEach(z => {
-        if (metric === "On-Time")     entry[z.zone] = z.perf;
+      ALL_ZONES.forEach(z => {
+        if (metric === "On-Time")      entry[z.zone] = z.perf;
         if (metric === "GPS Coverage") entry[z.zone] = z.gpsCoverage;
         if (metric === "Fleet Util.")  entry[z.zone] = z.fleetUtil;
         if (metric === "Cargo Eff.")   entry[z.zone] = z.cargoEff;
@@ -59,7 +58,6 @@ const AnalyticsZone = () => {
     }),
   [ALL_ZONES]);
 
-  const primaryZones = ALL_ZONES.slice(0, 4);
   const primaryColors = ["#3b82f6","#22c55e","#f59e0b","#a855f7"];
 
   return (
@@ -144,7 +142,7 @@ const AnalyticsZone = () => {
               <PolarGrid stroke="#1a3356" />
               <PolarAngleAxis dataKey="metric" tick={{ fill: "#4a6fa5", fontSize: 10 }} />
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#4a6fa5", fontSize: 9 }} />
-              {primaryZones.map((z, i) => (
+              {ALL_ZONES.map((z, i) => (
                 <Radar key={z.zone} name={z.zone} dataKey={z.zone} stroke={primaryColors[i]} fill={primaryColors[i]} fillOpacity={0.12} />
               ))}
               <Legend wrapperStyle={{ color: "#94a3b8", fontSize: 11 }} />

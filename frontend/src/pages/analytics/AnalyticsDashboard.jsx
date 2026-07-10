@@ -10,7 +10,7 @@ import { useState, useMemo } from "react";
 import AnalyticsLayout from "../../components/AnalyticsLayout";
 import StatCard from "../../components/StatCard";
 import { useAuth } from "../../context/AuthContext";
-import { useWagonData } from "../../context/WagonDataContext";
+import useZoneWagons from "../../hooks/useZoneWagons";
 import {
   AnalyticsToolbar, ChartCard, DrillDownAnalytics,
   TrendComparison, PredictiveAnalytics, AIInsights, ReportGenerationPanel,
@@ -21,44 +21,41 @@ import {
 
 const PIE_C = ["#ef4444", "#f59e0b", "#22c55e"];
 const TT = { contentStyle: { background:"#0d1f3c", border:"1px solid #1a3356", borderRadius:10, color:"#f1f5f9" } };
-const ZONE_KEYS = ["NR","SR","ER","WR","NER","NWR","SER","SWR"];
 
 const AnalyticsDashboard = () => {
   const { analyst } = useAuth();
-  const { wagons } = useWagonData();
-  const analystZone = analyst?.zone || "All";
+  const { wagons, zone: analystZone } = useZoneWagons();
 
-  const [filters,   setFilters]   = useState({ zone: analystZone, status:"All", severity:"All", period:"All" });
+  const [filters,   setFilters]   = useState({ status:"All", severity:"All", period:"All" });
   const [dateRange, setDateRange] = useState({ from:"", to:"" });
 
-  const handleFiltersChange = (next) => setFilters({ ...next, zone: analystZone });
+  const handleFiltersChange = (next) => setFilters(next);
 
-  // Filter wagons by zone
-  const filteredWagons = useMemo(() =>
-    filters.zone === "All" ? wagons : wagons.filter(w => w.zone === filters.zone),
-  [wagons, filters.zone]);
+  // Apply status filter on top of already zone-filtered wagons
+  const filteredWagons = useMemo(() => {
+    if (filters.status === "All") return wagons;
+    const map = { Active: ["Running","Loading","Unloading"], Delayed: ["Delayed"], Maintenance: ["Maintenance"] };
+    const allowed = map[filters.status] || [];
+    return wagons.filter(w => allowed.includes(w.status));
+  }, [wagons, filters.status]);
 
   // ── Derived KPI values from real data ─────────────────────────────────────
   const kpi = useMemo(() => {
     const summary = buildWagonSummary(filteredWagons);
-    let dispActive  = summary.active;
-    let dispDelayed = summary.delayed;
-    let dispMaint   = summary.maintenance;
-    if (filters.status === "Active")      { dispDelayed = 0; dispMaint = 0; }
-    if (filters.status === "Delayed")     { dispActive  = 0; dispMaint = 0; }
-    if (filters.status === "Maintenance") { dispActive  = 0; dispDelayed = 0; }
     return {
-      total: summary.total,
-      active: dispActive,
-      delayed: dispDelayed,
-      maint: dispMaint,
+      total:     summary.total,
+      active:    summary.active,
+      delayed:   summary.delayed,
+      maint:     summary.maintenance,
       onTimePct: summary.onTimeRate,
-      gps: summary.gpsCoverage,
-      fleet: summary.total ? Math.round((summary.active / summary.total) * 100) : 0,
-      cargo: summary.totalCapacity ? Math.round((summary.totalLoad / summary.totalCapacity) * 100) : 0,
-      maintR: summary.total ? ((summary.maintenance / summary.total) * 100).toFixed(1) : 0,
+      gps:       summary.gpsCoverage,
+      fleet:     summary.total ? Math.round((summary.active / summary.total) * 100) : 0,
+      cargo:     summary.totalCapacity ? Math.round((summary.totalLoad / summary.totalCapacity) * 100) : 0,
+      maintR:    summary.total ? ((summary.maintenance / summary.total) * 100).toFixed(1) : 0,
+      avgSpeed:  summary.avgSpeed,
+      alerts:    summary.alerts,
     };
-  }, [filteredWagons, filters.status]);
+  }, [filteredWagons]);
 
   // ── Movement chart data from real data ────────────────────────────────────
   const movementData = useMemo(() =>
@@ -67,7 +64,7 @@ const AnalyticsDashboard = () => {
 
   // ── Monthly chart data from real data ─────────────────────────────────────
   const monthlyData = useMemo(() =>
-    buildMonthlyTrendRows(filteredWagons).map(d => ({ month: d.month, wagons: d.wagons, onTime: Math.max(0, d.wagons - d.alerts) })),
+    buildMonthlyTrendRows(filteredWagons).map(d => ({ month: d.month, wagons: d.wagons, cargo: d.cargo, alerts: d.alerts })),
   [filteredWagons]);
 
   // ── Alert pie data from real data ─────────────────────────────────────────
@@ -81,17 +78,12 @@ const AnalyticsDashboard = () => {
     return [{ name:"Critical", value:critical }, { name:"Warning", value:warning }, { name:"Resolved", value:healthy }];
   }, [filteredWagons, filters.severity]);
 
-  // ── Zone on-time performance bars from real data ───────────────────────────
+  // ── Zone on-time performance — analyst's zone only ────────────────────────
   const zonePerf = useMemo(() => {
-    const all = ZONE_KEYS.map(zk => {
-      const zWagons = wagons.filter(w => w.zone === zk);
-      if (!zWagons.length) return null;
-      const s = buildWagonSummary(zWagons);
-      const pct = s.onTimeRate;
-      return { label: zk, val: `${pct}%`, pct: `${pct}%`, c: pct < 95 ? "#f59e0b" : undefined };
-    }).filter(Boolean);
-    return filters.zone === "All" ? all : all.filter(z => z.label === filters.zone);
-  }, [wagons, filters.zone]);
+    const s = buildWagonSummary(wagons);
+    const pct = s.onTimeRate;
+    return [{ label: analystZone || "Zone", val: `${pct}%`, pct: `${pct}%`, c: pct < 95 ? "#f59e0b" : undefined }];
+  }, [wagons, analystZone]);
 
   return (
     <AnalyticsLayout title="Analytics Overview" sub="Real-time KPIs, performance trends and operational insights">
@@ -125,7 +117,7 @@ const AnalyticsDashboard = () => {
               {dateRange.from} → {dateRange.to || "…"}
             </span>
           )}
-          <button onClick={() => { handleFiltersChange({ zone:analystZone, status:"All", severity:"All", period:"All" }); setDateRange({ from:"", to:"" }); }}
+          <button onClick={() => { handleFiltersChange({ status:"All", severity:"All", period:"All" }); setDateRange({ from:"", to:"" }); }}
             style={{ background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.25)", color:"#ef4444", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:700, cursor:"pointer" }}>
             ✕ Clear all
           </button>
@@ -182,15 +174,17 @@ const AnalyticsDashboard = () => {
           </AreaChart>
         </ChartCard>
 
-        <ChartCard title="Monthly Performance" icon={FiBarChart2} iconColor="#3b82f6" exportData={monthlyData} exportName="monthly_performance" height={220}>
+        <ChartCard title="Monthly Performance Trend" icon={FiBarChart2} iconColor="#3b82f6" exportData={monthlyData} exportName="monthly_performance" height={220}>
           <LineChart data={monthlyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1a3356"/>
             <XAxis dataKey="month" stroke="#4a6fa5" tick={{ fill:"#4a6fa5", fontSize:11 }}/>
-            <YAxis stroke="#4a6fa5" tick={{ fill:"#4a6fa5", fontSize:11 }}/>
+            <YAxis yAxisId="left"  stroke="#4a6fa5" tick={{ fill:"#4a6fa5", fontSize:11 }}/>
+            <YAxis yAxisId="right" orientation="right" stroke="#4a6fa5" tick={{ fill:"#4a6fa5", fontSize:10 }} tickFormatter={v => `${(v/1000).toFixed(1)}k`}/>
             <Tooltip {...TT}/>
             <Legend wrapperStyle={{ color:"#94a3b8", fontSize:12 }}/>
-            <Line type="monotone" dataKey="wagons" stroke="#3b82f6" strokeWidth={2.5} dot={false} name="Deployed"/>
-            <Line type="monotone" dataKey="onTime" stroke="#22c55e" strokeWidth={2.5} dot={false} name="On-Time"/>
+            <Line yAxisId="left"  type="monotone" dataKey="alerts" stroke="#ef4444" strokeWidth={2}   dot={{ r:3 }} name="Alerts"/>
+            <Line yAxisId="right" type="monotone" dataKey="cargo"  stroke="#22c55e" strokeWidth={2.5} dot={{ r:3 }} name="Cargo (tonnes)"/>
+            <Line yAxisId="left"  type="monotone" dataKey="wagons" stroke="#3b82f6" strokeWidth={2.5} dot={{ r:3 }} name="Wagons Deployed"/>
           </LineChart>
         </ChartCard>
       </div>
@@ -244,9 +238,9 @@ const AnalyticsDashboard = () => {
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
             {[
-              { label:"Total Movements", val:"28,432", color:"#3b82f6" },
-              { label:"Avg Speed",       val:"76 km/h", color:"#22c55e" },
-              { label:"Alert Rate",      val:`${((kpi.delayed / (kpi.total || 1)) * 100).toFixed(1)}%`, color:"#f59e0b" },
+              { label:"Total Wagons",  val: kpi.total.toLocaleString(),          color:"#3b82f6" },
+              { label:"Avg Speed",     val: `${kpi.avgSpeed} km/h`,              color:"#22c55e" },
+              { label:"Alert Rate",    val: `${((kpi.alerts / (kpi.total || 1))).toFixed(1)}`,  color:"#f59e0b" },
             ].map(s => (
               <div key={s.label} style={{ textAlign:"center", background:"rgba(255,255,255,.03)", borderRadius:10, padding:"12px 8px", border:"1px solid #1a3356" }}>
                 <div style={{ color:s.color, fontWeight:800, fontSize:20 }}>{s.val}</div>
