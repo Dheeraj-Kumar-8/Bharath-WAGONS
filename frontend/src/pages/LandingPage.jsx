@@ -540,6 +540,15 @@ const LandingPage = () => {
         @keyframes box-breathe  { 0%,100%{box-shadow:0 8px 40px rgba(0,0,0,.35),0 0 0 1px rgba(59,130,246,.18),inset 0 1px 0 rgba(255,255,255,.05)} 50%{box-shadow:0 12px 60px rgba(0,0,0,.45),0 0 32px rgba(59,130,246,.18),0 0 0 1px rgba(59,130,246,.38),inset 0 1px 0 rgba(255,255,255,.08)} }
         @keyframes box-shimmer  { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
         @keyframes box-scanline { 0%{top:0%;opacity:.6} 100%{top:100%;opacity:0} }
+        @keyframes ft-rise      { from{opacity:0;transform:translateY(36px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ft-line-grow { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+        @keyframes ft-badge-pop { 0%{opacity:0;transform:scale(.7)} 70%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes ft-dot-ping  { 0%{transform:scale(1);opacity:1} 70%{transform:scale(2.2);opacity:0} 100%{transform:scale(1);opacity:0} }
+        @keyframes ft-scan      { 0%{left:-30%} 100%{left:110%} }
+        @keyframes ft-train     { 0%{transform:translateX(110vw)} 100%{transform:translateX(-420px)} }
+        @keyframes ft-track-move{ from{background-position:0 0} to{background-position:-60px 0} }
+        @keyframes ft-smoke-a   { 0%{transform:translate(0,0) scale(.4);opacity:.7} 100%{transform:translate(-18px,-55px) scale(2);opacity:0} }
+        @keyframes ft-smoke-b   { 0%{transform:translate(0,0) scale(.3);opacity:.5} 100%{transform:translate(8px,-70px) scale(2.4);opacity:0} }
 
         /* Platform — zoom up spring */
         @keyframes plat-zoomUp { 0%{opacity:0;transform:translateY(52px) scale(.88)} 65%{transform:translateY(-5px) scale(1.03)} 100%{opacity:1;transform:translateY(0) scale(1)} }
@@ -614,10 +623,12 @@ const LandingPage = () => {
           .ops-g     { grid-template-columns:1fr !important; }
           .ai-g      { grid-template-columns:1fr 1fr !important; }
           .hide-m    { display:none !important; }
+          .footer-g  { grid-template-columns:1fr 1fr !important; }
         }
         @media(max-width:600px){
           .ai-g { grid-template-columns:1fr !important; }
           .stats-g { grid-template-columns:1fr 1fr !important; }
+          .footer-g { grid-template-columns:1fr !important; }
         }
       `}</style>
 
@@ -954,25 +965,231 @@ const LandingPage = () => {
           </Fade>
         </section>
 
-        {/* FOOTER */}
-        <footer style={{ borderTop: "1px solid rgba(20,45,80,.5)", padding: "32px clamp(20px,6vw,76px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, overflow:"hidden" }}><img src="/BW-iconic.png" alt="Bharath Wagons" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/></div>
-            <div>
-              <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 12, fontFamily: FM }}>Bharath WAGONS</div>
-              <div style={{ color: "#1e3a5f", fontSize: 10 }}>Ministry of Railways, Government of India</div>
+        {/* ═══════════════════════════════════════════════════
+            FOOTER
+        ═══════════════════════════════════════════════════ */}
+        <footer style={{ position: "relative", borderTop: "1px solid rgba(30,58,100,.5)", background: "rgba(2,8,20,.97)", padding: "64px clamp(20px,6vw,76px) 0", overflow: "hidden" }}>
+
+          {/* animated bg grid */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(59,130,246,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.018) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
+          {/* radial glow centre */}
+          <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 700, height: 300, background: "radial-gradient(ellipse,rgba(59,130,246,.055),transparent 70%)", pointerEvents: "none" }} />
+          {/* horizontal scan line */}
+          <div style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg,transparent,rgba(59,130,246,.025),transparent)", animation: "ft-scan 9s linear infinite", pointerEvents: "none" }} />
+
+          {/* ── MOVING TRAIN STRIP ── */}
+          <div style={{ position: "relative", width: "100%", height: 80, marginBottom: 48, overflow: "hidden" }}>
+            {/* full-width track */}
+            <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, height: 8, borderRadius: 4, background: "rgba(30,58,100,.5)" }}>
+              <div style={{ position: "absolute", inset: 0, borderRadius: 4, backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 44px,rgba(59,130,246,.3) 44px,rgba(59,130,246,.3) 52px)", animation: "ft-track-move .55s linear infinite" }} />
+              <div style={{ position: "absolute", top: 1, left: 0, right: 0, height: 2, background: "rgba(96,165,250,.45)", borderRadius: 2 }} />
+              <div style={{ position: "absolute", bottom: 1, left: 0, right: 0, height: 2, background: "rgba(96,165,250,.45)", borderRadius: 2 }} />
+            </div>
+            {/* glow under train */}
+            <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", width: "100%", height: 12, background: "radial-gradient(ellipse,rgba(59,130,246,.18),transparent 70%)", pointerEvents: "none", animation: "ft-train 12s linear infinite" }} />
+            {/* train wrapper */}
+            <div style={{ position: "absolute", bottom: 14, animation: "ft-train 12s linear infinite" }}>
+              {/* smoke */}
+              <div style={{ position: "absolute", top: -18, left: 38, width: 10, height: 10, borderRadius: "50%", background: "rgba(148,163,184,.6)", animation: "ft-smoke-a 2s ease-out infinite" }} />
+              <div style={{ position: "absolute", top: -14, left: 44, width: 8, height: 8, borderRadius: "50%", background: "rgba(148,163,184,.45)", animation: "ft-smoke-b 2s ease-out .7s infinite" }} />
+              {/* train SVG */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 52" width="340" height="52"
+                style={{ display: "block", animation: "ht-shake .3s ease-in-out infinite" }}>
+                {/* chimney */}
+                <rect x="36" y="2" width="10" height="12" rx="2" fill="#1e3a5f" />
+                <rect x="32" y="1" width="18" height="4" rx="2" fill="#1d4ed8" />
+                {/* boiler */}
+                <rect x="14" y="14" width="100" height="26" rx="10" fill="#172a45" />
+                <rect x="16" y="15" width="96" height="7" rx="5" fill="rgba(59,130,246,.15)" />
+                <rect x="54" y="14" width="3" height="26" rx="1" fill="rgba(59,130,246,.2)" />
+                <rect x="76" y="14" width="3" height="26" rx="1" fill="rgba(59,130,246,.2)" />
+                <rect x="98" y="14" width="3" height="26" rx="1" fill="rgba(59,130,246,.2)" />
+                {/* cab */}
+                <rect x="112" y="6" width="54" height="34" rx="5" fill="#112036" />
+                <rect x="109" y="3" width="60" height="7" rx="4" fill="#1d4ed8" />
+                <rect x="118" y="11" width="18" height="12" rx="3" fill="rgba(96,165,250,.2)" stroke="rgba(59,130,246,.5)" strokeWidth="1" />
+                <rect x="142" y="11" width="14" height="12" rx="3" fill="rgba(96,165,250,.15)" stroke="rgba(59,130,246,.4)" strokeWidth="1" />
+                {/* tender */}
+                <rect x="168" y="18" width="44" height="22" rx="5" fill="#0f1e33" />
+                <ellipse cx="178" cy="22" rx="5" ry="3" fill="rgba(30,41,59,.9)" />
+                <ellipse cx="190" cy="21" rx="4" ry="2.5" fill="rgba(30,41,59,.8)" />
+                <ellipse cx="202" cy="22" rx="4" ry="2.5" fill="rgba(30,41,59,.85)" />
+                {/* wagons */}
+                {[216, 268, 296].map((x, i) => (
+                  <g key={i}>
+                    <rect x={x} y="16" width="46" height="22" rx="4" fill="#0d1b2e" stroke="rgba(59,130,246,.15)" strokeWidth="1" />
+                    <rect x={x+2} y="18" width="42" height="6" rx="2" fill="rgba(30,58,100,.5)" />
+                  </g>
+                ))}
+                {/* cow-catcher */}
+                <polygon points="14,40 2,46 14,46" fill="#1d4ed8" />
+                {/* running board */}
+                <rect x="2" y="38" width="168" height="5" rx="3" fill="#1a3050" />
+                {/* headlight */}
+                <circle cx="5" cy="26" r="5" fill="rgba(251,191,36,.15)" stroke="rgba(251,191,36,.6)" strokeWidth="1.2" style={{ animation: "ht-glow 1.8s ease-in-out infinite" }} />
+                <circle cx="5" cy="26" r="2.5" fill="rgba(251,191,36,.8)" />
+                {/* wheels — loco */}
+                {[28, 60, 92, 130, 178, 200].map((cx, i) => (
+                  <g key={i} style={{ animation: "ht-wheel .45s linear infinite", transformBox: "fill-box", transformOrigin: "center" }}>
+                    <circle cx={cx} cy="44" r={i < 4 ? 8 : 6} fill="none" stroke="#3b82f6" strokeWidth={i < 4 ? 2 : 1.5} />
+                    <circle cx={cx} cy="44" r="2" fill="#60a5fa" />
+                    <line x1={cx} y1={i < 4 ? 36 : 38} x2={cx} y2={i < 4 ? 52 : 50} stroke="#3b82f6" strokeWidth="1.2" />
+                    <line x1={i < 4 ? cx-8 : cx-6} y1="44" x2={i < 4 ? cx+8 : cx+6} y2="44" stroke="#3b82f6" strokeWidth="1.2" />
+                  </g>
+                ))}
+                {/* wagon wheels */}
+                {[224, 252, 276, 304, 328].map((cx) => (
+                  <g key={cx} style={{ animation: "ht-wheel .45s linear infinite", transformBox: "fill-box", transformOrigin: "center" }}>
+                    <circle cx={cx} cy="44" r="5" fill="none" stroke="rgba(59,130,246,.5)" strokeWidth="1.2" />
+                    <circle cx={cx} cy="44" r="1.5" fill="rgba(96,165,250,.7)" />
+                    <line x1={cx} y1="39" x2={cx} y2="49" stroke="rgba(59,130,246,.5)" strokeWidth="1" />
+                    <line x1={cx-5} y1="44" x2={cx+5} y2="44" stroke="rgba(59,130,246,.5)" strokeWidth="1" />
+                  </g>
+                ))}
+                {/* connecting rod */}
+                <rect x="28" y="41" width="64" height="4" rx="2" fill="rgba(59,130,246,.45)" />
+              </svg>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 20 }}>
-            {[["Privacy",null],["Security","security"],["Terms",null],["Contact",null]].map(([l, id]) => (
-              <span key={l}
-                onClick={() => id && scrollTo(id)}
-                style={{ color: "#1e3a5f", fontSize: 12, cursor: id ? "pointer" : "default", transition: "color .2s", fontWeight: 500 }}
-                onMouseEnter={e => { if (id) e.currentTarget.style.color = "#60a5fa"; }}
-                onMouseLeave={e => e.currentTarget.style.color = "#1e3a5f"}>{l}</span>
-            ))}
+
+          {/* Top grid */}
+          <div className="footer-g" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, paddingBottom: 48, borderBottom: "1px solid rgba(30,58,100,.35)", position: "relative", zIndex: 1 }}>
+
+            {/* Brand column */}
+            <Fade dir="left">
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", animation: "lp-glow 3s ease infinite" }}>
+                    <img src="/BW-iconic.png" alt="Bharath Wagons" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                  </div>
+                  <div>
+                    <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 14, fontFamily: FM }}>Bharath WAGONS</div>
+                    <div style={{ color: "#3b82f6", fontSize: 9, fontWeight: 700, letterSpacing: "1.8px" }}>OPERATIONS PLATFORM</div>
+                  </div>
+                </div>
+                <p style={{ color: "#3a5a7c", fontSize: 13, lineHeight: 1.8, maxWidth: 300, marginBottom: 24 }}>
+                  Real-time GPS wagon tracking, AI predictive alerts, and enterprise cargo intelligence — built exclusively for Indian Railways operations.
+                </p>
+                {/* animated status badge */}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(34,197,94,.08)", border: "1px solid rgba(34,197,94,.2)", borderRadius: 20, padding: "6px 14px", animation: "ft-badge-pop .8s .6s both" }}>
+                  <span style={{ position: "relative", width: 8, height: 8, flexShrink: 0 }}>
+                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#22c55e", animation: "ft-dot-ping 2s ease-out infinite" }} />
+                    <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#22c55e" }} />
+                  </span>
+                  <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: .4 }}>All Systems Operational</span>
+                </div>
+              </div>
+            </Fade>
+
+            {/* Platform column */}
+            <Fade delay={0.1}>
+              <div>
+                <div style={{ color: "#f1f5f9", fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Platform</div>
+                <div style={{ height: 2, width: 28, background: "linear-gradient(90deg,#3b82f6,transparent)", borderRadius: 2, marginBottom: 18, animation: "ft-line-grow .6s .3s both", transformOrigin: "left" }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    ["Live Tracking",  () => scrollTo("platform")],
+                    ["AI Analytics",   () => scrollTo("analytics")],
+                    ["Features",       () => scrollTo("features")],
+                    ["Security",       () => scrollTo("security")],
+                    ["Sign In",        () => navigate("/login")],
+                    ["Request Access", () => navigate("/create-account")],
+                  ].map(([label, action], i) => (
+                    <span key={label} onClick={action}
+                      style={{ color: "#3a5a7c", fontSize: 13, cursor: "pointer", transition: "color .2s, transform .2s, padding-left .2s", width: "fit-content", display: "flex", alignItems: "center", gap: 6, animation: `ft-rise .5s ${0.15 + i * 0.07}s both` }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#60a5fa"; e.currentTarget.style.paddingLeft = "8px"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#3a5a7c"; e.currentTarget.style.paddingLeft = "0"; }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1e3a5f", flexShrink: 0, transition: "background .2s" }} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Fade>
+
+            {/* About column */}
+            <Fade delay={0.2}>
+              <div>
+                <div style={{ color: "#f1f5f9", fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>About</div>
+                <div style={{ height: 2, width: 28, background: "linear-gradient(90deg,#a855f7,transparent)", borderRadius: 2, marginBottom: 18, animation: "ft-line-grow .6s .4s both", transformOrigin: "left" }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    ["Ministry of Railways", () => window.open("https://indianrailways.gov.in", "_blank")],
+                    ["About the Project",    () => scrollTo("platform")],
+                    ["Our Mission",          () => scrollTo("features")],
+                    ["Zone Coverage",        () => scrollTo("platform")],
+                    ["Careers",              () => window.open("https://www.rrcb.gov.in", "_blank")],
+                    ["Press & Media",        () => window.open("https://pib.gov.in", "_blank")],
+                  ].map(([label, action], i) => (
+                    <span key={label} onClick={action}
+                      style={{ color: "#3a5a7c", fontSize: 13, cursor: "pointer", transition: "color .2s, padding-left .2s", width: "fit-content", display: "flex", alignItems: "center", gap: 6, animation: `ft-rise .5s ${0.2 + i * 0.07}s both` }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#c084fc"; e.currentTarget.style.paddingLeft = "8px"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#3a5a7c"; e.currentTarget.style.paddingLeft = "0"; }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1e3a5f", flexShrink: 0 }} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Fade>
+
+            {/* Legal column */}
+            <Fade delay={0.3}>
+              <div>
+                <div style={{ color: "#f1f5f9", fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Legal</div>
+                <div style={{ height: 2, width: 28, background: "linear-gradient(90deg,#22c55e,transparent)", borderRadius: 2, marginBottom: 18, animation: "ft-line-grow .6s .5s both", transformOrigin: "left" }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    ["Privacy Policy",   () => window.open("https://indianrailways.gov.in/railwayboard/view_section.jsp?lang=0&id=0,1,304,366,554", "_blank")],
+                    ["Terms of Service", () => window.open("https://indianrailways.gov.in", "_blank")],
+                    ["Data Protection",  () => window.open("https://meity.gov.in", "_blank")],
+                    ["Accessibility",    () => window.open("https://indianrailways.gov.in", "_blank")],
+                    ["RTI Portal",       () => window.open("https://rti.gov.in", "_blank")],
+                    ["Grievances",       () => window.open("https://pgportal.gov.in", "_blank")],
+                  ].map(([label, action], i) => (
+                    <span key={label} onClick={action}
+                      style={{ color: "#3a5a7c", fontSize: 13, cursor: "pointer", transition: "color .2s, padding-left .2s", width: "fit-content", display: "flex", alignItems: "center", gap: 6, animation: `ft-rise .5s ${0.25 + i * 0.07}s both` }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.paddingLeft = "8px"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#3a5a7c"; e.currentTarget.style.paddingLeft = "0"; }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1e3a5f", flexShrink: 0 }} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Fade>
           </div>
-          <div style={{ color: "#111e3a", fontSize: 10 }}>© 2025 · v2.4.1</div>
+
+          {/* Trust badges row */}
+          <Fade>
+            <div style={{ display: "flex", gap: 20, padding: "22px 0", borderBottom: "1px solid rgba(30,58,100,.3)", flexWrap: "wrap", position: "relative", zIndex: 1 }}>
+              {[
+                ["🔒", "HMAC-SHA256", "#3b82f6"],
+                ["🛡", "RBAC Enforced", "#a855f7"],
+                ["📋", "Full Audit Trail", "#22c55e"],
+                ["🏛", "Govt. of India", "#f59e0b"],
+                ["⚡", "99.9% Uptime", "#38bdf8"],
+                ["🌐", "8 Railway Zones", "#f97316"],
+              ].map(([ic, label, c]) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, background: `${c}0d`, border: `1px solid ${c}20`, borderRadius: 20, padding: "5px 12px", transition: "background .2s, border-color .2s, transform .2s", cursor: "default" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${c}18`; e.currentTarget.style.borderColor = `${c}45`; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${c}0d`; e.currentTarget.style.borderColor = `${c}20`; e.currentTarget.style.transform = ""; }}>
+                  <span style={{ fontSize: 12 }}>{ic}</span>
+                  <span style={{ color: c, fontSize: 11, fontWeight: 600 }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </Fade>
+
+          {/* Bottom bar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0", flexWrap: "wrap", gap: 12, position: "relative", zIndex: 1 }}>
+            <div style={{ color: "#1e3a5f", fontSize: 11 }}>© 2025 Bharath WAGONS · Ministry of Railways, Government of India · v2.4.1</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="btn-g" style={{ padding: "7px 16px", fontSize: 12 }} onClick={() => navigate("/login")}>Sign In</button>
+              <button className="btn-p" style={{ padding: "7px 16px", fontSize: 12 }} onClick={() => navigate("/create-account")}>Get Access</button>
+            </div>
+          </div>
+
         </footer>
       </div>
     </>
