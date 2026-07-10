@@ -243,7 +243,7 @@ function PlatformVideoSection({ FM, FI }) {
 ════════════════════════════════════════════════════════════════ */
 function HeroTrainAnimation() {
   return (
-    <div style={{ position: "relative", width: 380, height: 260 }}>
+    <div style={{ position: "relative", width: 320, height: 220 }}>
       <style>{`
         @keyframes ht-wheel   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes ht-shake   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
@@ -286,7 +286,7 @@ function HeroTrainAnimation() {
 
       {/* Train SVG */}
       <svg className="ht-body" xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 280 120" width="370" height="120"
+        viewBox="0 0 280 120" width="310" height="100"
         style={{ position:"absolute", bottom:22, left:-10 }}
       >
         {/* ── Smoke puffs ── */}
@@ -537,6 +537,9 @@ const LandingPage = () => {
         @keyframes lp-glow      { 0%,100%{box-shadow:0 0 20px rgba(59,130,246,.35)} 50%{box-shadow:0 0 48px rgba(59,130,246,.75)} }
         @keyframes lp-spin      { to{transform:rotate(360deg)} }
         @keyframes lp-rotBorder { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+        @keyframes box-breathe  { 0%,100%{box-shadow:0 8px 40px rgba(0,0,0,.35),0 0 0 1px rgba(59,130,246,.18),inset 0 1px 0 rgba(255,255,255,.05)} 50%{box-shadow:0 12px 60px rgba(0,0,0,.45),0 0 32px rgba(59,130,246,.18),0 0 0 1px rgba(59,130,246,.38),inset 0 1px 0 rgba(255,255,255,.08)} }
+        @keyframes box-shimmer  { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+        @keyframes box-scanline { 0%{top:0%;opacity:.6} 100%{top:100%;opacity:0} }
 
         /* Platform — zoom up spring */
         @keyframes plat-zoomUp { 0%{opacity:0;transform:translateY(52px) scale(.88)} 65%{transform:translateY(-5px) scale(1.03)} 100%{opacity:1;transform:translateY(0) scale(1)} }
@@ -679,48 +682,87 @@ const LandingPage = () => {
           {/* content */}
           <div className="hero-row" style={{ position: "relative", zIndex: 10, width: "100%", padding: "90px clamp(20px,6vw,76px) 110px", display: "flex", alignItems: "center", gap: 56 }}>
 
-            {/* LEFT */}
-            <div style={{ flex: 1, maxWidth: 580 }}>
-              <div style={{ opacity: ready ? 1 : 0, transform: ready ? "none" : "translateX(-24px)", transition: "all .6s ease", marginBottom: 18 }}>
-                <span className="gtag">
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "lp-pulse 1.5s infinite", flexShrink: 0 }} />
-                  LIVE SYSTEM · Ministry of Railways, Govt. of India
-                </span>
+            {/* LEFT — Train + title below it */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: -140 }}>
+              <div className="hide-m" style={{ display: "flex", justifyContent: "flex-start", marginBottom: 20, marginTop: -40, opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(-20px)", transition: "all .8s .2s ease" }}>
+                <HeroTrainAnimation />
               </div>
-
-              <h1 style={{ fontFamily: FM, fontWeight: 900, lineHeight: 1.08, letterSpacing: "-1.5px", fontSize: "clamp(36px,5vw,68px)", marginBottom: 8, opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(28px)", transition: "all .7s .1s ease" }}>
+              <h1 style={{ fontFamily: FM, fontWeight: 900, lineHeight: 1.08, letterSpacing: "-1.5px", fontSize: "clamp(28px,3.5vw,52px)", marginBottom: 6, color: "#f1f5f9", opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(20px)", transition: "all .7s .4s ease" }}>
                 Railway Command Center
               </h1>
-              <h1 style={{ fontFamily: FM, fontWeight: 900, lineHeight: 1.08, letterSpacing: "-1.5px", fontSize: "clamp(36px,5vw,68px)", marginBottom: 22, opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(28px)", transition: "all .7s .2s ease" }}>
+              <h1 style={{ fontFamily: FM, fontWeight: 900, lineHeight: 1.08, letterSpacing: "-1.5px", fontSize: "clamp(28px,3.5vw,52px)", color: "#f1f5f9", opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(20px)", transition: "all .7s .45s ease" }}>
                 <TypeWriter words={["Wagon Monitoring", "Live Operations", "AI Intelligence", "Fleet Tracking", "Zone Analytics"]} />
               </h1>
+            </div>
 
-              <p style={{ color: "#4a6fa5", fontSize: "clamp(14px,1.5vw,17px)", lineHeight: 1.8, maxWidth: 530, marginBottom: 34, opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(24px)", transition: "all .7s .3s ease" }}>
+            {/* RIGHT — Glass container: ALL content */}
+            <div style={{
+              flex: "0 0 auto",
+              width: "clamp(380px,42vw,520px)",
+              background: "rgba(4,14,36,.52)",
+              border: "1px solid rgba(59,130,246,.18)",
+              borderRadius: 20,
+              backdropFilter: "blur(22px)",
+              WebkitBackdropFilter: "blur(22px)",
+              animation: "box-breathe 4s ease-in-out infinite",
+              padding: "38px 36px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 18,
+              opacity: ready ? 1 : 0,
+              transform: ready ? "none" : "translateX(32px)",
+              transition: "all .8s .4s ease",
+              position: "relative",
+              overflow: "hidden",
+            }}>
+              {/* animated scanline sweep */}
+              <div style={{ position: "absolute", left: 0, right: 0, height: 2, background: "linear-gradient(90deg,transparent,rgba(59,130,246,.18),transparent)", animation: "box-scanline 5s linear infinite", pointerEvents: "none", zIndex: 1 }} />
+              {/* shimmer streak */}
+              <div style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg,transparent,rgba(255,255,255,.03),transparent)", animation: "box-shimmer 6s ease-in-out infinite", pointerEvents: "none", zIndex: 1 }} />
+              {/* top shimmer */}
+              <div style={{ position: "absolute", top: 0, left: "10%", right: "10%", height: 1, background: "linear-gradient(90deg,transparent,rgba(99,163,255,.5),transparent)", pointerEvents: "none" }} />
+              {/* bottom shimmer */}
+              <div style={{ position: "absolute", bottom: 0, left: "20%", right: "20%", height: 1, background: "linear-gradient(90deg,transparent,rgba(59,130,246,.2),transparent)", pointerEvents: "none" }} />
+              {/* corner glow TL */}
+              <div style={{ position: "absolute", top: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,130,246,.07),transparent 70%)", pointerEvents: "none" }} />
+              {/* corner glow BR */}
+              <div style={{ position: "absolute", bottom: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,.07),transparent 70%)", pointerEvents: "none" }} />
+
+              {/* Badge */}
+              <span className="gtag" style={{ alignSelf: "flex-start" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "lp-pulse 1.5s infinite", flexShrink: 0 }} />
+                LIVE SYSTEM · Ministry of Railways, Govt. of India
+              </span>
+
+              {/* Description */}
+              <p style={{ color: "#4a6fa5", fontSize: "clamp(12px,1.1vw,13px)", lineHeight: 1.75 }}>
                 Real-time GPS wagon tracking · AI predictive alerts · Enterprise cargo intelligence — built for Indian Railways.
               </p>
 
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", opacity: ready ? 1 : 0, transform: ready ? "none" : "translateY(20px)", transition: "all .7s .4s ease" }}>
-                <button className="btn-p" style={{ fontSize: 15, padding: "14px 34px" }} onClick={() => navigate("/login")}>
-                  <ShieldOutlinedIcon style={{ fontSize: 17 }} /> Access Platform
+              {/* Buttons */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button className="btn-p" style={{ fontSize: 14, padding: "13px 20px", width: "100%" }} onClick={() => navigate("/login")}>
+                  <ShieldOutlinedIcon style={{ fontSize: 16 }} /> Access Platform
                 </button>
-                <button className="btn-g" onClick={() => navigate("/create-account")}>Request Access →</button>
+                <button className="btn-g" style={{ width: "100%" }} onClick={() => navigate("/create-account")}>Request Access →</button>
               </div>
 
-              {/* mini stats bar */}
-              <div style={{ display: "flex", gap: 24, marginTop: 44, flexWrap: "wrap", opacity: ready ? 1 : 0, transition: "opacity .7s .55s ease" }}>
+              {/* Divider */}
+              <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(59,130,246,.2),transparent)" }} />
+
+              {/* Mini stats — 2x2 grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 12px" }}>
                 {[["2,400+", "Wagons", "#60a5fa"], ["8", "Zones", "#a78bfa"], ["99.9%", "Uptime", "#34d399"], ["< 2s", "Alerts", "#fbbf24"]].map(([v, l, c]) => (
-                  <div key={l} style={{ borderLeft: `2px solid ${c}35`, paddingLeft: 13 }}>
-                    <div style={{ color: c, fontSize: 20, fontWeight: 800, fontFamily: FM, lineHeight: 1 }}>{v}</div>
-                    <div style={{ color: "#3a5a7c", fontSize: 11, marginTop: 3, fontWeight: 500 }}>{l}</div>
+                  <div key={l} style={{ borderLeft: `2px solid ${c}40`, paddingLeft: 10, transition: "border-color .3s, transform .3s", cursor: "default" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = c; e.currentTarget.style.transform = "translateX(4px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = `${c}40`; e.currentTarget.style.transform = ""; }}
+                  >
+                    <div style={{ color: c, fontSize: 18, fontWeight: 800, fontFamily: FM, lineHeight: 1 }}>{v}</div>
+                    <div style={{ color: "#3a5a7c", fontSize: 10, marginTop: 3, fontWeight: 500 }}>{l}</div>
                   </div>
                 ))}
               </div>
-            </div>
-
-
-            {/* RIGHT — Train Animation */}
-            <div className="hide-m" style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", opacity: ready ? 1 : 0, transform: ready ? "translate(60px, -60px)" : "translateX(32px)", transition: "all .8s .4s ease" }}>
-              <HeroTrainAnimation />
             </div>
 
           </div>
