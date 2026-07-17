@@ -171,22 +171,12 @@ export const generateAlerts = async (req, res, next) => {
 };
 
 // ── GET /api/alerts ───────────────────────────────────────────────────────────
-// Returns alerts for the requesting user's zone (from JWT) or ?zone= query param.
+// Reads persisted alerts from the Alert collection (zone-filtered).
 export const getAlerts = async (req, res, next) => {
   try {
-    const zone     = req.query.zone || req.user?.zone || null;
-    const priority = req.query.priority || null;
-    const status   = req.query.status   || null;
-    const wagonId  = req.query.wagonId  || null;
-
-    const filter = {};
-    if (zone)     filter.zone     = zone;
-    if (priority) filter.priority = priority;
-    if (status)   filter.status   = status;
-    if (wagonId)  filter.wagonId  = wagonId;
-
+    const userZone = req.user?.zone;
+    const filter = userZone ? { zone: userZone } : {};
     const alerts = await Alert.find(filter).sort({ createdAt: -1 });
-    console.log(`[GET /api/alerts] zone=${zone || "all"} returned ${alerts.length}`);
     res.json({ success: true, count: alerts.length, data: alerts });
   } catch (error) {
     next(error);

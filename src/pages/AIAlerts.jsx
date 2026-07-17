@@ -59,6 +59,12 @@ const AIAlerts = () => {
   // On mount: generate fresh alerts from current wagon data, then display
   useEffect(() => { generateAndFetch(); }, [generateAndFetch]);
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const id = setInterval(fetchAlerts, 30000);
+    return () => clearInterval(id);
+  }, [fetchAlerts]);
+
   // ── Resolve persisted to MongoDB ──────────────────────────────────────────
   const resolve = useCallback(async (alert) => {
     try {

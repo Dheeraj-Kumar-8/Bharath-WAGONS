@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -15,6 +15,7 @@ import { useWagonData } from "../context/WagonDataContext";
 import {
   buildWagonSummary, buildStatusTrendRows, buildStationActivityRows,
 } from "../utils/wagonUtils";
+import { api } from "../utils/api";
 
 const PIE_COLORS = ["#ef4444", "#f59e0b", "#3b82f6", "#22c55e"];
 
@@ -154,19 +155,34 @@ const AdminDashboard = () => {
       .slice(0, 4);
   }, [zoneWagons]);
 
-  // AI alerts from real wagon alert data
-  const alerts = useMemo(() =>
-    zoneWagons
-      .filter(w => w.alertReasons.length > 0)
-      .slice(0, 8)
-      .map(w => ({
-        wagon: w.wagonId || w.id,
-        type: w.alertReasons[0] + " Alert",
-        priority: w.wagonHealth === "Critical" ? "Critical" : w.wagonHealth === "Warning" ? "High" : "Medium",
-        time: w.lastUpdated ? new Date(w.lastUpdated).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "N/A",
-        status: w.status === "Maintenance" ? "Pending" : "Active",
-      })),
-  [zoneWagons]);
+  // AI alerts from MongoDB Alert collection via API
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(true);
+
+  const fetchAlerts = useCallback(async () => {
+    setAlertsLoading(true);
+    try {
+      const res = await api.getAlerts();
+      const raw = res.data || [];
+      const preview = raw.slice(0, 5).map(a => ({
+        wagon:    a.wagonId,
+        type:     a.type,
+        priority: a.priority,
+        time:     a.createdAt
+          ? new Date(a.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+          : "N/A",
+        status:   a.status,
+      }));
+      setAlerts(preview);
+    } catch (err) {
+      console.error("[AdminDashboard] alerts fetch failed:", err.message);
+      setAlerts([]);
+    } finally {
+      setAlertsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
 
   // System logs from real wagon events
   const logs = useMemo(() => {
@@ -371,8 +387,10 @@ const AdminDashboard = () => {
           <table>
             <thead><tr><th>Wagon ID</th><th>Alert Type</th><th>Priority</th><th>Time</th><th>Status</th></tr></thead>
             <tbody>
-              {alerts.length === 0 ? (
-                <tr><td colSpan={5} style={{ color: "#22c55e", textAlign: "center" }}>✓ No active alerts</td></tr>
+              {alertsLoading ? (
+                <tr><td colSpan={5} style={{ color: "#4a6fa5", textAlign: "center" }}>Loading alerts…</td></tr>
+              ) : alerts.length === 0 ? (
+                <tr><td colSpan={5} style={{ color: "#64748b", textAlign: "center" }}>No alerts available</td></tr>
               ) : alerts.map((a, i) => (
                 <tr key={i}>
                   <td style={{ color: "#60a5fa", fontWeight: 600 }}>{a.wagon}</td>

@@ -14,8 +14,8 @@ const router = express.Router();
 // Generate / sync alerts from wagon data (admin only)
 router.post("/generate", authMiddleware, allowRoles("admin"), generateAlerts);
 
-// Read alerts (admin + analyst)
-router.get("/",      authMiddleware, allowRoles("admin", "analyst"), getAlerts);
+// GET /api/alerts — dynamically generated from Wagon data (no DB write)
+router.get("/", authMiddleware, allowRoles("admin", "operator", "analyst"), getAlerts);
 router.get("/stats", authMiddleware, allowRoles("admin", "analyst"), getAlertStats);
 
 // Mutate alert status

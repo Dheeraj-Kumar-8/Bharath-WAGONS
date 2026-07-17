@@ -988,6 +988,14 @@ tbody tr:nth-child(8)  { animation-delay: .24s; }
   .modal-box { padding: 20px; border-radius: 16px; }
 }
 
+/* ── AI Alerts KPI row ─────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .kpi-row-7 { grid-template-columns: repeat(4,1fr) !important; }
+}
+@media (max-width: 700px) {
+  .kpi-row-7 { grid-template-columns: repeat(2,1fr) !important; }
+}
+
 /* ── Accessibility ───────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
